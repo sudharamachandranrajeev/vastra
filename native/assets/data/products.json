@@ -1,0 +1,332 @@
+[
+  {
+    "id": "sample-1",
+    "name": "The tailored cotton shirt",
+    "category": "Clothing",
+    "description": "A little polish for the everyday",
+    "images": [
+      "https://images.unsplash.com/photo-1598033129183-c4f50c736f10?auto=format&fit=crop&w=900&q=85"
+    ],
+    "brand": "THE VASTRA EDIT",
+    "material": "Cotton",
+    "color": "White",
+    "sizes": [
+      "XS",
+      "S",
+      "M",
+      "L",
+      "XL"
+    ],
+    "offers": [
+      {
+        "seller": "Illustrative offer",
+        "price": 49,
+        "currency": "USD",
+        "availability": "Sample — not live stock",
+        "url": ""
+      }
+    ],
+    "sourceUrl": "",
+    "checkedAt": "",
+    "sample": true,
+    "extraction": "sample"
+  },
+  {
+    "id": "sample-2",
+    "name": "The everyday city backpack",
+    "category": "Accessories",
+    "description": "Room for the little things",
+    "images": [
+      "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=900&q=85"
+    ],
+    "brand": "THE VASTRA EDIT",
+    "material": "Woven textile",
+    "color": "Navy",
+    "sizes": [],
+    "offers": [
+      {
+        "seller": "Illustrative offer",
+        "price": 89,
+        "currency": "EUR",
+        "availability": "Sample — not live stock",
+        "url": ""
+      }
+    ],
+    "sourceUrl": "",
+    "checkedAt": "",
+    "sample": true,
+    "extraction": "sample"
+  },
+  {
+    "id": "sample-3",
+    "name": "The everyday court sneaker",
+    "category": "Footwear",
+    "description": "Made for taking the long way",
+    "images": [
+      "https://images.unsplash.com/photo-1549298916-b41d501d3772?auto=format&fit=crop&w=900&q=85"
+    ],
+    "brand": "THE VASTRA EDIT",
+    "material": "Leather",
+    "color": "Terracotta",
+    "sizes": [],
+    "offers": [
+      {
+        "seller": "Illustrative offer",
+        "price": 75,
+        "currency": "GBP",
+        "availability": "Sample — not live stock",
+        "url": ""
+      }
+    ],
+    "sourceUrl": "",
+    "checkedAt": "",
+    "sample": true,
+    "extraction": "sample"
+  },
+  {
+    "id": "sample-4",
+    "name": "A moment of rose",
+    "category": "Fragrance",
+    "description": "Floral, soft, quietly memorable",
+    "images": [
+      "https://images.unsplash.com/photo-1541643600914-78b084683601?auto=format&fit=crop&w=900&q=85"
+    ],
+    "brand": "THE VASTRA EDIT",
+    "material": "Eau de parfum",
+    "color": "50 ml",
+    "sizes": [],
+    "offers": [
+      {
+        "seller": "Illustrative offer",
+        "price": 4200,
+        "currency": "INR",
+        "availability": "Sample — not live stock",
+        "url": ""
+      }
+    ],
+    "sourceUrl": "",
+    "checkedAt": "",
+    "sample": true,
+    "extraction": "sample"
+  },
+  {
+    "id": "sample-5",
+    "name": "The statement drop earrings",
+    "category": "Accessories",
+    "description": "A little everyday statement",
+    "images": [
+      "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?auto=format&fit=crop&w=900&q=85"
+    ],
+    "brand": "THE VASTRA EDIT",
+    "material": "See seller details",
+    "color": "Silver and blue",
+    "sizes": [],
+    "offers": [
+      {
+        "seller": "Illustrative offer",
+        "price": 35,
+        "currency": "USD",
+        "availability": "Sample — not live stock",
+        "url": ""
+      }
+    ],
+    "sourceUrl": "",
+    "checkedAt": "",
+    "sample": true,
+    "extraction": "sample"
+  },
+  {
+    "id": "sample-6",
+    "name": "The essential cotton tee",
+    "category": "Clothing",
+    "description": "Your wardrobe, simplified",
+    "images": [
+      "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=900&q=85"
+    ],
+    "brand": "THE VASTRA EDIT",
+    "material": "Cotton",
+    "color": "Off-white",
+    "sizes": [
+      "XS",
+      "S",
+      "M",
+      "L",
+      "XL"
+    ],
+    "offers": [
+      {
+        "seller": "Illustrative offer",
+        "price": 29,
+        "currency": "EUR",
+        "availability": "Sample — not live stock",
+        "url": ""
+      }
+    ],
+    "sourceUrl": "",
+    "checkedAt": "",
+    "sample": true,
+    "extraction": "sample"
+  },
+  {
+    "id": "sample-7",
+    "name": "Daily hydration serum",
+    "category": "Beauty",
+    "description": "A considered skincare ritual",
+    "images": [
+      "https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?auto=format&fit=crop&w=900&q=85"
+    ],
+    "brand": "THE VASTRA EDIT",
+    "material": "See seller ingredients",
+    "color": "30 ml",
+    "sizes": [],
+    "offers": [
+      {
+        "seller": "Illustrative offer",
+        "price": 28,
+        "currency": "GBP",
+        "availability": "Sample — not live stock",
+        "url": ""
+      }
+    ],
+    "sourceUrl": "",
+    "checkedAt": "",
+    "sample": true,
+    "extraction": "sample"
+  },
+  {
+    "id": "sample-8",
+    "name": "The quilted crossbody",
+    "category": "Accessories",
+    "description": "Small bag, big possibilities",
+    "images": [
+      "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=900&q=85"
+    ],
+    "brand": "THE VASTRA EDIT",
+    "material": "Leather",
+    "color": "Black",
+    "sizes": [],
+    "offers": [
+      {
+        "seller": "Illustrative offer",
+        "price": 79,
+        "currency": "USD",
+        "availability": "Sample — not live stock",
+        "url": ""
+      }
+    ],
+    "sourceUrl": "",
+    "checkedAt": "",
+    "sample": true,
+    "extraction": "sample"
+  },
+  {
+    "id": "sample-9",
+    "name": "The weekend graphic tee",
+    "category": "Clothing",
+    "description": "A little personality for the weekend",
+    "images": [
+      "https://images.unsplash.com/photo-1576566588028-4147f3842f27?auto=format&fit=crop&w=900&q=85"
+    ],
+    "brand": "THE VASTRA EDIT",
+    "material": "Cotton",
+    "color": "Cream",
+    "sizes": [
+      "XS",
+      "S",
+      "M",
+      "L",
+      "XL"
+    ],
+    "offers": [
+      {
+        "seller": "Illustrative offer",
+        "price": 69,
+        "currency": "EUR",
+        "availability": "Sample — not live stock",
+        "url": ""
+      }
+    ],
+    "sourceUrl": "",
+    "checkedAt": "",
+    "sample": true,
+    "extraction": "sample"
+  },
+  {
+    "id": "sample-10",
+    "name": "Restorative hair mask",
+    "category": "Body care",
+    "description": "A little care for wash day",
+    "images": [
+      "https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?auto=format&fit=crop&w=900&q=85"
+    ],
+    "brand": "THE VASTRA EDIT",
+    "material": "See seller ingredients",
+    "color": "200 ml",
+    "sizes": [],
+    "offers": [
+      {
+        "seller": "Illustrative offer",
+        "price": 1490,
+        "currency": "INR",
+        "availability": "Sample — not live stock",
+        "url": ""
+      }
+    ],
+    "sourceUrl": "",
+    "checkedAt": "",
+    "sample": true,
+    "extraction": "sample"
+  },
+  {
+    "id": "sample-11",
+    "name": "The weekend runner",
+    "category": "Footwear",
+    "description": "Comfort in every direction",
+    "images": [
+      "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=900&q=85"
+    ],
+    "brand": "THE VASTRA EDIT",
+    "material": "Textile",
+    "color": "Red",
+    "sizes": [],
+    "offers": [
+      {
+        "seller": "Illustrative offer",
+        "price": 99,
+        "currency": "USD",
+        "availability": "Sample — not live stock",
+        "url": ""
+      }
+    ],
+    "sourceUrl": "",
+    "checkedAt": "",
+    "sample": true,
+    "extraction": "sample"
+  },
+  {
+    "id": "sample-12",
+    "name": "Soft light sunglasses",
+    "category": "Accessories",
+    "description": "A fresh point of view",
+    "images": [
+      "https://images.unsplash.com/photo-1511499767150-a48a237f0083?auto=format&fit=crop&w=900&q=85"
+    ],
+    "brand": "THE VASTRA EDIT",
+    "material": "Metal frame",
+    "color": "Gold and green",
+    "sizes": [],
+    "offers": [
+      {
+        "seller": "Illustrative offer",
+        "price": 39,
+        "currency": "GBP",
+        "availability": "Sample — not live stock",
+        "url": ""
+      }
+    ],
+    "sourceUrl": "",
+    "checkedAt": "",
+    "sample": true,
+    "extraction": "sample"
+  }
+]

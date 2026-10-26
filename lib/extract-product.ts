@@ -9,11 +9,11 @@ const string = (v: unknown, limit = 2000): string => typeof v === "string" ? v.r
 export type PageData = { jsonLd: unknown[]; meta: Record<string, string>; title: string };
 
 export function categoryFor(text: string): Category {
-  if (/body|lotion|shower|deodorant|soap/i.test(text)) return "Body care";
+  if (/\bbody\b|lotion|shower|deodorant|soap/i.test(text)) return "Body care";
   if (/perfume|parfum|fragrance|cologne/i.test(text)) return "Fragrance";
   if (/serum|cosmetic|makeup|lipstick|skincare|cleanser|moisturi[sz]er/i.test(text)) return "Beauty";
   if (/shoe|sneaker|boot|sandal|loafer|trainer|runner/i.test(text)) return "Footwear";
-  if (/bag|jewel|necklace|earring|ring\b|watch|sunglass|belt|scarf/i.test(text)) return "Accessories";
+  if (/bag|jewel|necklace|earring|\bring\b|watch|sunglass|belt|scarf|crossbody/i.test(text)) return "Accessories";
   return "Clothing";
 }
 

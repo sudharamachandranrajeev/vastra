@@ -1,85 +1,176 @@
-# Vastra
+<h1 align="center">
+  <br>
+  <a href="https://github.com/sudharamachandranrajeev/vastra"><img src="branding/vastra-512.png" alt="Vastra" width="140"></a>
+  <br>
+  Vastra
+  <br>
+</h1>
 
-A considered way to discover fashion, footwear, accessories, cosmetics, fragrance, and personal care. Vastra brings product links into a searchable personal catalog, with original-currency offers, saved collections, and a global sourcing directory.
+<h4 align="center">A considered way to discover fashion, beauty, and the people behind them — for Android, Windows and Linux.</h4>
 
-![Vastra discovery interface](docs/preview-desktop.png)
+<p align="center">
+  <a href="https://github.com/sudharamachandranrajeev/vastra/releases"><img src="https://img.shields.io/github/v/release/sudharamachandranrajeev/vastra?include_prereleases&color=697854&labelColor=283029" alt="Release"></a>
+  <img src="https://img.shields.io/badge/platforms-Android%20%7C%20Windows%20%7C%20Linux-555" alt="Platforms">
+  <img src="https://img.shields.io/badge/Flutter-3.47-02569B?logo=flutter" alt="Flutter">
+  <img src="https://img.shields.io/badge/Arch%20%2F%20Omarchy-supported-697854" alt="Arch and Omarchy">
+  <a href="https://github.com/sudharamachandranrajeev/vastra/actions/workflows/native.yml"><img src="https://github.com/sudharamachandranrajeev/vastra/actions/workflows/native.yml/badge.svg" alt="Native checks"></a>
+</p>
 
-## What works in this first release
+<p align="center">
+  <a href="#key-features">Key Features</a> •
+  <a href="#screenshots">Screenshots</a> •
+  <a href="#how-to-use">How To Use</a> •
+  <a href="#download">Download</a> •
+  <a href="#current-scope">Current Scope</a> •
+  <a href="#credits">Credits</a> •
+  <a href="#related">Related</a> •
+  <a href="#license">License</a>
+</p>
 
-- Responsive discovery UI with product search, category filters, and currency-scoped price sorting.
-- Real server-side product-link imports using Schema.org Product / ProductGroup JSON-LD, with product metadata fallback.
-- Product-group and source-URL selection that separates variants from recommendations.
-- Product pages with imagery, brand, descriptions, materials, listed sizes, source offers, availability, and extraction timestamps. Missing fields remain unknown.
-- ChatGPT sign-in and user-owned D1 persistence for imported products and named collections.
-- Side-by-side comparison of up to four independently selected products.
-- Curated independent, retail, wholesale, marketplace, and directory sources with public contact links.
-- Original source links and deletion of owned imports, including their collection entries.
-- Search handoffs to Google Shopping and Etsy.
+<p align="center">
+  <img src="docs/screenshots/native-desktop.png" alt="Vastra native desktop discovery screen" width="100%">
+</p>
 
-**Coverage is intentionally explicit:** catalog search currently searches your imports and 12 clearly labeled inspiration samples. It does not yet query all retailers live. Seller-directory entries are curated sources, not automatically verified individual sellers. Sample prices, specifications, and photographs are illustrative, not offers for sale.
+Vastra brings clothing, footwear, accessories, cosmetics, fragrances, and personal care into
+one personal edit. **Standalone, with no account required:** the native apps keep your catalog
+and collections on your device in SQLite. Vastra does not depend on Brahma or its shared account.
+Status: early releases, for testing.
 
-## Run locally
+The [hosted web preview](https://vastra-discover.stonyrain66.chatgpt.site) is also available. It
+requires ChatGPT sign-in and has a separate catalog; native and web data do not currently sync.
 
-Requires Node.js 22.13+ and npm. The app uses Vinext (Next.js App Router on Vite), React, TypeScript, Cloudflare Workers, D1, and Drizzle.
+## Key Features
 
-```sh
-npm ci
-npm run build
-node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0000_thick_carlie_cooper.sql
-npm run dev -- --hostname 127.0.0.1 --port 5173
+* **Discover** — search your imported products and the inspiration catalog by name, brand,
+  category, color, or material. Filter by category and original store currency. Continue a search
+  on Google Shopping or Etsy, then bring a supported product link back to Vastra.
+* **One link, all the details** — import a product page from an eligible retailer. Vastra reads
+  public product data for its images, name, brand, description, materials, listed sizes, offers,
+  availability and source. Missing details stay unknown; blocked pages produce an explanation.
+* **A catalog that stays yours** — imported products are saved locally. Import the same link again
+  to refresh its details while keeping its identity and collection.
+* **Collections** — save favorite products into named edits, such as a travel wardrobe or a gift
+  shortlist. Your saves survive closing and reopening the app.
+* **A little perspective** — compare up to four products side by side. Prices remain in their
+  original currencies, and price sorting works within one currency. Comparisons are independent
+  selections, not claims that the products are exact matches.
+* **Find your people** — explore a curated directory of independent, wholesale, retail,
+  marketplace and directory sources, with their public website/contact links.
+* **A calm native interface** — warm paper, olive accents, bundled fonts, offline sample photos,
+  desktop navigation and a phone navigation bar. Linux includes standard launcher integration
+  for Arch and Omarchy without changing desktop settings.
+
+Source prices exclude unverified shipping, taxes and duties. Confirm availability, quality,
+returns, seller identity and final costs with the source before buying. Inspiration samples
+are clearly labeled: their prices and specifications are illustrative, not offers for sale.
+
+## Screenshots
+
+<table>
+  <tr>
+    <td align="center"><img src="docs/screenshots/native-phone.png" alt="Native phone catalog" width="260"><br><sub>Native phone layout</sub></td>
+    <td align="center"><img src="docs/preview-mobile.png" alt="Web discovery preview" width="260"><br><sub>Web discovery preview</sub></td>
+  </tr>
+</table>
+
+The native screenshots are rendered from the current Flutter application using its labeled
+sample catalog. See `native/test/screenshots_test.dart`. The web preview uses the same sample
+product and seller data.
+
+## How To Use
+
+You'll need [Git](https://git-scm.com) and [Flutter](https://flutter.dev) 3.47.7:
+
+```bash
+# Clone this repository
+$ git clone https://github.com/sudharamachandranrajeev/vastra
+$ cd vastra/native
+
+# Install the locked dependencies
+$ flutter pub get --enforce-lockfile
+
+# Run the native app
+$ flutter run -d linux
+# On a Windows development machine: flutter run -d windows
+# For Android: flutter run -d <device-id>
+
+# Analyze and test
+$ flutter analyze
+$ flutter test --concurrency=2 --timeout 60s
 ```
 
-Apply that initial migration once to a new local database. Keep `.wrangler/state` between sessions. Later schema changes must append migrations; never replay or edit applied migrations. Local and hosted databases are separate.
+Linux builds need Clang, CMake, Ninja, pkg-config, GTK 3 development libraries and liblzma.
+Windows builds need Visual Studio's Desktop development with C++ workload. Android builds need
+the Android SDK and JDK 21. The release workflow builds on each platform's supported host.
 
-Open http://127.0.0.1:5173. Use the account icon to sign in. The supplied Sites development integration simulates a loopback-only local account; production sign-in is handled by the Sites gateway. This local identity is for development only.
+See [native development and packaging](docs/NATIVE.md) for release signing, data locations,
+installer behavior and packaging. For the existing web app, see [web development](docs/WEB.md).
 
-No AI key is required for product imports. No credentials belong in source control.
+## Download
 
-## Verification
+Builds are on the [releases page](https://github.com/sudharamachandranrajeev/vastra/releases), with
+`SHA256SUMS.txt`. See the [changelog](CHANGELOG.md) for what is new.
 
-```sh
-npm run typecheck
-npm test
-npx playwright install chromium
-npm run test:e2e
-```
+| Platform | Package | Installation |
+| --- | --- | --- |
+| Android 7+ | `Vastra-<version>-android.apk` | Install the signed APK. Keep the same signing key for future updates. |
+| Windows 10 1809+ / 11, x64 | `Vastra-<version>-windows-x64-setup.exe` | Per-user installer; no administrator rights required. |
+| Windows, x64 portable | `Vastra-<version>-windows-x64-portable.zip` | Extract the entire folder and open `vastra.exe`. |
+| Linux, x86-64 | `Vastra-<version>-linux-x64.tar.gz` | Extract and run `./install.sh`, or open `./vastra` directly. |
+| Arch / Omarchy, x86-64 | `vastra-bin-<version>-1-x86_64.pkg.tar.zst` | Install the package with `sudo pacman -U ./vastra-bin-*.pkg.tar.zst`. |
 
-Browser tests require the local migration above. To use an existing system Chromium:
+The Linux tarball requires GTK 3 and system OpenGL libraries. On Arch/Omarchy these are `gtk3`
+and `libglvnd`; the Arch package declares its dependencies. The per-user tarball installer adds
+a launcher and icon. `./install.sh --uninstall` removes the program while keeping your catalog.
+Use either the tarball installer or the Arch package manager for an installation.
 
-```sh
-VASTRA_BROWSER_PATH=/usr/bin/chromium npm run test:e2e
-```
+The Windows build is not code-signed and Windows may show an unknown-publisher warning.
+Desktop uninstallers retain your catalog; Android uninstall follows Android's normal app-data
+removal behavior. Native catalogs are local and are not automatically backed up or synced.
 
-Unit tests cover extraction, missing/invalid data, product-group selection, currencies, search, and URL policy. Worker integration tests run the actual HTML parser and bounded fetch pipeline in Miniflare with a controlled outbound transport. Browser tests exercise desktop/mobile navigation, search, currency sorting, comparisons, seller filtering, authenticated collection persistence, import errors, and write authorization. The test account's `Travel wardrobe` sample save is created and removed by the collection test; do not use that development collection for personal records.
+## Current Scope
 
-A live Allbirds product import was also verified manually during development. Live retailer availability is not a deterministic test dependency.
+This release searches your local catalog and 12 inspiration samples. **Automatic live search
+across retailers, automated individual-seller discovery, exact-product matching, delivered-price
+calculations, AI model connections and cross-device synchronization are not implemented yet.**
 
-## Import boundaries
+Product imports use the eligible merchant list shown in the app and validate every redirect.
+A store on that list can still block automated requests or omit usable product data. Vastra
+does not bypass access controls. Imported facts retain their source and extraction time.
 
-`lib/import-policy.ts` owns the exact retailer host allowlist. Every fetch and redirect is validated against it. Only HTTPS, standard ports, and credential-free URLs are accepted. Arbitrary hosts, untrusted subdomains, private addresses, and internal services are never fetched. Imports have a 15-second deadline, a 2 MB response limit, and at most four followed redirects. URLs retain variant selectors while common tracking parameters are removed.
+The native apps use local app-private storage, without database encryption. The hosted web
+preview uses authenticated server storage. Neither client enables or bills an AI provider.
+See the [implementation roadmap](docs/ROADMAP.md).
 
-Eligible stores are listed inside the import dialog. A listed store can still block automated requests or omit usable product data. Vastra reports that instead of inventing details or circumventing access controls. For a known working starting example, try:
+## Credits
 
-```text
-https://www.allbirds.com/products/mens-wool-runners
-```
+This software uses the following open source packages and services:
 
-Vastra retains source image URLs instead of copying merchant photographs. Sample photography uses Unsplash URLs. Availability and prices are snapshots, not checkout guarantees. Shipping, taxes, duties, returns, and final availability must be checked with the source. Prices are never ranked across different currencies. Comparisons are not assertions of exact product equivalence or independent quality certification.
+- [Flutter](https://flutter.dev), [Dart](https://dart.dev), [SQLite](https://sqlite.org),
+  [sqlite3](https://pub.dev/packages/sqlite3), [http](https://pub.dev/packages/http),
+  [html](https://pub.dev/packages/html), [path_provider](https://pub.dev/packages/path_provider),
+  [url_launcher](https://pub.dev/packages/url_launcher), [intl](https://pub.dev/packages/intl), and [uuid](https://pub.dev/packages/uuid).
+- [React](https://react.dev), [Vinext](https://github.com/cloudflare/vinext),
+  [Cloudflare Workers / D1](https://developers.cloudflare.com), [Drizzle](https://orm.drizzle.team),
+  [Lucide](https://lucide.dev), and Sites for the web preview.
+- [Inter](https://rsms.me/inter/) and [Lora](https://github.com/cyrealtype/Lora-Cyrillic), bundled
+  under the SIL Open Font License. License texts are beside the fonts in `native/assets/fonts/`.
+- [Unsplash](https://unsplash.com/license) for sample photography. Exact image source URLs are
+  retained in `native/assets/data/products.json`; no brand or seller endorsement is implied.
 
-## Ownership and deployment
+## Related
 
-- `app/`: page and API routes; `app/chatgpt-auth.ts` reads platform-authenticated identity.
-- `components/vastra-app.tsx`: discovery, catalog, collections, sourcing, imports, and comparison UI.
-- `lib/catalog.ts`: shared product/offer types, inspiration catalog, sourcing directory, and search helpers.
-- `lib/import-policy.ts`, `lib/fetch-product.ts`, `lib/extract-product.ts`: fetch policy, bounded retrieval, and evidence-preserving extraction.
-- `db/schema.ts`, `drizzle/`: user-owned catalog/collection schema and append-only migrations.
-- `.openai/hosting.json`: Sites project identity and D1 binding; no secrets.
-- `worker/` and `scripts/`: supplied Sites/Vinext runtime and portable tooling.
+README presentation follows these other projects by the same author. Vastra remains standalone:
 
-API writes require authenticated identity, same-origin JSON requests, and bounded bodies. Saved products, reads, and deletes are scoped to the authenticated user ID. Canonical source URLs are unique per owner. The initial catalog limit is 200 imported products per account; pagination and large-catalog search are future work.
+* [Vidya](https://github.com/sudharamachandranrajeev/vidya) — learning and knowledge management.
+* [Graha Anveshana](https://github.com/sudharamachandranrajeev/graha-anveshana) — property search and management.
+* [Vahana Anveshana](https://github.com/sudharamachandranrajeev/vahana-anveshana) — car discovery and ownership.
 
-**Deploy behind the Sites authentication gateway.** The app trusts dispatch-owned `oai-authenticated-user-*` headers. If self-hosting elsewhere, replace that boundary with verified authentication and strip untrusted identity headers at the proxy; never expose this Worker directly while trusting client-supplied identity headers. Production mock sign-in is disabled by the supplied Sites build integration.
+## License
 
-Sites publication synchronizes the exact Git source commit, packages the build, applies schema migrations, and deploys a private authenticated preview. A public source repository does not make the hosted app public.
+No license has been chosen yet; all rights reserved. Bundled third-party components retain their
+own licenses and notices.
 
-See [the implementation roadmap](docs/ROADMAP.md) for global search, seller discovery, price freshness, and optional AI.
+---
+
+> GitHub [@sudharamachandranrajeev](https://github.com/sudharamachandranrajeev)

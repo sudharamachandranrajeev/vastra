@@ -1,0 +1,94 @@
+[
+  {
+    "name": "Nicobar",
+    "country": "India",
+    "kind": "Independent",
+    "categories": [
+      "Clothing",
+      "Accessories"
+    ],
+    "description": "Contemporary Indian design, natural fabrics, and thoughtfully made everyday pieces.",
+    "url": "https://www.nicobar.com",
+    "contact": "https://www.nicobar.com/pages/contact-us",
+    "initials": "Ni",
+    "color": "#e9e8dc"
+  },
+  {
+    "name": "Etsy",
+    "country": "Global",
+    "kind": "Marketplace",
+    "categories": [
+      "Clothing",
+      "Accessories",
+      "Footwear"
+    ],
+    "description": "Discover individual vintage sellers, independent makers, and handmade accessories.",
+    "url": "https://www.etsy.com",
+    "contact": "https://www.etsy.com",
+    "initials": "Et",
+    "color": "#f4e3d4"
+  },
+  {
+    "name": "Faire",
+    "country": "Global",
+    "kind": "Wholesale",
+    "categories": [
+      "Clothing",
+      "Accessories",
+      "Beauty",
+      "Body care"
+    ],
+    "description": "Independent brands for retail buyers. Minimum orders and territories vary by brand.",
+    "url": "https://www.faire.com",
+    "contact": "https://www.faire.com",
+    "initials": "Fa",
+    "color": "#e4e8e3"
+  },
+  {
+    "name": "Good On You",
+    "country": "Global",
+    "kind": "Directory",
+    "categories": [
+      "Clothing",
+      "Footwear",
+      "Accessories"
+    ],
+    "description": "Explore fashion brands and read the directory’s published sustainability assessments.",
+    "url": "https://directory.goodonyou.eco",
+    "contact": "https://goodonyou.eco/contact/",
+    "initials": "Go",
+    "color": "#e5e7d9"
+  },
+  {
+    "name": "Sephora",
+    "country": "Global",
+    "kind": "Retail",
+    "categories": [
+      "Beauty",
+      "Fragrance",
+      "Body care"
+    ],
+    "description": "Beauty, fragrance, and personal care. Select your region to check local availability.",
+    "url": "https://www.sephora.com",
+    "contact": "https://www.sephora.com/beauty/customer-service",
+    "initials": "Se",
+    "color": "#e9e1e5"
+  },
+  {
+    "name": "IndiaMART",
+    "country": "India",
+    "kind": "Wholesale",
+    "categories": [
+      "Clothing",
+      "Footwear",
+      "Accessories",
+      "Beauty",
+      "Body care"
+    ],
+    "description": "A supplier marketplace for sourcing and wholesale inquiries. Verify sellers before ordering.",
+    "url": "https://www.indiamart.com",
+    "contact": "https://www.indiamart.com",
+    "initials": "IM",
+    "color": "#e1e7ed"
+  }
+]

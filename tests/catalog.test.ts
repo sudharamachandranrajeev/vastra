@@ -90,3 +90,13 @@ test("offer selection compares one currency and does not rank across currencies"
   assert.equal(lowestOffer({ ...base, offers: [usd, other] })?.seller, "B");
   assert.equal(lowestOffer({ ...base, offers: [usd, { ...other, currency: "GBP" }] })?.seller, "A");
 });
+
+import extractionFixtures from "./fixtures/extraction.json";
+for (const fixture of extractionFixtures) {
+  test(`shared web/native contract: ${fixture.label}`, () => {
+    const actual = extractProduct({ ...fixture.data, meta: Object.fromEntries(Object.entries(fixture.data.meta).map(([key, value]) => [key, value ?? ""])) }, fixture.source);
+    for (const [key, value] of Object.entries(fixture.expected)) {
+      assert.deepEqual(actual[key as keyof typeof actual], value);
+    }
+  });
+}

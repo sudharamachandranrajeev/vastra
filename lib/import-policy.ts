@@ -1,10 +1,6 @@
-export const supportedRetailers = [
-  "nicobar.com", "hm.com", "www2.hm.com", "zara.com", "uniqlo.com",
-  "nike.com", "adidas.com", "adidas.co.in", "sephora.com", "nykaa.com",
-  "myntra.com", "ajio.com", "nordstrom.com", "asos.com", "farfetch.com",
-  "net-a-porter.com", "cultbeauty.com", "theordinary.com", "goodamerican.com",
-  "allbirds.com", "everlane.com", "mejuri.com", "cos.com", "arket.com",
-] as const;
+import retailerData from "../native/assets/data/retailers.json";
+
+export const supportedRetailers = retailerData;
 
 export class ImportError extends Error {
   constructor(message: string, public status = 422) { super(message); }

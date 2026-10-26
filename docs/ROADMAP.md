@@ -2,6 +2,10 @@
 
 Launch preference: **global coverage, preserving original store currencies**.
 
+## Native platforms
+
+Standalone Flutter clients for Android, Windows and Linux now use local SQLite catalogs, direct eligible-store imports, named collections, refreshes and comparisons. Their data is separate from the authenticated hosted web catalog. Brahma integration is intentionally excluded by the owner’s preference. Native distribution includes Android signing, Windows installer/portable packages, Linux user installation and Arch packaging.
+
 ## Implemented foundation
 
 Discovery UI, searchable imported catalog, eligible-merchant link extraction, ProductGroup handling, source evidence, owner-scoped persistence, named collections, product comparisons, curated sourcing links, and responsive/accessibility behavior.

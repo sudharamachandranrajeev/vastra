@@ -1,0 +1,104 @@
+[
+  {
+    "label": "single product",
+    "source": "https://www.allbirds.com/products/test",
+    "data": {
+      "jsonLd": [
+        {
+          "@type": "Product",
+          "name": "Wool runner",
+          "offers": {
+            "price": "110",
+            "priceCurrency": "USD",
+            "availability": "https://schema.org/InStock"
+          }
+        }
+      ],
+      "meta": {},
+      "title": ""
+    },
+    "expected": {
+      "name": "Wool runner",
+      "category": "Footwear",
+      "material": null,
+      "sizes": [],
+      "offers": [
+        {
+          "seller": "allbirds.com",
+          "url": "https://www.allbirds.com/products/test",
+          "price": 110,
+          "currency": "USD",
+          "availability": "InStock"
+        }
+      ]
+    }
+  },
+  {
+    "label": "product metadata fallback",
+    "source": "https://www.allbirds.com/products/test",
+    "data": {
+      "jsonLd": [],
+      "meta": {
+        "og:type": "product",
+        "og:title": "Face serum",
+        "product:price:amount": "12",
+        "product:price:currency": "EUR"
+      },
+      "title": ""
+    },
+    "expected": {
+      "name": "Face serum",
+      "category": "Beauty",
+      "extraction": "metadata"
+    }
+  },
+  {
+    "label": "crossbody is an accessory",
+    "source": "https://www.allbirds.com/products/test",
+    "data": {
+      "jsonLd": [
+        {
+          "@type": "Product",
+          "name": "Leather crossbody"
+        }
+      ],
+      "meta": {},
+      "title": ""
+    },
+    "expected": {
+      "name": "Leather crossbody",
+      "category": "Accessories",
+      "material": null
+    }
+  },
+  {
+    "label": "unknown price stays unknown",
+    "source": "https://www.allbirds.com/products/test",
+    "data": {
+      "jsonLd": [
+        {
+          "@type": "Product",
+          "name": "Spring cotton shirt",
+          "offers": {
+            "price": "price upon request"
+          }
+        }
+      ],
+      "meta": {},
+      "title": ""
+    },
+    "expected": {
+      "name": "Spring cotton shirt",
+      "category": "Clothing",
+      "offers": [
+        {
+          "seller": "allbirds.com",
+          "url": "https://www.allbirds.com/products/test",
+          "price": null,
+          "currency": null,
+          "availability": "Unknown"
+        }
+      ]
+    }
+  }
+]

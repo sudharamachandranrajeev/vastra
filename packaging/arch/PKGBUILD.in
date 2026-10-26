@@ -1,0 +1,33 @@
+# Generated for an immutable release archive, with its SHA-256 pinned.
+pkgname=vastra-bin
+pkgver=@VERSION@
+pkgrel=1
+pkgdesc='Standalone fashion and personal-care discovery'
+arch=('x86_64')
+url='https://github.com/sudharamachandranrajeev/vastra'
+license=('custom:All rights reserved')
+depends=('gtk3' 'gcc-libs' 'libglvnd')
+provides=('vastra')
+conflicts=('vastra')
+options=('!strip')
+source=("Vastra-${pkgver}-linux-x64.tar.gz::https://github.com/sudharamachandranrajeev/vastra/releases/download/v${pkgver}/Vastra-${pkgver}-linux-x64.tar.gz")
+sha256sums=('@SHA256@')
+package() {
+  local app="$srcdir/vastra-$pkgver-linux-x64"
+  install -dm755 "$pkgdir/opt/vastra" "$pkgdir/usr/bin" "$pkgdir/usr/share/applications"
+  cp -a "$app/vastra" "$app/lib" "$app/data" "$pkgdir/opt/vastra/"
+  ln -s /opt/vastra/vastra "$pkgdir/usr/bin/vastra"
+  install -Dm644 "$app/vastra.png" "$pkgdir/usr/share/icons/hicolor/512x512/apps/io.github.sudharamachandranrajeev.vastra.png"
+  cat > "$pkgdir/usr/share/applications/io.github.sudharamachandranrajeev.vastra.desktop" <<DESKTOP
+[Desktop Entry]
+Type=Application
+Name=Vastra
+Comment=Discover fashion and beauty; collect and compare product finds
+Exec=/opt/vastra/vastra
+Icon=io.github.sudharamachandranrajeev.vastra
+Terminal=false
+Categories=Utility;
+Keywords=fashion;clothing;beauty;fragrance;shopping;catalog;
+StartupWMClass=io.github.sudharamachandranrajeev.vastra
+DESKTOP
+}
