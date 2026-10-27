@@ -49,8 +49,18 @@ class CatalogRepository {
     }
     _db.execute('BEGIN IMMEDIATE');
     try {
-      final rows = _db.select('SELECT id FROM products WHERE source = ?', [product.sourceUrl]);
-      final stored = rows.isEmpty ? product : product.withId(rows.first['id'] as String);
+      final rows = _db.select('SELECT id, document FROM products WHERE source = ?', [product.sourceUrl]);
+      var stored = product;
+      if (rows.isNotEmpty) {
+        final existing = Product.fromJson(jsonDecode(rows.first['document'] as String) as Map<String, dynamic>);
+        // A refresh the store blocked keeps the details gathered earlier.
+        if (product.extraction == 'link' && existing.extraction != 'link') {
+          _db.execute('COMMIT');
+          return existing;
+        }
+        stored = product.withId(existing.id);
+        if (existing.categorySource == 'user') stored = stored.withCategory(existing.category, existing.productType);
+      }
       _db.execute(
         'INSERT INTO products (id, source, document) VALUES (?, ?, ?) ON CONFLICT(source) DO UPDATE SET document = excluded.document',
         [stored.id, stored.sourceUrl, jsonEncode(stored.toJson())],
@@ -73,6 +83,10 @@ class CatalogRepository {
       [product.id, product.sourceUrl.isEmpty ? null : product.sourceUrl, jsonEncode(product.toJson()), name],
     );
   }
+
+  /// Replaces an imported product's details, keeping its collection.
+  void update(Product product) =>
+      _db.execute('UPDATE products SET document = ? WHERE id = ?', [jsonEncode(product.toJson()), product.id]);
 
   void unsave(Product product) {
     if (product.sample) {

@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.3.0
+
+- Native apps accept product links from any public store. Links can arrive from the Android share
+  sheet, the text-selection menu, desktop arguments, a copied link or a paste. Short links and
+  tracking parameters are handled.
+- Blocked and non-product pages still save the find from the shared text, page metadata or URL.
+- Richer capture: variants, SKU, GTIN, MPN, pattern, condition, audience, ratings, keywords and
+  breadcrumbs.
+- Automatic category and type, with a Google product taxonomy path, learned from corrections.
+- "More like this" and "Picked for you" suggestions use on-device TF-IDF similarity.
+- Export to a Shopify product CSV, a Google, Meta, Pinterest and TikTok product feed, or
+  schema.org JSON.
+- Neo-skeuomorphic paper redesign with fluid transitions, plus optional quiet sounds and haptics.
+- Phased feature plan from user research in `docs/ROADMAP.md`.
+
 ## 0.2.0
 
 - Standalone Flutter applications for Android, Windows and Linux, with an offline inspiration catalog.

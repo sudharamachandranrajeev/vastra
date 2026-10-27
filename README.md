@@ -44,9 +44,15 @@ requires ChatGPT sign-in and has a separate catalog; native and web data do not 
 * **Discover** — search your imported products and the inspiration catalog by name, brand,
   category, color, or material. Filter by category and original store currency. Continue a search
   on Google Shopping or Etsy, then bring a supported product link back to Vastra.
-* **One link, all the details** — import a product page from an eligible retailer. Vastra reads
-  public product data for its images, name, brand, description, materials, listed sizes, offers,
-  availability and source. Missing details stay unknown; blocked pages produce an explanation.
+* **One link, all the details** — share a product from any store or app to Vastra, or paste its
+  link. Vastra reads public product data for images, name, brand, description, materials,
+  variants, sizes, colours, barcodes, ratings, offers, availability and source. Missing details
+  stay unknown. When a store blocks reading, the link is still saved, and you can refresh it
+  later. The hosted web app imports from eligible retailers only.
+* **Filed and matched for you** — each find is placed in a category and type automatically.
+  Vastra learns from your corrections and suggests similar finds, all on your device.
+* **Take it anywhere** — export your catalog as a Shopify product CSV, a product feed for
+  Google, Meta, Pinterest and TikTok catalogs, or schema.org JSON.
 * **A catalog that stays yours** — imported products are saved locally. Import the same link again
   to refresh its details while keeping its identity and collection.
 * **Collections** — save favorite products into named edits, such as a travel wardrobe or a gift
@@ -56,8 +62,9 @@ requires ChatGPT sign-in and has a separate catalog; native and web data do not 
   selections, not claims that the products are exact matches.
 * **Find your people** — explore a curated directory of independent, wholesale, retail,
   marketplace and directory sources, with their public website/contact links.
-* **A calm native interface** — warm paper, olive accents, bundled fonts, offline sample photos,
-  desktop navigation and a phone navigation bar. Linux includes standard launcher integration
+* **A calm native interface** — tactile cream paper with copper accents, fluid transitions,
+  very soft optional sounds and haptics, bundled fonts, offline sample photos, folder tabs on
+  desktop and a phone navigation bar. Linux includes standard launcher integration
   for Arch and Omarchy without changing desktop settings.
 
 Source prices exclude unverified shipping, taxes and duties. Confirm availability, quality,

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
@@ -7,19 +9,22 @@ import 'package:sqlite3/sqlite3.dart';
 
 import 'data/catalog_data.dart';
 import 'data/catalog_repository.dart';
+import 'data/share_intake.dart';
 import 'ui/app.dart';
+import 'ui/feedback.dart';
+import 'ui/paper.dart';
 
-Future<void> main() async {
+Future<void> main(List<String> arguments) async {
   WidgetsFlutterBinding.ensureInitialized();
   LicenseRegistry.addLicense(() async* {
     for (final family in ['Inter', 'Lora']) {
       yield LicenseEntryWithLineBreaks([family], await rootBundle.loadString('assets/fonts/$family-OFL.txt'));
     }
   });
-  await start();
+  await start(ShareIntake(arguments));
 }
 
-Future<void> start() async {
+Future<void> start(ShareIntake intake) async {
   try {
     final data = await CatalogData.load();
     final directory = await getApplicationSupportDirectory();
@@ -33,11 +38,19 @@ Future<void> start() async {
       rethrow;
     }
     debugPrint('Vastra catalog opened');
-    runApp(VastraApp(data: data, repository: repository));
+    runApp(
+      VastraApp(
+        data: data,
+        repository: repository,
+        intake: intake,
+        feedback: UiFeedback(settingsFile: File(path.join(directory.path, 'settings.json'))),
+      ),
+    );
   } on Object catch (error) {
     debugPrint('Vastra startup failed: $error');
     runApp(
       MaterialApp(
+        theme: paperTheme(),
         home: Scaffold(
           body: SafeArea(
             child: Center(
@@ -53,7 +66,7 @@ Future<void> start() async {
                     Text('$error'),
                     const Text('Your data has not been deleted or reset.'),
                     const SizedBox(height: 20),
-                    FilledButton(onPressed: start, child: const Text('Try again')),
+                    CopperButton(label: 'Try again', onPressed: () => start(intake)),
                   ],
                 ),
               ),

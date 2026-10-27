@@ -1,12 +1,14 @@
 name: vastra
 description: Standalone fashion and personal-care discovery for Android, Windows and Linux.
 publish_to: none
-version: 0.2.0+2
+version: 0.3.0+3
 
 environment:
   sdk: ^3.13.5
 
 dependencies:
+  audioplayers: ^6.8.1
+  file_picker: ^13.3.0
   flutter:
     sdk: flutter
   html: ^0.15.6
@@ -28,6 +30,7 @@ flutter:
   assets:
     - assets/data/
     - assets/images/
+    - assets/sounds/
     - assets/fonts/Inter-OFL.txt
     - assets/fonts/Lora-OFL.txt
   fonts:

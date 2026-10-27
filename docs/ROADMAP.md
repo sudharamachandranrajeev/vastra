@@ -4,7 +4,77 @@ Launch preference: **global coverage, preserving original store currencies**.
 
 ## Native platforms
 
-Standalone Flutter clients for Android, Windows and Linux now use local SQLite catalogs, direct eligible-store imports, named collections, refreshes and comparisons. Their data is separate from the authenticated hosted web catalog. Brahma integration is intentionally excluded by the owner’s preference. Native distribution includes Android signing, Windows installer/portable packages, Linux user installation and Arch packaging.
+Standalone Flutter clients for Android, Windows and Linux now use local SQLite catalogs, links shared from any app or store, named collections, refreshes and comparisons. Their data is separate from the authenticated hosted web catalog. Brahma integration is intentionally excluded by the owner’s preference. Native distribution includes Android signing, Windows installer/portable packages, Linux user installation and Arch packaging.
+
+## Feature plan from user research
+
+Researched October 2026 across shopping, universal-wishlist and digital-wardrobe apps. The most liked and most requested features are below, one phase at a time. Each phase ships on its own and leaves the app complete.
+
+What users ask for most: adding items from any store with details filled in automatically, price-drop and back-in-stock alerts, confidence about size and fit, outfit planning and wardrobe statistics, wishlists shared without making others sign up, sync across devices, and privacy controls.
+
+What users hate, which Vastra never does:
+
+- Forced sign-in before browsing or saving.
+- Notification floods. BEUC counted 12 notifications in one day from Shein's app.
+- False urgency and countdowns.
+- Adding items to a basket without asking (basket sneaking).
+- Confirm-shaming, nagging pop-ups and pressure not to leave.
+- Hidden costs revealed late.
+- Subscription traps and ads.
+- Unexplained personalisation.
+- Automatic tags the user cannot correct, which is the most common complaint about wardrobe apps.
+
+### Phase 0 — capture anything, keep everything (0.3.0)
+
+- Share from any app or browser to Vastra on Android, including selected text. On desktop, open Vastra with a link or confirm a copied link.
+- Import from any public store. Short links are followed and tracking parameters removed. A blocked store still saves the item from its link, so a share is never lost.
+- Full details: variants, SKU, GTIN, MPN, gender, rating, the seller's breadcrumb, and every image.
+- Automatic category and type. Corrections are always one tap away and teach the categorizer (naive Bayes, on device).
+- "More like this" (TF-IDF cosine with facet boosts, on device) and searches of other stores for similar items.
+- Export to Shopify CSV, a Google, Meta, Pinterest and TikTok product feed, or schema.org JSON.
+- The tactile paper-and-copper redesign, with soft sounds and haptics that can be muted.
+
+### Phase 1 — price and stock watching
+
+- Price history recorded on every refresh.
+- Optional background refresh.
+- Opt-in price-drop and back-in-stock alerts, per item, sent as at most one daily digest.
+- Warnings when an offer is stale.
+
+Acceptance: an alert names the old and new price and their source, and turning alerts off is one tap.
+
+### Phase 2 — size and fit confidence
+
+- A private size profile per brand: what you bought, what you kept, how it fit.
+- Size charts captured when stores publish them.
+- A "fits me" note on each item.
+- Suggestions explain their evidence, and size data never leaves the device.
+
+### Phase 3 — wardrobe and outfits
+
+- Mark items as owned.
+- Outfit boards built from catalog items, plus moodboards.
+- A calendar planner with optional reminders, and packing lists.
+- Cost-per-wear and wardrobe statistics.
+
+### Phase 4 — sharing and gifting
+
+- Read-only wishlist links or files that open without an account.
+- Gift reservation so people don't buy the same gift twice.
+- Per-collection privacy.
+
+### Phase 5 — backup and sync
+
+- Encrypted backup and restore files.
+- Optional sync across devices, using a self-hosted or end-to-end encrypted service chosen by the owner.
+
+### Phase 6 — optional visual search and enrichment
+
+- Similar items from a photo.
+- Attribute tagging for links with sparse data.
+- Uses the "Optional AI models" rules below: evidence stays separate from suggestions, and every tag can be corrected.
+
+Sources: [BEUC complaint about Shein](https://www.storyboard18.com/amp/brand-marketing/shein-hit-with-eu-complaint-over-dark-patterns-in-app-website-68964.htm), [Dark patterns at scale, 11K shopping sites](https://arxiv.org/pdf/2107.07893), [Forbes India on dark patterns](https://www.magzter.com/ja/stories/business/Forbes-India/CLICK-BUY-REGRET), [Universal wishlist apps compared](https://giftlist.com/blog/10-best-universal-wishlist-apps-in-2025-ranked-and-reviewed), [Good On You wardrobe app test](https://goodonyou.eco/wardrobe-organising-apps/), [Whering best wardrobe apps](https://whering.co.uk/best-wardrobe-apps-2025), [MediaPost on fit and returns](https://www.mediapost.com/publications/article/317614/retail-search-fit-recommendations-fail-to-curtai.html), [Baymard product page research](https://www.baymard.com/research/product-page), [Clutch on AI shopping features](https://clutch.co/resources/ai-shopping-features).
 
 ## Implemented foundation
 
@@ -28,7 +98,7 @@ Acceptance: sourcing filters return specific sellers with traceable, appropriate
 
 ## Next: catalog refinement and freshness
 
-Add editable product annotations, refresh-from-source actions, saved collection reassignment, price history, stale-offer warnings, deletion/export controls, and update jobs. Preserve imported evidence separately from user annotations. Expand the merchant allowlist after fixture and live validation; do not replace the SSRF boundary with unchecked arbitrary fetches.
+Add editable product annotations, refresh-from-source actions, saved collection reassignment, price history, stale-offer warnings, deletion/export controls, and update jobs. Preserve imported evidence separately from user annotations. On the hosted web app, expand the merchant allowlist after fixture and live validation; do not replace the server's SSRF boundary with unchecked arbitrary fetches. Native clients fetch from the user's own device, so they accept any public host (no address literals or local names).
 
 Acceptance: users can correct their catalog, refresh a listing without losing notes, and distinguish current facts from stale or user-entered information.
 
