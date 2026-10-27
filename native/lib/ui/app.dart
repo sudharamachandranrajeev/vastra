@@ -10,17 +10,30 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../data/catalog_data.dart';
 import '../data/catalog_repository.dart';
+import '../data/diagnostics.dart';
 import '../data/share_intake.dart';
+import '../data/updater.dart';
 import '../domain/catalog_export.dart';
 import '../domain/categorizer.dart';
 import '../domain/product.dart';
 import '../domain/product_importer.dart';
 import '../domain/recommender.dart';
+import '../domain/releases.dart';
 import 'feedback.dart';
+import 'maintenance.dart';
 import 'paper.dart';
 
 class VastraApp extends StatelessWidget {
-  const VastraApp({super.key, required this.data, required this.repository, this.intake, this.feedback, this.importer});
+  const VastraApp({
+    super.key,
+    required this.data,
+    required this.repository,
+    this.intake,
+    this.feedback,
+    this.importer,
+    this.updates,
+    this.diagnostics,
+  });
   final CatalogData data;
   final CatalogRepository repository;
   final ShareIntake? intake;
@@ -28,6 +41,10 @@ class VastraApp extends StatelessWidget {
 
   /// Replaces network imports in tests.
   final ProductImporter Function(Categorizer categorizer)? importer;
+
+  /// Update checks and installs; left out in tests and screenshots.
+  final UpdateService? updates;
+  final Diagnostics? diagnostics;
   @override
   Widget build(BuildContext context) => MaterialApp(
     title: 'Vastra',
@@ -37,16 +54,33 @@ class VastraApp extends StatelessWidget {
       feedback: feedback ?? UiFeedback.silent(),
       child: ToastHost(child: child!),
     ),
-    home: Home(data: data, repository: repository, intake: intake ?? ShareIntake(), importer: importer),
+    home: Home(
+      data: data,
+      repository: repository,
+      intake: intake ?? ShareIntake(),
+      importer: importer,
+      updates: updates,
+      diagnostics: diagnostics ?? Diagnostics(),
+    ),
   );
 }
 
 class Home extends StatefulWidget {
-  const Home({super.key, required this.data, required this.repository, required this.intake, this.importer});
+  const Home({
+    super.key,
+    required this.data,
+    required this.repository,
+    required this.intake,
+    required this.diagnostics,
+    this.importer,
+    this.updates,
+  });
   final CatalogData data;
   final CatalogRepository repository;
   final ShareIntake intake;
   final ProductImporter Function(Categorizer categorizer)? importer;
+  final UpdateService? updates;
+  final Diagnostics diagnostics;
   @override
   State<Home> createState() => _HomeState();
 }
@@ -64,6 +98,7 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
       _sellerKind = 'All sellers';
   bool _samples = true;
   String? _copiedLink, _dismissedLink;
+  Release? _available;
   final _search = TextEditingController();
   final Set<String> _comparison = {};
   late List<CatalogEntry> _entries;
@@ -82,8 +117,50 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
       final initial = await widget.intake.initial();
       if (initial != null) _receive(initial);
       unawaited(_checkClipboard());
+      if (widget.updates?.checkOnStartup ?? false) unawaited(_checkForUpdate(quiet: true));
     });
   }
+
+  /// Startup checks stay quiet when offline; a manual check reports the result.
+  Future<void> _checkForUpdate({bool quiet = false}) async {
+    final updates = widget.updates;
+    if (updates == null) return;
+    try {
+      final release = await updates.newer();
+      if (!mounted) return;
+      setState(() => _available = release);
+      if (!quiet && release == null) _toast(ToastKind.success, 'Vastra $appVersion is the latest version.');
+    } on UpdateFailure catch (e) {
+      if (!quiet) _toast(ToastKind.warning, e.message);
+    }
+  }
+
+  void _quit() {
+    widget.repository.close();
+    exit(0);
+  }
+
+  void _update(Release release) {
+    final updates = widget.updates!;
+    if (updates.canInstall(release)) {
+      showPaperDialog<void>(
+        context,
+        builder: (_) => UpdateSheet(release: release, updates: updates, repository: widget.repository, quit: _quit),
+      );
+    } else {
+      _open(release.page.toString());
+    }
+  }
+
+  void _versions() => showPaperDialog<void>(
+    context,
+    builder: (_) => VersionsSheet(updates: widget.updates!, repository: widget.repository, quit: _quit),
+  );
+
+  void _report() => showPaperDialog<void>(
+    context,
+    builder: (_) => ReportSheet(diagnostics: widget.diagnostics, finds: _entries.length),
+  );
 
   @override
   void dispose() {
@@ -331,13 +408,15 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
 
   void _settings() {
     final feedback = FeedbackScope.of(context);
+    final updates = widget.updates;
     showPaperDialog<void>(
       context,
       builder: (c) => PaperSheet(
         maxWidth: 520,
         child: ListenableBuilder(
           listenable: feedback,
-          builder: (context, _) => Column(
+          builder: (context, _) => SingleChildScrollView(
+            child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -369,11 +448,70 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
                   feedback.play(Cue.toggle);
                 },
               ),
+              if (updates != null) ...[
+                const SizedBox(height: Space.l),
+                const SectionHeader('Updates'),
+                StatefulBuilder(
+                  builder: (context, setLocal) => SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text('Check for updates when Vastra starts'),
+                    subtitle: const Text('Asks GitHub for the list of releases. Nothing else is sent.'),
+                    value: updates.checkOnStartup,
+                    onChanged: (v) {
+                      setLocal(() => updates.checkOnStartup = v);
+                      feedback.play(Cue.toggle);
+                    },
+                  ),
+                ),
+                Wrap(
+                  spacing: Space.s,
+                  runSpacing: Space.s,
+                  children: [
+                    PaperButton(label: 'Check now', icon: Icons.refresh, compact: true, onPressed: _checkForUpdate),
+                    PaperButton(label: 'All versions and rollback', icon: Icons.history, compact: true, onPressed: _versions),
+                  ],
+                ),
+              ],
+              const SizedBox(height: Space.l),
+              const SectionHeader('Your data'),
+              const SizedBox(height: Space.s),
+              const Text(
+                'Back up the whole catalog to a file. Restoring adds the finds that are missing and keeps everything already here.',
+                style: TextStyle(color: Tone.inkSoft),
+              ),
+              const SizedBox(height: Space.m),
+              Wrap(
+                spacing: Space.s,
+                runSpacing: Space.s,
+                children: [
+                  PaperButton(
+                    label: 'Back up catalog',
+                    icon: Icons.save_alt,
+                    compact: true,
+                    onPressed: () => backupCatalog(context, widget.repository),
+                  ),
+                  PaperButton(
+                    label: 'Restore from backup',
+                    icon: Icons.settings_backup_restore,
+                    compact: true,
+                    onPressed: () async {
+                      if ((await restoreCatalog(context, widget.repository) ?? 0) > 0) _reload();
+                    },
+                  ),
+                ],
+              ),
+              const SizedBox(height: Space.l),
+              const SectionHeader('Help'),
+              const SizedBox(height: Space.m),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: PaperButton(label: 'Report a problem', icon: Icons.bug_report_outlined, compact: true, onPressed: _report),
+              ),
               const SizedBox(height: Space.l),
               const SectionHeader('About'),
               const SizedBox(height: Space.m),
               const Text(
-                'Vastra 0.3.0. Fashion, footwear, accessories, beauty, fragrance and personal care, gathered from any store. Your catalog stays on this device. No account, no tracking, no ads, and never more than you asked for.',
+                'Vastra $appVersion. Fashion, footwear, accessories, beauty, fragrance and personal care, gathered from any store. Your catalog stays on this device. No account, no tracking, no ads, and never more than you asked for.',
               ),
               const SizedBox(height: Space.m),
               Wrap(
@@ -389,11 +527,12 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
                   PaperButton(
                     label: 'Licences',
                     compact: true,
-                    onPressed: () => showLicensePage(context: context, applicationName: 'Vastra', applicationVersion: '0.3.0'),
+                    onPressed: () => showLicensePage(context: context, applicationName: 'Vastra', applicationVersion: appVersion),
                   ),
                 ],
               ),
             ],
+          ),
           ),
         ),
       ),
@@ -474,6 +613,19 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
     final header = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        if (_available != null)
+          Padding(
+            padding: const EdgeInsets.only(bottom: Space.l),
+            child: AlertBanner(
+              title: 'Vastra ${_available!.version} is ready.',
+              message: 'You have $appVersion.',
+              icon: Icons.system_update_alt,
+              actions: [
+                CopperButton(label: 'Update', compact: true, onPressed: () => _update(_available!)),
+                PaperButton(label: 'Later', compact: true, onPressed: () => setState(() => _available = null)),
+              ],
+            ),
+          ),
         if (_copiedLink != null)
           Padding(
             padding: const EdgeInsets.only(bottom: Space.l),

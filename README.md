@@ -62,6 +62,9 @@ requires ChatGPT sign-in and has a separate catalog; native and web data do not 
   selections, not claims that the products are exact matches.
 * **Find your people** — explore a curated directory of independent, wholesale, retail,
   marketplace and directory sources, with their public website/contact links.
+* **Always up to date, never stuck** — Vastra checks for new versions when it starts, installs
+  verified updates, and can roll back to any earlier version. Back up and restore your catalog,
+  and report a problem straight from Settings.
 * **A calm native interface** — tactile cream paper with copper accents, fluid transitions,
   very soft optional sounds and haptics, bundled fonts, offline sample photos, folder tabs on
   desktop and a phone navigation bar. Linux includes standard launcher integration

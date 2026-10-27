@@ -1,30 +1,25 @@
 import 'dart:async';
-import 'dart:convert';
-import 'dart:io';
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
+import '../data/settings_store.dart';
+
 enum Cue { tap, toggle, open, close, success, error }
 
 /// Quiet sounds and light haptics that confirm an action. Both can be turned
-/// off, and the choice is remembered in [settingsFile] when one is given.
+/// off, and the choice is remembered in [settings] when one is given.
 class UiFeedback extends ChangeNotifier {
-  UiFeedback({this.settingsFile}) {
-    try {
-      final saved = jsonDecode(settingsFile?.readAsStringSync() ?? '{}') as Map<String, dynamic>;
-      _sound = saved['sound'] as bool? ?? _sound;
-      _haptics = saved['haptics'] as bool? ?? _haptics;
-    } on Object {
-      /* First run, or an unreadable file: keep the defaults. */
-    }
+  UiFeedback({this.settings}) {
+    _sound = settings?.get<bool>('sound') ?? _sound;
+    _haptics = settings?.get<bool>('haptics') ?? _haptics;
   }
 
   /// Silent feedback for tests and screenshots.
-  UiFeedback.silent() : settingsFile = null, _sound = false, _haptics = false, _enabled = false;
+  UiFeedback.silent() : settings = null, _sound = false, _haptics = false, _enabled = false;
 
-  final File? settingsFile;
+  final SettingsStore? settings;
   bool _sound = true, _haptics = true;
   bool _enabled = true;
   final _players = <Cue, AudioPlayer>{};
@@ -34,21 +29,14 @@ class UiFeedback extends ChangeNotifier {
 
   set sound(bool value) {
     _sound = value;
-    _save();
+    settings?.set('sound', value);
+    notifyListeners();
   }
 
   set haptics(bool value) {
     _haptics = value;
-    _save();
-  }
-
-  void _save() {
+    settings?.set('haptics', value);
     notifyListeners();
-    try {
-      settingsFile?.writeAsStringSync(jsonEncode({'sound': _sound, 'haptics': _haptics}));
-    } on Object {
-      /* The setting still applies for this session. */
-    }
   }
 
   static const _volume = {

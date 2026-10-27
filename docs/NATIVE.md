@@ -84,6 +84,39 @@ is the approach used by Lucene MoreLikeThis. Everything runs on the device.
   Pinterest and TikTok catalogs accept this feed.
 - A schema.org `ItemList` JSON file that keeps every captured detail.
 
+## Updates, rollback and bug reports
+
+`updater.dart` reads the GitHub releases API for this repository. By default it does this when
+Vastra starts, and Settings can turn the check off. Only `v<major>.<minor>.<patch>` tags count.
+Only download links under this repository's release files are used. A package installs only if
+its SHA-256 matches the release's `SHA256SUMS.txt`. Before any version change, Vastra copies the
+catalog to `backups/` in its support directory and keeps the newest five copies.
+
+How each install type changes version:
+
+- Android: the verified APK goes to the system installer through a `FileProvider` limited to
+  the app's `cache/updates/` folder. Android asks the user to allow installs from Vastra once,
+  and to confirm each install. Android does not install an older version over a newer one. A
+  rollback therefore guides the user through these steps:
+  1. Back up the catalog to a file.
+  2. Save the verified older APK.
+  3. Uninstall Vastra, then install the saved APK.
+  4. Restore the backup.
+- Windows installer: Vastra runs the verified setup with `/SILENT /relaunch=1` and closes. Inno
+  Setup replaces the program and reopens it.
+- Linux, installed with `install.sh`: Vastra unpacks the verified archive and runs its
+  `install.sh` for the same prefix. It then restarts.
+- Portable Windows folders and the Arch package are managed outside Vastra. For these, Vastra
+  opens the release page instead of replacing files.
+
+Settings can back up the catalog to a file and restore one. A restore adds the finds that are
+missing and never overwrites finds already present. Backups from newer catalog versions are
+refused.
+
+Uncaught errors are kept in `diagnostics.log`, which holds the newest 80 lines. Link paths and
+the home folder are removed from it. "Report a problem" opens a prefilled GitHub issue in the
+browser. The user can preview the text and leave the errors out. Vastra sends nothing itself.
+
 ## Interface and sound
 
 `paper.dart` holds the neo-skeuomorphic paper design system: tokens, raised and pressed

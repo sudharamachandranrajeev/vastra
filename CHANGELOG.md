@@ -14,6 +14,12 @@
   schema.org JSON.
 - Neo-skeuomorphic paper redesign with fluid transitions, plus optional quiet sounds and haptics.
 - Phased feature plan from user research in `docs/ROADMAP.md`.
+- In-app updates from GitHub releases. Vastra checks at startup (can be turned off) and verifies
+  every package against the release's SHA-256 checksums before installing it.
+- Roll back to any published version from Settings. The catalog is copied before every version
+  change.
+- Catalog backup and restore. Restoring adds missing finds and keeps the ones already present.
+- Bug reporter that opens a prefilled GitHub issue. Recent errors are optional and redacted.
 
 ## 0.2.0
 

@@ -33,3 +33,10 @@ Name: "{autoprograms}\Vastra"; Filename: "{app}\vastra.exe"; Comment: "Fashion a
 Name: "{autodesktop}\Vastra"; Filename: "{app}\vastra.exe"; Tasks: desktopicon
 [Run]
 Filename: "{app}\vastra.exe"; Description: "{cm:LaunchProgram,Vastra}"; Flags: nowait postinstall skipifsilent
+; In-app updates install silently with /relaunch=1 and reopen Vastra afterwards.
+Filename: "{app}\vastra.exe"; Flags: nowait skipifnotsilent; Check: Relaunch
+[Code]
+function Relaunch: Boolean;
+begin
+  Result := ExpandConstant('{param:relaunch|0}') = '1';
+end;

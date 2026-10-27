@@ -97,5 +97,53 @@ class CatalogRepository {
   }
 
   void remove(String id) => _db.execute('DELETE FROM products WHERE id = ?', [id]);
+
+  /// Writes a consistent copy of the whole catalog to [path], which must not
+  /// exist yet. The copy is an ordinary Vastra database.
+  void backupTo(String path) => _db.execute('VACUUM INTO ?', [path]);
+
+  /// Adds the finds in the backup at [path] that this catalog lacks. Finds
+  /// already here are kept as they are, so a restore never loses data.
+  /// Returns how many finds were added.
+  int restoreFrom(String path) {
+    final backup = sqlite3.open(path, mode: OpenMode.readOnly);
+    final List<Row> rows;
+    try {
+      final version = backup.select('PRAGMA user_version').first.values.first as int;
+      if (version > 1) {
+        throw const FormatException('This backup was made by a newer version of Vastra. Update Vastra, then restore it.');
+      }
+      final hasTable = backup.select("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'products'").isNotEmpty;
+      if (version != 1 || !hasTable) throw const FormatException('This file is not a Vastra catalog backup.');
+      rows = backup.select('SELECT id, source, document, collection FROM products').toList();
+    } on SqliteException {
+      throw const FormatException('This file is not a Vastra catalog backup.');
+    } finally {
+      backup.close();
+    }
+    var added = 0;
+    _db.execute('BEGIN IMMEDIATE');
+    try {
+      for (final r in rows) {
+        try {
+          // Rows that are not valid products are skipped rather than restored.
+          Product.fromJson(jsonDecode(r['document'] as String) as Map<String, dynamic>);
+        } on Object {
+          continue;
+        }
+        _db.execute(
+          'INSERT OR IGNORE INTO products (id, source, document, collection) VALUES (?, ?, ?, ?)',
+          [r['id'], r['source'], r['document'], r['collection']],
+        );
+        added += _db.updatedRows;
+      }
+      _db.execute('COMMIT');
+      return added;
+    } catch (_) {
+      _db.execute('ROLLBACK');
+      rethrow;
+    }
+  }
+
   void close() => _db.close();
 }

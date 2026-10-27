@@ -58,6 +58,11 @@ flutter {
     source = "../.."
 }
 
+dependencies {
+    // FileProvider hands a verified update package to the system installer.
+    implementation("androidx.core:core:1.13.1")
+}
+
 // Public release tasks must use the persistent Vastra signing key.
 gradle.taskGraph.whenReady {
     if (allTasks.any { it.name.contains("Release", ignoreCase = true) } && signingPath == null && System.getenv("VASTRA_ALLOW_DEBUG_SIGNING") != "true") {
