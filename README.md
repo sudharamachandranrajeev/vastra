@@ -14,6 +14,7 @@
   <img src="https://img.shields.io/badge/Flutter-3.47-02569B?logo=flutter" alt="Flutter">
   <img src="https://img.shields.io/badge/Arch%20%2F%20Omarchy-supported-697854" alt="Arch and Omarchy">
   <a href="https://github.com/sudharamachandranrajeev/vastra/actions/workflows/native.yml"><img src="https://github.com/sudharamachandranrajeev/vastra/actions/workflows/native.yml/badge.svg" alt="Native checks"></a>
+  <a href="https://github.com/sudharamachandranrajeev/brahma"><img src="https://img.shields.io/badge/part%20of-Brahma-8a5cf6" alt="Part of Brahma"></a>
 </p>
 
 <p align="center">
