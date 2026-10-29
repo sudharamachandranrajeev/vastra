@@ -6,181 +6,280 @@
   <br>
 </h1>
 
-<h4 align="center">A considered way to discover fashion, beauty, and the people behind them — for Android, Windows and Linux.</h4>
+<h4 align="center">Keep the clothes, shoes and beauty products you like in one place, and compare them side by side.</h4>
 
 <p align="center">
-  <a href="https://github.com/sudharamachandranrajeev/vastra/releases"><img src="https://img.shields.io/github/v/release/sudharamachandranrajeev/vastra?include_prereleases&color=697854&labelColor=283029" alt="Release"></a>
-  <img src="https://img.shields.io/badge/platforms-Android%20%7C%20Windows%20%7C%20Linux-555" alt="Platforms">
-  <img src="https://img.shields.io/badge/Flutter-3.47-02569B?logo=flutter" alt="Flutter">
-  <img src="https://img.shields.io/badge/Arch%20%2F%20Omarchy-supported-697854" alt="Arch and Omarchy">
-  <a href="https://github.com/sudharamachandranrajeev/vastra/actions/workflows/native.yml"><img src="https://github.com/sudharamachandranrajeev/vastra/actions/workflows/native.yml/badge.svg" alt="Native checks"></a>
+  <a href="https://github.com/sudharamachandranrajeev/vastra/releases"><img src="https://img.shields.io/github/v/release/sudharamachandranrajeev/vastra?include_prereleases&color=a0522d&label=download" alt="Latest release"></a>
+  <img src="https://img.shields.io/badge/works%20on-Android%20%7C%20Windows%20%7C%20Linux-555" alt="Works on Android, Windows and Linux">
+  <img src="https://img.shields.io/badge/account-not%20needed-697854" alt="No account needed">
   <a href="https://github.com/sudharamachandranrajeev/brahma"><img src="https://img.shields.io/badge/part%20of-Brahma-8a5cf6" alt="Part of Brahma"></a>
 </p>
 
 <p align="center">
-  <a href="#key-features">Key Features</a> •
-  <a href="#screenshots">Screenshots</a> •
-  <a href="#how-to-use">How To Use</a> •
-  <a href="#download">Download</a> •
-  <a href="#current-scope">Current Scope</a> •
-  <a href="#credits">Credits</a> •
-  <a href="#related">Related</a> •
-  <a href="#license">License</a>
+  <a href="#-what-it-does">What it does</a> •
+  <a href="#-get-started">Get started</a> •
+  <a href="#-how-it-works">How it works</a> •
+  <a href="#-faq-and-troubleshooting">FAQ</a> •
+  <a href="#%EF%B8%8F-for-developers">For developers</a>
 </p>
 
 <p align="center">
-  <img src="docs/screenshots/native-desktop.png" alt="Vastra native desktop discovery screen" width="100%">
+  <img src="docs/screenshots/native-desktop.png" alt="Vastra's Discover page on a desktop window" width="100%">
 </p>
 
-Vastra brings clothing, footwear, accessories, cosmetics, fragrances, and personal care into
-one personal edit. **Standalone, with no account required:** the native apps keep your catalog
-and collections on your device in SQLite. Vastra does not depend on Brahma or its shared account.
-Status: early releases, for testing.
+Vastra is a personal catalogue for fashion and personal care: clothing, footwear, accessories,
+cosmetics, fragrance and body care. Paste a product link from a shop and Vastra fills in the
+details. It needs no account, and everything stays on your device. Status: **early test
+releases** (0.x). It does not search shops for you yet.
 
-The [hosted web preview](https://vastra-discover.stonyrain66.chatgpt.site) is also available. It
-requires ChatGPT sign-in and has a separate catalog; native and web data do not currently sync.
+## ✨ What it does
 
-## Key Features
+- 🔗 **One link, all the details** – paste a product link from a shop on Vastra's list, and it
+  reads the shop's public page: photos, name, brand, materials, sizes, colours and price. Unknown
+  details stay blank.
+- 🔎 **Discover** – search your finds by name, brand, category, colour or material, and filter by
+  category or currency. Carry on a search at Google Shopping or Etsy.
+- 🗂️ **Collections** – save finds into named edits, such as a travel wardrobe or a gift list.
+- ⚖️ **Compare** – put up to four products side by side. Prices stay in their own currency.
+- 🧵 **Find sellers** – a hand-picked list of independent, wholesale and high-street sources, with
+  their public website and contact links.
+- 🔄 **Refresh** – add the same link again to update its details. It keeps its place in your
+  collections.
+- 📴 **Offline, no account** – your catalogue lives on your device. Sample photos work offline.
+  ...and more.
 
-* **Discover** — search your imported products and the inspiration catalog by name, brand,
-  category, color, or material. Filter by category and original store currency. Continue a search
-  on Google Shopping or Etsy, then bring a supported product link back to Vastra.
-* **One link, all the details** — share a product from any store or app to Vastra, or paste its
-  link. Vastra reads public product data for images, name, brand, description, materials,
-  variants, sizes, colours, barcodes, ratings, offers, availability and source. Missing details
-  stay unknown. When a store blocks reading, the link is still saved, and you can refresh it
-  later. The hosted web app imports from eligible retailers only.
-* **Filed and matched for you** — each find is placed in a category and type automatically.
-  Vastra learns from your corrections and suggests similar finds, all on your device.
-* **Take it anywhere** — export your catalog as a Shopify product CSV, a product feed for
-  Google, Meta, Pinterest and TikTok catalogs, or schema.org JSON.
-* **A catalog that stays yours** — imported products are saved locally. Import the same link again
-  to refresh its details while keeping its identity and collection.
-* **Collections** — save favorite products into named edits, such as a travel wardrobe or a gift
-  shortlist. Your saves survive closing and reopening the app.
-* **A little perspective** — compare up to four products side by side. Prices remain in their
-  original currencies, and price sorting works within one currency. Comparisons are independent
-  selections, not claims that the products are exact matches.
-* **Find your people** — explore a curated directory of independent, wholesale, retail,
-  marketplace and directory sources, with their public website/contact links.
-* **Always up to date, never stuck** — Vastra checks for new versions when it starts, installs
-  verified updates, and can roll back to any earlier version. Back up and restore your catalog,
-  and report a problem straight from Settings.
-* **A calm native interface** — tactile cream paper with copper accents, fluid transitions,
-  very soft optional sounds and haptics, bundled fonts, offline sample photos, folder tabs on
-  desktop and a phone navigation bar. Linux includes standard launcher integration
-  for Arch and Omarchy without changing desktop settings.
+**Coming in the next release (0.3.0):**
 
-Source prices exclude unverified shipping, taxes and duties. Confirm availability, quality,
-returns, seller identity and final costs with the source before buying. Inspiration samples
-are clearly labeled: their prices and specifications are illustrative, not offers for sale.
+- 📤 **Share from any shop or app** – send a link from Android's share menu, or copy it on a
+  computer, and Vastra offers to add it. Links from any public shop work.
+- 🏷️ **Sorted for you** – each find gets a category and type, and Vastra learns from your fixes.
+  "More like this" suggests similar finds, worked out on your device.
+- 📦 **Take it anywhere** – export your catalogue for Shopify, for Google, Meta, Pinterest and
+  TikTok product feeds, or as schema.org JSON.
+- 🛟 **Updates and backups** – Vastra checks for new versions, installs checked updates and can roll
+  back. **Back up catalog** and **Restore from backup** live in **Settings**, with **Report a
+  problem**.
+- 📜 **A paper look** – cream paper, copper buttons and folder tabs, with optional quiet sounds.
 
-## Screenshots
+## 📸 Screenshots
 
 <table>
   <tr>
-    <td align="center"><img src="docs/screenshots/native-phone.png" alt="Native phone catalog" width="260"><br><sub>Native phone layout</sub></td>
-    <td align="center"><img src="docs/preview-mobile.png" alt="Web discovery preview" width="260"><br><sub>Web discovery preview</sub></td>
+    <td align="center"><img src="docs/screenshots/native-phone.png" alt="Vastra's Discover page on a phone" width="260"><br><sub>Discover on a phone</sub></td>
+    <td align="center"><img src="docs/preview-mobile.png" alt="The web preview on a phone" width="260"><br><sub>The web preview</sub></td>
   </tr>
 </table>
 
-The native screenshots are rendered from the current Flutter application using its labeled
-sample catalog. See `native/test/screenshots_test.dart`. The web preview uses the same sample
-product and seller data.
+<sub>The app screenshots show the sample catalogue, rendered from the current code, in the look
+coming in the next release. Release 0.2.0 has the same pages in a plainer style.</sub>
 
-## How To Use
+## 🚀 Get started
 
-You'll need [Git](https://git-scm.com) and [Flutter](https://flutter.dev) 3.47.7:
+### Step 1 – Download
 
-```bash
-# Clone this repository
-$ git clone https://github.com/sudharamachandranrajeev/vastra
-$ cd vastra/native
+Open the [releases page](https://github.com/sudharamachandranrajeev/vastra/releases) and, under
+the newest release, pick the file for your device:
 
-# Install the locked dependencies
-$ flutter pub get --enforce-lockfile
+| Your device | File to download | Works on |
+| --- | --- | --- |
+| 🤖 Android phone | `Vastra-<version>-android.apk` | Android 7 and newer |
+| 🪟 Windows computer | `Vastra-<version>-windows-x64-setup.exe` | Windows 10 (1809 or newer) and 11 |
+| 🐧 Linux computer | `Vastra-<version>-linux-x64.tar.gz` | Ubuntu 22.04 or newer and similar (Intel/AMD 64-bit) |
+| 🏔️ Arch or Omarchy | `vastra-bin-<version>-1-x86_64.pkg.tar.zst` | Arch Linux and Omarchy (64-bit) |
 
-# Run the native app
-$ flutter run -d linux
-# On a Windows development machine: flutter run -d windows
-# For Android: flutter run -d <device-id>
+Each release also has `SHA256SUMS.txt`, a list of fingerprints to check the files are genuine.
 
-# Analyze and test
-$ flutter analyze
-$ flutter test --concurrency=2 --timeout 60s
+### Step 2 – Install
+
+<details>
+<summary><b>🤖 Android</b></summary>
+
+1. Open the downloaded `.apk` on your phone.
+2. If Android asks, allow installs from your browser or file manager. This is normal for apps
+   from outside the Play Store.
+3. Tap **Install**, then **Open**.
+
+</details>
+
+<details>
+<summary><b>🪟 Windows</b></summary>
+
+1. Double-click `Vastra-<version>-windows-x64-setup.exe`. No admin rights needed.
+2. Windows may say *"Windows protected your PC"*. This appears because the app isn't paid-signed
+   yet, not because it is harmful. Click **More info → Run anyway**.
+3. Follow the installer, then open **Vastra** from the Start menu.
+
+Prefer no installer? Download `…-windows-x64-portable.zip`, unzip the whole folder and run
+`vastra.exe`.
+
+</details>
+
+<details>
+<summary><b>🐧 Linux</b></summary>
+
+1. Open a terminal in the folder where the download landed.
+2. Unpack it and run the installer as your normal user (not `sudo`):
+   ```sh
+   tar -xzf Vastra-*-linux-x64.tar.gz
+   cd vastra-*-linux-x64 && ./install.sh
+   ```
+3. Open **Vastra** from your app menu.
+
+Vastra needs GTK 3 and the system OpenGL libraries (`gtk3` and `libglvnd` on Arch). To remove it,
+run `./install.sh --uninstall`. Your catalogue stays.
+
+</details>
+
+<details>
+<summary><b>🏔️ Arch or Omarchy package</b></summary>
+
+1. Open a terminal in the folder where the download landed.
+2. Install it with pacman:
+   ```sh
+   sudo pacman -U ./vastra-bin-*.pkg.tar.zst
+   ```
+3. Open **Vastra** from your app menu.
+
+Use either this package or the tarball installer, not both.
+
+</details>
+
+### Step 3 – First launch
+
+1. Vastra opens on **Discover**, with a few sample products to show how it works. No sign-in is
+   needed.
+2. Tap **Add a product link** (**Add link** on a phone), paste a link from a shop, and add it.
+3. Tap the ♡ heart on a product to save it into a **Collection**.
+4. Tap **Compare** on up to four products to see them side by side.
+
+## 🧭 How it works
+
+```mermaid
+flowchart LR
+    U["🙂 You paste a<br/>product link"] --> V["📱 Vastra on your device"]
+    V -->|"reads the public page"| S["🛍️ The shop's website"]
+    S -->|"photos, sizes, price"| V
+    V --> C[("🗂️ Your catalogue<br/>on this device")]
 ```
 
-Linux builds need Clang, CMake, Ninja, pkg-config, GTK 3 development libraries and liblzma.
-Windows builds need Visual Studio's Desktop development with C++ workload. Android builds need
-the Android SDK and JDK 21. The release workflow builds on each platform's supported host.
+- **Vastra reads only the page you give it**, and only the public product details on it. It does
+  not sign in to shops or get around their blocks.
+- **When a shop blocks reading**, Vastra still saves the link so you can refresh it later.
+- **Your catalogue stays on your device.** There is no account and no sync. Desktop apps and the
+  web preview keep separate catalogues.
+- **Prices are the shop's listed price.** Shipping, taxes and duties are not included.
 
-See [native development and packaging](docs/NATIVE.md) for release signing, data locations,
-installer behavior and packaging. For the existing web app, see [web development](docs/WEB.md).
+> [!IMPORTANT]
+> The catalogue is not backed up automatically, and it is not encrypted. On Android, uninstalling
+> Vastra deletes it. On a computer, close Vastra and copy the data folder (see FAQ) to keep a copy.
 
-## Download
+## ❓ FAQ and troubleshooting
 
-Builds are on the [releases page](https://github.com/sudharamachandranrajeev/vastra/releases), with
-`SHA256SUMS.txt`. See the [changelog](CHANGELOG.md) for what is new.
+<details>
+<summary><b>A shop's link added only the name, without photos or price</b></summary>
 
-| Platform | Package | Installation |
-| --- | --- | --- |
-| Android 7+ | `Vastra-<version>-android.apk` | Install the signed APK. Keep the same signing key for future updates. |
-| Windows 10 1809+ / 11, x64 | `Vastra-<version>-windows-x64-setup.exe` | Per-user installer; no administrator rights required. |
-| Windows, x64 portable | `Vastra-<version>-windows-x64-portable.zip` | Extract the entire folder and open `vastra.exe`. |
-| Linux, x86-64 | `Vastra-<version>-linux-x64.tar.gz` | Extract and run `./install.sh`, or open `./vastra` directly. |
-| Arch / Omarchy, x86-64 | `vastra-bin-<version>-1-x86_64.pkg.tar.zst` | Install the package with `sudo pacman -U ./vastra-bin-*.pkg.tar.zst`. |
+Some shops block automatic reading or hide their product details. Vastra saves the link anyway.
+Try adding the same link again later to refresh it.
+</details>
 
-The Linux tarball requires GTK 3 and system OpenGL libraries. On Arch/Omarchy these are `gtk3`
-and `libglvnd`; the Arch package declares its dependencies. The per-user tarball installer adds
-a launcher and icon. `./install.sh --uninstall` removes the program while keeping your catalog.
-Use either the tarball installer or the Arch package manager for an installation.
+<details>
+<summary><b>Does Vastra search shops or find the cheapest seller for me?</b></summary>
 
-The Windows build is not code-signed and Windows may show an unknown-publisher warning.
-Desktop uninstallers retain your catalog; Android uninstall follows Android's normal app-data
-removal behavior. Native catalogs are local and are not automatically backed up or synced.
+Not yet. It searches your own catalogue and the samples. Live search across shops, exact-product
+matching and delivered prices are on the [roadmap](docs/ROADMAP.md).
+</details>
 
-## Current Scope
+<details>
+<summary><b>Windows says the app might be unsafe</b></summary>
 
-This release searches your local catalog and 12 inspiration samples. **Automatic live search
-across retailers, automated individual-seller discovery, exact-product matching, delivered-price
-calculations, AI model connections and cross-device synchronization are not implemented yet.**
+The build isn't code-signed (a paid certificate). Click **More info → Run anyway**. Check the file
+against `SHA256SUMS.txt` on the release if you want to be sure it is genuine.
+</details>
 
-Product imports use the eligible merchant list shown in the app and validate every redirect.
-A store on that list can still block automated requests or omit usable product data. Vastra
-does not bypass access controls. Imported facts retain their source and extraction time.
+<details>
+<summary><b>Where is my catalogue stored?</b></summary>
 
-The native apps use local app-private storage, without database encryption. The hosted web
-preview uses authenticated server storage. Neither client enables or bills an AI provider.
-See the [implementation roadmap](docs/ROADMAP.md).
+Linux: `~/.local/share/io.github.sudharamachandranrajeev.vastra/vastra.sqlite`. Windows: Vastra's
+folder under `%APPDATA%`. Android: inside the app. Uninstalling on a computer leaves it in place.
+</details>
 
-## Credits
+<details>
+<summary><b>Is there a web version?</b></summary>
 
-This software uses the following open source packages and services:
+There is a [web preview](https://vastra-discover.stonyrain66.chatgpt.site). It needs a ChatGPT
+sign-in and keeps its own catalogue, separate from the apps. See [web development](docs/WEB.md).
+</details>
+
+<details>
+<summary><b>Are the sample products for sale?</b></summary>
+
+No. Samples carry a "Sample" label. Their prices and details are made up for illustration.
+</details>
+
+## 🛠️ For developers
+
+<details>
+<summary>Build from source, test and release</summary>
+
+You need [Git](https://git-scm.com) and [Flutter](https://flutter.dev) 3.47.7. Linux builds also
+need Clang, CMake, Ninja, pkg-config, GTK 3 development files and liblzma.
+
+```bash
+git clone https://github.com/sudharamachandranrajeev/vastra
+cd vastra/native
+flutter pub get --enforce-lockfile
+flutter run -d linux        # or windows, or an Android device
+
+flutter analyze && flutter test --concurrency=2 --timeout 60s   # check and test
+VASTRA_SHOTS=/tmp/vastra-shots flutter test test/screenshots_test.dart   # render the screenshots
+```
+
+- The Flutter app is in `native/`. The web preview (React on Cloudflare Workers) is at the
+  repository root.
+- Release signing, data locations, installers, the updater and packaging:
+  [native development and packaging](docs/NATIVE.md). Web app: [web development](docs/WEB.md).
+- A `v*` tag builds, smoke-tests and publishes every package (`.github/workflows/release.yml`).
+  Plans: [roadmap](docs/ROADMAP.md). Changes per version: [CHANGELOG.md](CHANGELOG.md).
+
+</details>
+
+<details>
+<summary>Credits</summary>
 
 - [Flutter](https://flutter.dev), [Dart](https://dart.dev), [SQLite](https://sqlite.org),
   [sqlite3](https://pub.dev/packages/sqlite3), [http](https://pub.dev/packages/http),
   [html](https://pub.dev/packages/html), [path_provider](https://pub.dev/packages/path_provider),
-  [url_launcher](https://pub.dev/packages/url_launcher), [intl](https://pub.dev/packages/intl), and [uuid](https://pub.dev/packages/uuid).
+  [url_launcher](https://pub.dev/packages/url_launcher), [intl](https://pub.dev/packages/intl) and
+  [uuid](https://pub.dev/packages/uuid)
 - [React](https://react.dev), [Vinext](https://github.com/cloudflare/vinext),
-  [Cloudflare Workers / D1](https://developers.cloudflare.com), [Drizzle](https://orm.drizzle.team),
-  [Lucide](https://lucide.dev), and Sites for the web preview.
-- [Inter](https://rsms.me/inter/) and [Lora](https://github.com/cyrealtype/Lora-Cyrillic), bundled
-  under the SIL Open Font License. License texts are beside the fonts in `native/assets/fonts/`.
-- [Unsplash](https://unsplash.com/license) for sample photography. Exact image source URLs are
-  retained in `native/assets/data/products.json`; no brand or seller endorsement is implied.
+  [Cloudflare Workers / D1](https://developers.cloudflare.com), [Drizzle](https://orm.drizzle.team)
+  and [Lucide](https://lucide.dev) for the web preview
+- [Inter](https://rsms.me/inter/) and [Lora](https://github.com/cyrealtype/Lora-Cyrillic) fonts,
+  under the SIL Open Font License (texts beside the fonts in `native/assets/fonts/`)
+- [Unsplash](https://unsplash.com/license) for sample photos. Source links are in
+  `native/assets/data/products.json`; no brand or seller endorsement is implied.
+
+</details>
 
 ## Related
 
-README presentation follows these other projects by the same author. Vastra remains standalone:
+Vastra runs on its own, and the [Brahma](https://github.com/sudharamachandranrajeev/brahma) app
+links to it from its home screen. The Brahma family:
 
-* [Vidya](https://github.com/sudharamachandranrajeev/vidya) — learning and knowledge management.
-* [Graha Anveshana](https://github.com/sudharamachandranrajeev/graha-anveshana) — property search and management.
-* [Vahana Anveshana](https://github.com/sudharamachandranrajeev/vahana-anveshana) — car discovery and ownership.
+| App | What it does |
+| --- | --- |
+| [brahma](https://github.com/sudharamachandranrajeev/brahma) | The shared core and the all-in-one app |
+| [artha](https://github.com/sudharamachandranrajeev/artha) | Money: accounts, spending, bills and investments |
+| [graha-anveshana](https://github.com/sudharamachandranrajeev/graha-anveshana) | Find a home to rent or buy |
+| [vahana-anveshana](https://github.com/sudharamachandranrajeev/vahana-anveshana) | Find a car |
+| [udyoga](https://github.com/sudharamachandranrajeev/udyoga) | Career and job hunting |
+| [vidya](https://github.com/sudharamachandranrajeev/vidya) | Learning, flashcards and focus |
+| [bhojana](https://github.com/sudharamachandranrajeev/bhojana) | Shopping lists priced across UK shops |
 
 ## License
 
-No license has been chosen yet; all rights reserved. Bundled third-party components retain their
-own licenses and notices.
+No licence has been chosen yet; all rights reserved. Bundled third-party parts keep their own
+licences and notices.
 
 ---
 
