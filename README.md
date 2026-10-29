@@ -38,7 +38,7 @@ releases** (0.x). It does not search shops for you yet.
   reads the shop's public page: photos, name, brand, materials, sizes, colours and price. Unknown
   details stay blank.
 - 🔎 **Discover** – search your finds by name, brand, category, colour or material, and filter by
-  category or currency. Carry on a search at Google Shopping or Etsy.
+  category or currency. Carry on a search at a shopping search site or marketplace.
 - 🗂️ **Collections** – save finds into named edits, such as a travel wardrobe or a gift list.
 - ⚖️ **Compare** – put up to four products side by side. Prices stay in their own currency.
 - 🧵 **Find sellers** – a hand-picked list of independent, wholesale and high-street sources, with
@@ -54,8 +54,8 @@ releases** (0.x). It does not search shops for you yet.
   computer, and Vastra offers to add it. Links from any public shop work.
 - 🏷️ **Sorted for you** – each find gets a category and type, and Vastra learns from your fixes.
   "More like this" suggests similar finds, worked out on your device.
-- 📦 **Take it anywhere** – export your catalogue for Shopify, for Google, Meta, Pinterest and
-  TikTok product feeds, or as schema.org JSON.
+- 📦 **Take it anywhere** – export your catalogue for online shop platforms and the common
+  product-feed formats, or as schema.org JSON.
 - 🛟 **Updates and backups** – Vastra checks for new versions, installs checked updates and can roll
   back. **Back up catalog** and **Restore from backup** live in **Settings**, with **Report a
   problem**.
@@ -84,7 +84,7 @@ the newest release, pick the file for your device:
 | --- | --- | --- |
 | 🤖 Android phone | `Vastra-<version>-android.apk` | Android 7 and newer |
 | 🪟 Windows computer | `Vastra-<version>-windows-x64-setup.exe` | Windows 10 (1809 or newer) and 11 |
-| 🐧 Linux computer | `Vastra-<version>-linux-x64.tar.gz` | Ubuntu 22.04 or newer and similar (Intel/AMD 64-bit) |
+| 🐧 Linux computer | `Vastra-<version>-linux-x64.tar.gz` | Ubuntu 22.04 or newer and similar (64-bit x86) |
 | 🏔️ Arch or Omarchy | `vastra-bin-<version>-1-x86_64.pkg.tar.zst` | Arch Linux and Omarchy (64-bit) |
 
 Each release also has `SHA256SUMS.txt`, a list of fingerprints to check the files are genuine.
@@ -96,7 +96,7 @@ Each release also has `SHA256SUMS.txt`, a list of fingerprints to check the file
 
 1. Open the downloaded `.apk` on your phone.
 2. If Android asks, allow installs from your browser or file manager. This is normal for apps
-   from outside the Play Store.
+   from outside an app store.
 3. Tap **Install**, then **Open**.
 
 </details>
@@ -245,11 +245,10 @@ VASTRA_SHOTS=/tmp/vastra-shots flutter test test/screenshots_test.dart   # rende
   [url_launcher](https://pub.dev/packages/url_launcher), [intl](https://pub.dev/packages/intl) and
   [uuid](https://pub.dev/packages/uuid)
 - [React](https://react.dev), [Vinext](https://github.com/cloudflare/vinext),
-  [Cloudflare Workers / D1](https://developers.cloudflare.com), [Drizzle](https://orm.drizzle.team)
-  and [Lucide](https://lucide.dev) for the web preview
+  [Drizzle](https://orm.drizzle.team) and [Lucide](https://lucide.dev) for the web preview
 - [Inter](https://rsms.me/inter/) and [Lora](https://github.com/cyrealtype/Lora-Cyrillic) fonts,
   under the SIL Open Font License (texts beside the fonts in `native/assets/fonts/`)
-- [Unsplash](https://unsplash.com/license) for sample photos. Source links are in
+- Sample photos are openly licensed stock photos. Source links are in
   `native/assets/data/products.json`; no brand or seller endorsement is implied.
 
 </details>
