@@ -204,13 +204,6 @@ folder under `%APPDATA%`. Android: inside the app. Uninstalling on a computer le
 </details>
 
 <details>
-<summary><b>Is there a web version?</b></summary>
-
-There is a [web preview](https://vastra-discover.stonyrain66.chatgpt.site). It needs a ChatGPT
-sign-in and keeps its own catalogue, separate from the apps. See [web development](docs/WEB.md).
-</details>
-
-<details>
 <summary><b>Are the sample products for sale?</b></summary>
 
 No. Samples carry a "Sample" label. Their prices and details are made up for illustration.
