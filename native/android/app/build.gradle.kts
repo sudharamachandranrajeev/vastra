@@ -14,6 +14,8 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+        // Required by flutter_local_notifications.
+        isCoreLibraryDesugaringEnabled = true
     }
 
     defaultConfig {
@@ -61,6 +63,7 @@ flutter {
 dependencies {
     // FileProvider hands a verified update package to the system installer.
     implementation("androidx.core:core:1.13.1")
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
 }
 
 // Public release tasks must use the persistent Vastra signing key.

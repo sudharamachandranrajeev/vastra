@@ -37,6 +37,31 @@ before copying its database for a manual backup. Uninstalling the desktop progra
 the database; Android uninstall normally does remove private app data. Web and native catalogs
 are separate.
 
+## Price and stock watching
+
+Every import and refresh records one row per offer, and one per identifiable variant (size and
+colour, or SKU), in `price_points`. A refresh the store blocked records a failed check instead
+and keeps the earlier details. A watch (`watches`) covers a whole item or one variant, price
+drops (any, percent, or target price) and/or back-in-stock. Rules live in
+`lib/domain/watching.dart`:
+
+- An alert comes only from a successful check compared with the previous successful check from
+  the same seller and variant. A different currency, an unknown earlier stock state, or a price
+  drop on a sold-out item never alerts.
+- Alerts are queued in `alerts`. Ones marked "Tell me at once" are shown right away, up to five,
+  then a summary. The rest go out as one digest notification at most every 20 hours. With alerts
+  off, queued alerts are dropped, not saved up.
+- Offers are marked stale after 7 days without a successful check, or when the last check was
+  blocked.
+
+Checks are opt-in. Android runs a WorkManager job hourly (network connected, battery not low),
+which checks only what is due: hourly for "at once" watches and daily otherwise. Desktop
+checks on a 15-minute timer while Vastra is open. Requests to the same host are spaced
+3–6 seconds apart. Notifications use `flutter_local_notifications`, and there is no other
+notification channel. The new tables are additive, so the catalog stays at `user_version` 1 and
+older versions can still open it after a rollback. Restore brings history and watches only for
+the finds it adds.
+
 ## Import policy
 
 The native apps accept a link from any public store. The link can arrive from the Android share

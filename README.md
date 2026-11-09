@@ -34,124 +34,25 @@ releases** (0.x). It does not search shops for you yet.
 
 ## ✨ What it does
 
-- 🔗 **One link, all the details** – paste a product link from a shop on Vastra's list, and it
-  reads the shop's public page: photos, name, brand, materials, sizes, colours and price. Unknown
-  details stay blank.
+- 🔗 **One link, all the details** – share a product link from any shop or app, or copy it on a
+  computer, and Vastra reads the shop's public page: photos, name, brand, materials, sizes,
+  colours, price and stock. Unknown details stay blank.
+- 📉 **Watch prices and stock** – choose an item, and a size or colour if you like. Vastra tells you
+  when the price drops or it comes back in stock: once a day in one short summary, or straight
+  away for things that sell out fast. Each find keeps its price history, and old prices are marked.
 - 🔎 **Discover** – search your finds by name, brand, category, colour or material, and filter by
-  category or currency. Carry on a search at a shopping search site or marketplace.
+  category or currency. "More like this" suggests similar finds, worked out on your device.
+- 🏷️ **Sorted for you** – each find gets a category and type, and Vastra learns from your fixes.
 - 🗂️ **Collections** – save finds into named edits, such as a travel wardrobe or a gift list.
 - ⚖️ **Compare** – put up to four products side by side. Prices stay in their own currency.
 - 🧵 **Find sellers** – a hand-picked list of independent, wholesale and high-street sources, with
   their public website and contact links.
-- 🔄 **Refresh** – add the same link again to update its details. It keeps its place in your
-  collections.
-- 📴 **Offline, no account** – your catalogue lives on your device. Sample photos work offline.
-  ...and more.
-
-**Coming in the next release (0.3.0):**
-
-- 📤 **Share from any shop or app** – send a link from Android's share menu, or copy it on a
-  computer, and Vastra offers to add it. Links from any public shop work.
-- 🏷️ **Sorted for you** – each find gets a category and type, and Vastra learns from your fixes.
-  "More like this" suggests similar finds, worked out on your device.
 - 📦 **Take it anywhere** – export your catalogue for online shop platforms and the common
   product-feed formats, or as schema.org JSON.
 - 🛟 **Updates and backups** – Vastra checks for new versions, installs checked updates and can roll
-  back. **Back up catalog** and **Restore from backup** live in **Settings**, with **Report a
-  problem**.
-- 📜 **A paper look** – cream paper, copper buttons and folder tabs, with optional quiet sounds.
-
-## 📸 Screenshots
-
-<table>
-  <tr>
-    <td align="center"><img src="docs/screenshots/native-phone.png" alt="Vastra's Discover page on a phone" width="260"><br><sub>Discover on a phone</sub></td>
-    <td align="center"><img src="docs/preview-mobile.png" alt="The web preview on a phone" width="260"><br><sub>The web preview</sub></td>
-  </tr>
-</table>
-
-<sub>The app screenshots show the sample catalogue, rendered from the current code, in the look
-coming in the next release. Release 0.2.0 has the same pages in a plainer style.</sub>
-
-## 🚀 Get started
-
-### Step 1 – Download
-
-Open the [releases page](https://github.com/sudharamachandranrajeev/vastra/releases) and, under
-the newest release, pick the file for your device:
-
-| Your device | File to download | Works on |
-| --- | --- | --- |
-| 🤖 Android phone | `Vastra-<version>-android.apk` | Android 7 and newer |
-| 🪟 Windows computer | `Vastra-<version>-windows-x64-setup.exe` | Windows 10 (1809 or newer) and 11 |
-| 🐧 Linux computer | `Vastra-<version>-linux-x64.tar.gz` | Ubuntu 22.04 or newer and similar (64-bit x86) |
-| 🏔️ Arch or Omarchy | `vastra-bin-<version>-1-x86_64.pkg.tar.zst` | Arch Linux and Omarchy (64-bit) |
-
-Each release also has `SHA256SUMS.txt`, a list of fingerprints to check the files are genuine.
-
-### Step 2 – Install
-
-<details>
-<summary><b>🤖 Android</b></summary>
-
-1. Open the downloaded `.apk` on your phone.
-2. If Android asks, allow installs from your browser or file manager. This is normal for apps
-   from outside an app store.
-3. Tap **Install**, then **Open**.
-
-</details>
-
-<details>
-<summary><b>🪟 Windows</b></summary>
-
-1. Double-click `Vastra-<version>-windows-x64-setup.exe`. No admin rights needed.
-2. Windows may say *"Windows protected your PC"*. This appears because the app isn't paid-signed
-   yet, not because it is harmful. Click **More info → Run anyway**.
-3. Follow the installer, then open **Vastra** from the Start menu.
-
-Prefer no installer? Download `…-windows-x64-portable.zip`, unzip the whole folder and run
-`vastra.exe`.
-
-</details>
-
-<details>
-<summary><b>🐧 Linux</b></summary>
-
-1. Open a terminal in the folder where the download landed.
-2. Unpack it and run the installer as your normal user (not `sudo`):
-   ```sh
-   tar -xzf Vastra-*-linux-x64.tar.gz
-   cd vastra-*-linux-x64 && ./install.sh
-   ```
-3. Open **Vastra** from your app menu.
-
-Vastra needs GTK 3, GStreamer (for its interface sounds) and the system OpenGL libraries (`gtk3`,
-`gstreamer`, `gst-plugins-base-libs` and `libglvnd` on Arch). To remove it,
-run `./install.sh --uninstall`. Your catalogue stays.
-
-</details>
-
-<details>
-<summary><b>🏔️ Arch or Omarchy package</b></summary>
-
-1. Open a terminal in the folder where the download landed.
-2. Install it with pacman:
-   ```sh
-   sudo pacman -U ./vastra-bin-*.pkg.tar.zst
-   ```
-3. Open **Vastra** from your app menu.
-
-Use either this package or the tarball installer, not both.
-
-</details>
-
-### Step 3 – First launch
-
-1. Vastra opens on **Discover**, with a few sample products to show how it works. No sign-in is
-   needed.
-2. Tap **Add a product link** (**Add link** on a phone), paste a link from a shop, and add it.
-3. Tap the ♡ heart on a product to save it into a **Collection**.
-4. Tap **Compare** on up to four products to see them side by side.
+  back. **Back up catalog** and **Restore from backup** live in **Settings**.
+- 📴 **Offline, no account** – your catalogue lives on your device. No ads, and no notifications
+  except the alerts you set.
 
 ## 🧭 How it works
 
@@ -181,6 +82,21 @@ flowchart LR
 
 Some shops block automatic reading or hide their product details. Vastra saves the link anyway.
 Try adding the same link again later to refresh it.
+</details>
+
+<details>
+<summary><b>How do price and stock alerts work?</b></summary>
+
+1. Open a find and turn on **Watch this item**.
+2. Pick a size or colour if it matters, and what to hear about: **Price drops** (any drop, a
+   percentage, or a price you set) and **Back in stock**.
+3. In **Settings**, turn on **Check watched items automatically**. On Android, Vastra checks in the
+   background. On a computer, it checks while Vastra is open. **Check watched items now** works
+   any time.
+
+Vastra only alerts after a check that just succeeded, and each alert shows the old and new price,
+the shop and when it checked. If a shop blocks a check, you get a "may be out of date" note, not an
+alert. One switch in **Settings** turns every alert off.
 </details>
 
 <details>

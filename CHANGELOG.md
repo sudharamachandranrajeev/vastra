@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.4.0
+
+- Watch any find for price drops and back-in-stock, for the whole item or one size and colour.
+  Thresholds: any drop, a percentage, or a target price.
+- Alerts arrive as one daily digest, or straight away for items marked "Tell me at once". There is no
+  other notification channel, and one switch turns every alert off.
+- Alerts come only from a check that just succeeded, and name the old and new price, the store and
+  when it checked. A blocked check never alerts.
+- Price history for every find, with low, high and current prices, and a warning when prices are
+  more than 7 days old or the store blocked the last check.
+- Optional automatic checks: in the background on Android, while open on Windows and Linux.
+  "Watched only" filter in My catalog.
+- Backups carry price history and watches. Older versions still open the catalog after a rollback.
+
 ## 0.3.0
 
 - Native apps accept product links from any public store. Links can arrive from the Android share

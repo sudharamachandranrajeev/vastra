@@ -34,11 +34,11 @@ What users hate, which Vastra never does:
 - Export to Shopify CSV, a Google, Meta, Pinterest and TikTok product feed, or schema.org JSON.
 - The tactile paper-and-copper redesign, with soft sounds and haptics that can be muted.
 
-### Phase 1 — price and stock watching
+### Phase 1 — price and stock watching (0.4.0)
 
 - Price history recorded on every refresh.
 - Optional background refresh.
-- Opt-in price-drop and back-in-stock alerts, per item, sent as at most one daily digest.
+- Opt-in price-drop and back-in-stock alerts, per item or per size and colour, sent as at most one daily digest. An opt-in "Tell me at once" per item covers things that sell out fast, because late alerts were the top complaint in research.
 - Warnings when an offer is stale.
 
 Acceptance: an alert names the old and new price and their source, and turning alerts off is one tap.

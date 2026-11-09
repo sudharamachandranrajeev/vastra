@@ -1,5 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Price and stock alerts for watched items only. Android 13+ asks first. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <!-- In-app updates: Android still asks the user to allow and confirm each install. -->
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
     <application

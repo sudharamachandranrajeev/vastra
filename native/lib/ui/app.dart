@@ -11,8 +11,10 @@ import 'package:url_launcher/url_launcher.dart';
 import '../data/catalog_data.dart';
 import '../data/catalog_repository.dart';
 import '../data/diagnostics.dart';
+import '../data/settings_store.dart';
 import '../data/share_intake.dart';
 import '../data/updater.dart';
+import '../data/watcher.dart';
 import '../domain/catalog_export.dart';
 import '../domain/categorizer.dart';
 import '../domain/product.dart';
@@ -22,6 +24,7 @@ import '../domain/releases.dart';
 import 'feedback.dart';
 import 'maintenance.dart';
 import 'paper.dart';
+import 'watch_panel.dart';
 
 class VastraApp extends StatelessWidget {
   const VastraApp({
@@ -33,6 +36,8 @@ class VastraApp extends StatelessWidget {
     this.importer,
     this.updates,
     this.diagnostics,
+    this.settings,
+    this.notify,
   });
   final CatalogData data;
   final CatalogRepository repository;
@@ -45,6 +50,12 @@ class VastraApp extends StatelessWidget {
   /// Update checks and installs; left out in tests and screenshots.
   final UpdateService? updates;
   final Diagnostics? diagnostics;
+
+  /// Saved preferences; tests use an in-memory store.
+  final SettingsStore? settings;
+
+  /// Shows price and stock alerts; left out in tests.
+  final Notify? notify;
   @override
   Widget build(BuildContext context) => MaterialApp(
     title: 'Vastra',
@@ -61,6 +72,8 @@ class VastraApp extends StatelessWidget {
       importer: importer,
       updates: updates,
       diagnostics: diagnostics ?? Diagnostics(),
+      settings: settings ?? SettingsStore(),
+      notify: notify,
     ),
   );
 }
@@ -72,11 +85,15 @@ class Home extends StatefulWidget {
     required this.repository,
     required this.intake,
     required this.diagnostics,
+    required this.settings,
     this.importer,
     this.updates,
+    this.notify,
   });
   final CatalogData data;
   final CatalogRepository repository;
+  final SettingsStore settings;
+  final Notify? notify;
   final ShareIntake intake;
   final ProductImporter Function(Categorizer categorizer)? importer;
   final UpdateService? updates;
@@ -101,7 +118,14 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
       _sort = 'Curated order',
       _collection = 'All collections',
       _sellerKind = 'All sellers';
-  bool _samples = true;
+  bool _samples = true, _watchedOnly = false;
+  late final _watch = WatchService(
+    repository: widget.repository,
+    settings: widget.settings,
+    importer: () => widget.importer?.call(_categorizer) ?? ProductImporter(categorizer: _categorizer),
+    notify: widget.notify,
+  );
+  Timer? _watchTimer;
   String? _copiedLink, _dismissedLink;
   Release? _available;
   final _search = TextEditingController();
@@ -123,7 +147,46 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
       if (initial != null) _receive(initial);
       unawaited(_checkClipboard());
       if (widget.updates?.checkOnStartup ?? false) unawaited(_checkForUpdate(quiet: true));
+      if (_watch.backgroundOn) _startWatching();
     });
+  }
+
+  /// While Vastra is open, checks what is due every 15 minutes. Each watch
+  /// keeps its own pace (hourly or daily), so most ticks fetch nothing.
+  void _startWatching() {
+    _watchTimer?.cancel();
+    _watchTimer = Timer.periodic(const Duration(minutes: 15), (_) => _runChecks());
+    unawaited(_runChecks());
+  }
+
+  Future<void> _runChecks({bool all = false}) async {
+    final checked = await _watch.checkDue(all: all);
+    if (mounted && checked > 0) _reload();
+  }
+
+  Future<void> _setBackground(bool on) async {
+    widget.settings.set(backgroundKey, on);
+    if (on) {
+      _startWatching();
+    } else {
+      _watchTimer?.cancel();
+    }
+    try {
+      await scheduleBackground(on);
+    } on Object catch (error) {
+      debugPrint('Vastra background schedule failed: $error');
+    }
+  }
+
+  Future<void> _askToNotify() async {
+    if (widget.notify == null) return;
+    try {
+      if (!await requestNotifyPermission()) {
+        _toast(ToastKind.warning, 'Notifications are off for Vastra. Alerts will wait inside the app.');
+      }
+    } on Object {
+      /* Permission prompts are best effort. */
+    }
   }
 
   /// Startup checks stay quiet when offline; a manual check reports the result.
@@ -171,6 +234,7 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _watchTimer?.cancel();
     unawaited(_shares?.cancel());
     _search.dispose();
     super.dispose();
@@ -283,12 +347,18 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
     );
     if (!mounted || product == null) return;
     _reload();
-    _toast(
-      product.extraction == 'link' ? ToastKind.info : ToastKind.success,
-      product.extraction == 'link'
-          ? 'Link saved. The store shared few details, so refresh it later.'
-          : 'Added to your catalog as ${product.productType ?? product.category}.',
-    );
+    final found = widget.repository.pendingAlerts().where((a) => a.$2.productId == product.id).lastOrNull;
+    unawaited(_watch.deliver());
+    if (found != null) {
+      _toast(ToastKind.success, '${found.$2.title}. ${found.$2.body}');
+    } else {
+      _toast(
+        product.extraction == 'link' ? ToastKind.info : ToastKind.success,
+        product.extraction == 'link'
+            ? 'Link saved. The store shared few details, so refresh it later.'
+            : 'Added to your catalog as ${product.productType ?? product.category}.',
+      );
+    }
     await _detail(product);
   }
 
@@ -475,6 +545,59 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
                     feedback.play(Cue.toggle);
                   },
                 ),
+                const SizedBox(height: Space.l),
+                const SectionHeader('Price and stock alerts'),
+                StatefulBuilder(
+                  builder: (context, setLocal) => Column(
+                    children: [
+                      SwitchListTile(
+                        contentPadding: EdgeInsets.zero,
+                        title: const Text('Alerts'),
+                        subtitle: const Text(
+                          'One switch for every watched item. Off means nothing is sent or saved up.',
+                        ),
+                        value: _watch.alertsOn,
+                        onChanged: (v) {
+                          setLocal(() => widget.settings.set(alertsKey, v));
+                          feedback.play(Cue.toggle);
+                        },
+                      ),
+                      SwitchListTile(
+                        contentPadding: EdgeInsets.zero,
+                        title: const Text('Check watched items automatically'),
+                        subtitle: Text(
+                          Platform.isAndroid
+                              ? 'In the background, about daily, or hourly for items marked "Tell me at once". Each check reads only that item\'s store page.'
+                              : 'While Vastra is open, about daily, or hourly for items marked "Tell me at once". Each check reads only that item\'s store page.',
+                        ),
+                        value: _watch.backgroundOn,
+                        onChanged: (v) {
+                          setLocal(() {});
+                          unawaited(_setBackground(v));
+                          feedback.play(Cue.toggle);
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: PaperButton(
+                    label: 'Check watched items now',
+                    icon: Icons.refresh,
+                    compact: true,
+                    onPressed: () async {
+                      final watched = widget.repository.watches().length;
+                      if (watched == 0) {
+                        _toast(ToastKind.info, 'Watch an item from its page first.');
+                        return;
+                      }
+                      _toast(ToastKind.info, 'Checking $watched watched ${watched == 1 ? 'item' : 'items'}…');
+                      await _runChecks(all: true);
+                      _toast(ToastKind.success, 'Watched items checked.');
+                    },
+                  ),
+                ),
                 if (updates != null) ...[
                   const SizedBox(height: Space.l),
                   const SectionHeader('Updates'),
@@ -601,7 +724,10 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
               (_currency == 'All currencies' || p.offers.any((o) => o.currency == _currency)),
         )
         .toList();
-    if (_tab == 1) products = products.where((p) => !p.sample).toList();
+    if (_tab == 1) {
+      final watched = {for (final w in widget.repository.watches()) w.productId};
+      products = products.where((p) => !p.sample && (!_watchedOnly || watched.contains(p.id))).toList();
+    }
     if (_tab == 3) {
       products = products
           .where((p) => _saved(p) != null && (_collection == 'All collections' || _saved(p) == _collection))
@@ -826,6 +952,20 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
                       },
                     ),
                     const Text('Include samples'),
+                  ],
+                ),
+              if (_tab == 1)
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Checkbox(
+                      value: _watchedOnly,
+                      onChanged: (v) {
+                        FeedbackScope.of(context).play(Cue.toggle);
+                        setState(() => _watchedOnly = v!);
+                      },
+                    ),
+                    const Text('Watched only'),
                   ],
                 ),
               if (_tab == 3)
@@ -1697,6 +1837,15 @@ class _ProductDetailState extends State<_ProductDetail> {
                         onSelected: (_) => _recategorize(p.category, k),
                       ),
                   ],
+                ),
+              ],
+              if (!p.sample) ...[
+                const SizedBox(height: Space.xl),
+                WatchPanel(
+                  key: ValueKey('watch-${p.id}'),
+                  product: p,
+                  repository: home.widget.repository,
+                  onWatchStarted: home._askToNotify,
                 ),
               ],
               const SizedBox(height: Space.xl),

@@ -13,6 +13,7 @@ import 'data/diagnostics.dart';
 import 'data/settings_store.dart';
 import 'data/share_intake.dart';
 import 'data/updater.dart';
+import 'data/watcher.dart';
 import 'ui/app.dart';
 import 'ui/feedback.dart';
 import 'ui/maintenance.dart';
@@ -46,6 +47,11 @@ Future<void> start(ShareIntake intake) async {
       rethrow;
     }
     debugPrint('Vastra catalog opened');
+    if (settings.get<bool>(backgroundKey) == true) {
+      // Re-registering keeps the Android job alive after an update.
+      scheduleBackground(true)
+          .catchError((Object error) => debugPrint('Vastra background schedule failed: $error'));
+    }
     runApp(
       VastraApp(
         data: data,
@@ -53,6 +59,8 @@ Future<void> start(ShareIntake intake) async {
         intake: intake,
         feedback: UiFeedback(settings: settings),
         diagnostics: diagnostics,
+        settings: settings,
+        notify: systemNotify,
         updates: UpdateService(
           settings: settings,
           workDirectory: await getTemporaryDirectory(),

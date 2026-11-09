@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:sqlite3/sqlite3.dart';
 
 import '../domain/product.dart';
+import '../domain/watching.dart';
 
 class CatalogEntry {
   const CatalogEntry(this.product, this.collection);
@@ -30,6 +31,18 @@ class CatalogRepository {
         rethrow;
       }
     }
+    // Watching adds tables without touching `products`, so the catalog stays
+    // at version 1 and older versions of Vastra still open it after a rollback.
+    _db.execute('''CREATE TABLE IF NOT EXISTS price_points (
+      product_id TEXT NOT NULL, seller TEXT NOT NULL, variant TEXT NOT NULL, checked_at TEXT NOT NULL,
+      ok INTEGER NOT NULL, price REAL, currency TEXT, availability TEXT)''');
+    _db.execute('CREATE INDEX IF NOT EXISTS price_points_product ON price_points (product_id, checked_at)');
+    _db.execute('''CREATE TABLE IF NOT EXISTS watches (
+      product_id TEXT PRIMARY KEY, variant TEXT NOT NULL, price INTEGER NOT NULL, stock INTEGER NOT NULL,
+      rule TEXT NOT NULL, value REAL, immediate INTEGER NOT NULL)''');
+    _db.execute('''CREATE TABLE IF NOT EXISTS alerts (
+      id INTEGER PRIMARY KEY, product_id TEXT NOT NULL, title TEXT NOT NULL, body TEXT NOT NULL,
+      immediate INTEGER NOT NULL, created_at TEXT NOT NULL, delivered_at TEXT)''');
   }
   factory CatalogRepository.memory() => CatalogRepository(sqlite3.openInMemory());
   final Database _db;
@@ -43,10 +56,13 @@ class CatalogRepository {
       )
       .toList();
 
-  Product importProduct(Product product) {
+  /// Stores an import or refresh, records its prices in the item's history,
+  /// and queues any alert the item's watch asks for.
+  Product importProduct(Product product, {DateTime? at}) {
     if (product.sample || product.sourceUrl.isEmpty) {
       throw ArgumentError('An imported product needs a source.');
     }
+    final now = (at ?? DateTime.now()).toUtc();
     _db.execute('BEGIN IMMEDIATE');
     try {
       final rows = _db.select('SELECT id, document FROM products WHERE source = ?', [product.sourceUrl]);
@@ -57,6 +73,7 @@ class CatalogRepository {
         );
         // A refresh the store blocked keeps the details gathered earlier.
         if (product.extraction == 'link' && existing.extraction != 'link') {
+          _record([PricePoint(productId: existing.id, seller: '', variant: '', checkedAt: now, ok: false)]);
           _db.execute('COMMIT');
           return existing;
         }
@@ -69,6 +86,19 @@ class CatalogRepository {
         'INSERT INTO products (id, source, document) VALUES (?, ?, ?) ON CONFLICT(source) DO UPDATE SET document = excluded.document',
         [stored.id, stored.sourceUrl, jsonEncode(stored.toJson())],
       );
+      if (stored.extraction != 'link') {
+        final fresh = observe(stored, now);
+        final watch = watchFor(stored.id);
+        if (watch != null) {
+          for (final alert in evaluate(watch, stored.name, history(stored.id), fresh)) {
+            _db.execute(
+              'INSERT INTO alerts (product_id, title, body, immediate, created_at) VALUES (?, ?, ?, ?, ?)',
+              [alert.productId, alert.title, alert.body, alert.immediate ? 1 : 0, now.toIso8601String()],
+            );
+          }
+        }
+        _record(fresh);
+      }
       _db.execute('COMMIT');
       return stored;
     } catch (_) {
@@ -102,7 +132,120 @@ class CatalogRepository {
     }
   }
 
-  void remove(String id) => _db.execute('DELETE FROM products WHERE id = ?', [id]);
+  void remove(String id) {
+    for (final table in [
+      'products WHERE id',
+      'price_points WHERE product_id',
+      'watches WHERE product_id',
+      'alerts WHERE product_id',
+    ]) {
+      _db.execute('DELETE FROM $table = ?', [id]);
+    }
+  }
+
+  void _record(List<PricePoint> points) {
+    for (final p in points) {
+      _db.execute(
+        'INSERT INTO price_points (product_id, seller, variant, checked_at, ok, price, currency, availability) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+        [
+          p.productId,
+          p.seller,
+          p.variant,
+          p.checkedAt.toIso8601String(),
+          p.ok ? 1 : 0,
+          p.price,
+          p.currency,
+          p.availability,
+        ],
+      );
+    }
+  }
+
+  /// Every recorded check of an item, oldest first.
+  List<PricePoint> history(String productId) => _db
+      .select('SELECT * FROM price_points WHERE product_id = ? ORDER BY checked_at, rowid', [productId])
+      .map(
+        (r) => PricePoint(
+          productId: r['product_id'] as String,
+          seller: r['seller'] as String,
+          variant: r['variant'] as String,
+          checkedAt: DateTime.parse(r['checked_at'] as String),
+          ok: r['ok'] == 1,
+          price: (r['price'] as num?)?.toDouble(),
+          currency: r['currency'] as String?,
+          availability: r['availability'] as String?,
+        ),
+      )
+      .toList();
+
+  /// The latest successful check and whether a later one was blocked.
+  ({DateTime? lastOk, bool lastFailed}) freshness(String productId) {
+    final rows = _db.select(
+      'SELECT checked_at, ok FROM price_points WHERE product_id = ? ORDER BY checked_at DESC, rowid DESC',
+      [productId],
+    );
+    final ok = rows.where((r) => r['ok'] == 1).firstOrNull;
+    return (
+      lastOk: ok == null ? null : DateTime.parse(ok['checked_at'] as String),
+      lastFailed: rows.isNotEmpty && rows.first['ok'] == 0,
+    );
+  }
+
+  /// When an item was last checked, successfully or not.
+  DateTime? lastChecked(String productId) {
+    final value = _db.select('SELECT MAX(checked_at) AS at FROM price_points WHERE product_id = ?', [
+      productId,
+    ]).first['at'];
+    return value == null ? null : DateTime.parse(value as String);
+  }
+
+  Watch? watchFor(String productId) =>
+      _db.select('SELECT * FROM watches WHERE product_id = ?', [productId]).map(_watch).firstOrNull;
+
+  List<Watch> watches() => _db.select('SELECT * FROM watches').map(_watch).toList();
+
+  Watch _watch(Row r) => Watch(
+    productId: r['product_id'] as String,
+    variant: r['variant'] as String,
+    price: r['price'] == 1,
+    stock: r['stock'] == 1,
+    rule: PriceRule.values.byName(r['rule'] as String),
+    value: (r['value'] as num?)?.toDouble(),
+    immediate: r['immediate'] == 1,
+  );
+
+  void setWatch(Watch w) => _db.execute(
+    'INSERT OR REPLACE INTO watches (product_id, variant, price, stock, rule, value, immediate) VALUES (?, ?, ?, ?, ?, ?, ?)',
+    [w.productId, w.variant, w.price ? 1 : 0, w.stock ? 1 : 0, w.rule.name, w.value, w.immediate ? 1 : 0],
+  );
+
+  /// Stops watching an item and drops its alerts that were not sent yet.
+  void unwatch(String productId) {
+    _db.execute('DELETE FROM watches WHERE product_id = ?', [productId]);
+    _db.execute('DELETE FROM alerts WHERE product_id = ? AND delivered_at IS NULL', [productId]);
+  }
+
+  /// Alerts not yet shown, oldest first, as (id, alert).
+  List<(int, WatchAlert)> pendingAlerts() => _db
+      .select('SELECT * FROM alerts WHERE delivered_at IS NULL ORDER BY id')
+      .map(
+        (r) => (
+          r['id'] as int,
+          WatchAlert(
+            productId: r['product_id'] as String,
+            title: r['title'] as String,
+            body: r['body'] as String,
+            immediate: r['immediate'] == 1,
+          ),
+        ),
+      )
+      .toList();
+
+  void markDelivered(Iterable<int> ids, DateTime at) {
+    for (final id in ids) {
+      _db.execute('UPDATE alerts SET delivered_at = ? WHERE id = ?', [at.toUtc().toIso8601String(), id]);
+    }
+  }
 
   /// Writes a consistent copy of the whole catalog to [path], which must not
   /// exist yet. The copy is an ordinary Vastra database.
@@ -113,7 +256,7 @@ class CatalogRepository {
   /// Returns how many finds were added.
   int restoreFrom(String path) {
     final backup = sqlite3.open(path, mode: OpenMode.readOnly);
-    final List<Row> rows;
+    final List<Row> rows, points, watched;
     try {
       final version = backup.select('PRAGMA user_version').first.values.first as int;
       if (version > 1) {
@@ -126,6 +269,10 @@ class CatalogRepository {
           .isNotEmpty;
       if (version != 1 || !hasTable) throw const FormatException('This file is not a Vastra catalog backup.');
       rows = backup.select('SELECT id, source, document, collection FROM products').toList();
+      bool has(String table) =>
+          backup.select("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ?", [table]).isNotEmpty;
+      points = has('price_points') ? backup.select('SELECT * FROM price_points').toList() : const [];
+      watched = has('watches') ? backup.select('SELECT * FROM watches').toList() : const [];
     } on SqliteException {
       throw const FormatException('This file is not a Vastra catalog backup.');
     } finally {
@@ -147,7 +294,30 @@ class CatalogRepository {
           r['document'],
           r['collection'],
         ]);
-        added += _db.updatedRows;
+        if (_db.updatedRows == 0) continue;
+        added++;
+        // History and watches come along only with finds that are new here.
+        for (final p in points.where((p) => p['product_id'] == r['id'])) {
+          _db.execute(
+            'INSERT INTO price_points (product_id, seller, variant, checked_at, ok, price, currency, availability) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+            [
+              p['product_id'],
+              p['seller'],
+              p['variant'],
+              p['checked_at'],
+              p['ok'],
+              p['price'],
+              p['currency'],
+              p['availability'],
+            ],
+          );
+        }
+        for (final w in watched.where((w) => w['product_id'] == r['id'])) {
+          _db.execute(
+            'INSERT OR IGNORE INTO watches (product_id, variant, price, stock, rule, value, immediate) VALUES (?, ?, ?, ?, ?, ?, ?)',
+            [w['product_id'], w['variant'], w['price'], w['stock'], w['rule'], w['value'], w['immediate']],
+          );
+        }
       }
       _db.execute('COMMIT');
       return added;
