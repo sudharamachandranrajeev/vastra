@@ -144,6 +144,39 @@ dismissed (0) values. Accepting writes the field and is re-applied on refresh on
 still leaves it empty. Backups carry choices, keeping one accepted value per field; the look cache is
 not restored and rebuilds on demand.
 
+## Shop browser and screenshots
+
+`lib/ui/shop_browser.dart` opens shops in a WebView: `webview_flutter` inside the app on Android, and
+a single `desktop_webview_window` window on Windows (WebView2) and Linux (WebKitGTK 4.1). The browser
+only opens HTTPS pages (and `about:blank`); other schemes, such as `intent:`, `javascript:` and
+`file:`, are refused. On desktop a script adds a **Save to Vastra** button in a closed shadow root on
+the top frame, which posts `vastraSave` to the app.
+
+Sign-ins are the shop's own cookies and storage in that browser. Vastra never reads them. Where they
+are kept:
+
+- Android: the app's WebView data.
+- Windows: `WebView2` in Vastra's support folder.
+- Linux: `~/.local/share/io.github.sudharamachandranrajeev.vastra/browser/cookies.sqlite`, mode 0700.
+  The GTK runner turns on WebKit's persistent cookie storage at startup.
+
+**Sign out of shops** clears cookies, local storage and cache on every platform.
+
+On save, `captureScript` (in `lib/domain/page_capture.dart`) runs in the page. It clones the
+document and removes `input`, `textarea`, `select`, `form`, `iframe`, media, styles and every script
+except JSON-LD. Then it returns the cleaned HTML, the visible text, the selection, the first visible
+`h1`, up to six large HTTPS images, and the text of common name, price and brand elements (Amazon,
+eBay and schema.org microdata). `productFromScreen` validates the address with the importer's rules,
+then tries the structured extractor. If that fails, it falls back to the selection, the name element,
+then the heading. A price missing from structured data comes from the price element, or else the
+first price after the name in the visible text. The result is marked `screen` and saved like any
+import, so saving again records a new price.
+
+`lib/data/ocr.dart` reads screenshots on the device: ML Kit's bundled Latin recognizer on Android,
+and `tesseract <file> stdout -l eng` on desktop when it is on `PATH` (or in the standard Windows
+install folder). `lib/domain/screenshot_text.dart` drops clock times, counts, buttons and app names,
+and keeps up to eight short, wordy lines as search candidates, plus any price and links.
+
 ## Import policy
 
 The native apps accept a link from any public store. The link can arrive from the Android share

@@ -12,6 +12,7 @@ import '../data/catalog_data.dart';
 import '../data/catalog_repository.dart';
 import '../data/diagnostics.dart';
 import '../data/look_service.dart';
+import '../data/ocr.dart';
 import '../data/settings_store.dart';
 import '../data/share_intake.dart';
 import '../data/updater.dart';
@@ -19,14 +20,19 @@ import '../data/watcher.dart';
 import '../domain/catalog_export.dart';
 import '../domain/categorizer.dart';
 import '../domain/look.dart';
+import '../domain/page_capture.dart';
 import '../domain/product.dart';
 import '../domain/product_importer.dart';
 import '../domain/recommender.dart';
+import '../domain/screenshot_text.dart';
+import '../domain/shops.dart';
 import '../domain/sharing.dart';
 import '../domain/releases.dart';
 import 'feedback.dart';
 import 'fit_panel.dart';
 import 'look_panels.dart';
+import 'shop_browser.dart';
+import 'shop_sheet.dart';
 import 'maintenance.dart';
 import 'paper.dart';
 import 'wardrobe_screen.dart';
@@ -45,11 +51,17 @@ class VastraApp extends StatelessWidget {
     this.diagnostics,
     this.settings,
     this.notify,
+    this.openShop,
+    this.readText,
   });
   final CatalogData data;
   final CatalogRepository repository;
   final ShareIntake? intake;
   final UiFeedback? feedback;
+
+  /// Vastra's shop browser and screenshot reader; tests replace them.
+  final OpenShop? openShop;
+  final ReadText? readText;
 
   /// Replaces network imports in tests.
   final ProductImporter Function(Categorizer categorizer)? importer;
@@ -81,6 +93,8 @@ class VastraApp extends StatelessWidget {
       diagnostics: diagnostics ?? Diagnostics(),
       settings: settings ?? SettingsStore(),
       notify: notify,
+      openShop: openShop,
+      readText: readText,
     ),
   );
 }
@@ -96,7 +110,11 @@ class Home extends StatefulWidget {
     this.importer,
     this.updates,
     this.notify,
+    this.openShop,
+    this.readText,
   });
+  final OpenShop? openShop;
+  final ReadText? readText;
   final CatalogData data;
   final CatalogRepository repository;
   final SettingsStore settings;
@@ -387,6 +405,76 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
       );
     }
     await _detail(product);
+  }
+
+  /// Search shops, go to an address, or start from a screenshot.
+  Future<void> _shop({String query = '', ScreenshotText? screenshot}) {
+    final counts = <String, int>{};
+    for (final e in _entries.where((e) => !e.product.sample)) {
+      final host = Uri.tryParse(e.product.sourceUrl)?.host;
+      if (host != null && host.isNotEmpty) counts[host] = (counts[host] ?? 0) + 1;
+    }
+    final yours = (counts.keys.toList()..sort((a, b) => counts[b]!.compareTo(counts[a]!))).take(8).toList();
+    return showPaperDialog<void>(
+      context,
+      builder: (c) => ShopSheet(
+        settings: widget.settings,
+        initialQuery: query,
+        yourShops: yours,
+        screenshot: screenshot,
+        onScreenshot: screenshot == null ? _fromScreenshot : null,
+        onOpen: _browse,
+      ),
+    );
+  }
+
+  Future<void> _browse(Uri uri) async {
+    try {
+      await (widget.openShop ?? openShop)(context, uri, _savePage);
+    } on Object {
+      _toast(ToastKind.error, 'Vastra’s browser could not open. On Windows it needs the WebView2 runtime.');
+    }
+  }
+
+  /// Saves the page the shop browser is showing. A page already in the
+  /// catalog is updated with what is on screen now.
+  Future<String> _savePage(ScreenCapture capture) async {
+    final product = productFromScreen(capture, categorizer: _categorizer);
+    final known = _entries.any((e) => e.product.sourceUrl == product.sourceUrl);
+    late Product stored;
+    if (!_write(() => stored = widget.repository.importProduct(product))) {
+      return 'Vastra could not save this page.';
+    }
+    _reload();
+    final price = stored.displayOffer?.price == null ? '' : ' at ${stored.displayOffer!.priceText}';
+    return '${known ? 'Updated' : 'Saved'} "${stored.name}"$price.';
+  }
+
+  /// Reads the words, price and links in a screenshot on this device, then
+  /// offers them as a shop search.
+  Future<void> _fromScreenshot() async {
+    try {
+      final picked = await FilePicker.pickFile(dialogTitle: 'Choose a screenshot', type: FileType.image);
+      if (picked == null || !mounted) return;
+      var file = picked.path;
+      Directory? temp;
+      if (file == null) {
+        temp = await Directory.systemTemp.createTemp('vastra-shot');
+        file = '${temp.path}${Platform.pathSeparator}${picked.name}';
+        await File(file).writeAsBytes(await picked.readAsBytes());
+      }
+      try {
+        final lines = await (widget.readText ?? readText)(file);
+        if (!mounted) return;
+        await _shop(screenshot: readScreenshot(lines));
+      } finally {
+        await temp?.delete(recursive: true);
+      }
+    } on OcrUnavailable catch (e) {
+      _toast(ToastKind.error, e.message);
+    } on Object {
+      _toast(ToastKind.error, 'That screenshot could not be read.');
+    }
   }
 
   /// Finds items that look like a photo the owner picks. The photo is read
@@ -756,6 +844,19 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
                       },
                     ),
                     PaperButton(
+                      label: 'Sign out of shops',
+                      icon: Icons.logout,
+                      compact: true,
+                      onPressed: () async {
+                        try {
+                          await signOutOfShops();
+                          _toast(ToastKind.success, 'Signed out of every shop in Vastra’s browser.');
+                        } on Object {
+                          _toast(ToastKind.error, 'Vastra’s browser data could not be cleared.');
+                        }
+                      },
+                    ),
+                    PaperButton(
                       label: 'Sync with my server',
                       icon: Icons.sync,
                       compact: true,
@@ -968,6 +1069,7 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
                   runSpacing: Space.s,
                   children: [
                     CopperButton(label: 'Add a product link', icon: Icons.add_link, onPressed: _import),
+                    PaperButton(label: 'Shop in Vastra', icon: Icons.travel_explore, onPressed: _shop),
                     PaperButton(
                       label: 'Search by photo',
                       icon: Icons.image_search,
@@ -2093,25 +2195,18 @@ class _ProductDetailState extends State<_ProductDetail> {
                 spacing: Space.s,
                 runSpacing: Space.s,
                 children: [
-                  for (final (label, uri) in [
-                    (
-                      'Google Shopping',
-                      Uri.https('www.google.com', '/search', {
-                        'tbm': 'shop',
-                        'q': Recommender.searchQuery(p),
-                      }),
-                    ),
-                    (
-                      'Pinterest',
-                      Uri.https('www.pinterest.com', '/search/pins/', {'q': Recommender.searchQuery(p)}),
-                    ),
-                    ('Etsy', Uri.https('www.etsy.com', '/search', {'q': Recommender.searchQuery(p)})),
-                  ])
+                  for (final shop in shopSearches(
+                    amazon: home.widget.settings.get<String>('shop.amazon') ?? amazonSites.first,
+                    ebay: home.widget.settings.get<String>('shop.ebay') ?? ebaySites.first,
+                  ))
                     PaperButton(
-                      label: label,
-                      icon: Icons.north_east,
+                      label: shop.name,
+                      icon: Icons.travel_explore,
                       compact: true,
-                      onPressed: () => home._open(uri.toString()),
+                      onPressed: () {
+                        widget.close();
+                        home._browse(shop.search(Recommender.searchQuery(p)));
+                      },
                     ),
                 ],
               ),
@@ -2126,6 +2221,15 @@ class _ProductDetailState extends State<_ProductDetail> {
                       icon: Icons.open_in_new,
                       compact: true,
                       onPressed: () => home._open(p.sourceUrl),
+                    ),
+                    PaperButton(
+                      label: 'Open in Vastra’s browser',
+                      icon: Icons.travel_explore,
+                      compact: true,
+                      onPressed: () {
+                        widget.close();
+                        home._browse(Uri.parse(p.sourceUrl));
+                      },
                     ),
                     PaperButton(
                       label: 'Copy link',

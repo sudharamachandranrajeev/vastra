@@ -1,5 +1,28 @@
 # Changelog
 
+## 0.10.0
+
+- Shop in Vastra: search Amazon, eBay, Google Shopping, Etsy or Pinterest, return to a shop already in
+  your catalog, or go to any shop's address, all in Vastra's own browser. Choose which Amazon and eBay
+  country to use. On Android the browser opens inside the app; on Windows and Linux it opens in its
+  own window.
+- Sign in to shops in that browser, so you see your own prices, member prices and country. The sign-in
+  goes to the shop and stays in Vastra's browser on this device. Vastra never sees your password.
+  **Sign out of shops** in Settings forgets every shop sign-in and cookie.
+- **Save to Vastra** on any product page reads what the page is showing: the shop's product data when
+  it has some, otherwise the name, price, brand and photos on the screen. Select the product's name
+  first if Vastra picks the wrong one. Form fields are removed before reading, so typed or saved
+  personal details are never read. Saving the same page again updates the price.
+- From a screenshot: pick a screenshot of a product (from social media, a chat or a shop) and Vastra
+  reads its words, price and links on the device, then searches the shops for them. Android reads text
+  with Google's on-device recognizer, bundled with the app. Windows and Linux use Tesseract if it is
+  installed. No image is sent anywhere.
+- **Open in Vastra's browser** on any find, and **Find similar elsewhere** now opens in it too.
+- Linux now needs WebKitGTK 4.1 (`webkit2gtk-4.1`). Windows uses the WebView2 runtime, which Windows 10
+  and 11 already include.
+- The Android app is about 33 MB larger, because the text recognizer is included so it works without
+  Google Play services or a download.
+
 ## 0.9.0
 
 - Search by photo: pick a photo of something you like and Vastra lists the finds and samples with the

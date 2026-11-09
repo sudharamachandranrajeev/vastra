@@ -6,7 +6,9 @@ pkgdesc='Standalone fashion and personal-care discovery'
 arch=('x86_64')
 url='https://github.com/sudharamachandranrajeev/vastra'
 license=('custom:All rights reserved')
-depends=('gtk3' 'gcc-libs' 'libglvnd' 'gstreamer' 'gst-plugins-base-libs')
+depends=('gtk3' 'gcc-libs' 'libglvnd' 'gstreamer' 'gst-plugins-base-libs' 'webkit2gtk-4.1')
+optdepends=('tesseract: read product details from screenshots'
+            'tesseract-data-eng: English text for screenshots')
 provides=('vastra')
 conflicts=('vastra')
 options=('!strip')

@@ -7,6 +7,9 @@
 
 #include "flutter/generated_plugin_registrant.h"
 
+#include <glib/gstdio.h>
+#include <webkit2/webkit2.h>
+
 struct _MyApplication {
   GtkApplication parent_instance;
   char** dart_entrypoint_arguments;
@@ -103,7 +106,17 @@ static gboolean my_application_local_command_line(GApplication* application,
 static void my_application_startup(GApplication* application) {
   // MyApplication* self = MY_APPLICATION(object);
 
-  // Perform any actions required at application startup.
+  // Vastra's shop browser keeps shop sign-ins between runs. WebKitGTK holds
+  // cookies in memory unless told where to store them; the folder is private
+  // to this user.
+  g_autofree gchar* browser = g_build_filename(
+      g_get_user_data_dir(), g_application_get_application_id(application), "browser", nullptr);
+  g_mkdir_with_parents(browser, 0700);
+  g_chmod(browser, 0700);
+  g_autofree gchar* cookies = g_build_filename(browser, "cookies.sqlite", nullptr);
+  webkit_cookie_manager_set_persistent_storage(
+      webkit_web_context_get_cookie_manager(webkit_web_context_get_default()), cookies,
+      WEBKIT_COOKIE_PERSISTENT_STORAGE_SQLITE);
 
   G_APPLICATION_CLASS(my_application_parent_class)->startup(application);
 }

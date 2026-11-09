@@ -57,6 +57,9 @@ releases** (0.x). It does not search shops for you yet.
   deletes or overwrites.
 - 🔎 **Discover** – search your finds by name, brand, category, colour or material, and filter by
   category or currency. "More like this" suggests similar finds, worked out on your device.
+- 🛍️ **Shop in Vastra** – search Amazon, eBay and other shops in Vastra's own browser, and sign in
+  to see your own prices. On a product page, tap **Save to Vastra** and it reads what the page shows.
+  Or pick a screenshot of something you saw, and Vastra reads its words and price to search for it.
 - 📷 **Search by photo** – pick a photo and Vastra finds the items with the closest colours and
   pattern. When a shop leaves out the colour, material or pattern, Vastra suggests them and you
   decide. All of it happens on your device, with no AI service and no photo sent anywhere.
@@ -82,11 +85,12 @@ flowchart LR
     V --> C[("🗂️ Your catalogue<br/>on this device")]
 ```
 
-- **Vastra reads only the page you give it**, and only the public product details on it. It does
-  not sign in to shops or get around their blocks.
+- **Vastra reads only the page you give it**, and only the product details on it. When you browse
+  in Vastra's browser, you sign in to shops yourself and Vastra reads only the page you save. It
+  does not get around shops' blocks.
 - **When a shop blocks reading**, Vastra still saves the link so you can refresh it later.
-- **Your catalogue stays on your device.** There is no account and no sync. Desktop apps and the
-  web preview keep separate catalogues.
+- **Your catalogue stays on your device.** There is no Vastra account. Sync goes only to a server
+  you run, if you set one up. Desktop apps and the web preview keep separate catalogues.
 - **Prices are the shop's listed price.** Shipping, taxes and duties are not included.
 
 > [!IMPORTANT]
@@ -184,10 +188,43 @@ yet. They never delete or overwrite, so a removal on one device does not remove 
 </details>
 
 <details>
-<summary><b>Does Vastra search shops or find the cheapest seller for me?</b></summary>
+<summary><b>How do I shop and save from Amazon, eBay or any shop?</b></summary>
 
-Not yet. It searches your own catalogue and the samples. Live search across shops, exact-product
-matching and delivered prices are on the [roadmap](docs/ROADMAP.md).
+1. On **Discover**, choose **Shop in Vastra**.
+2. Type what you are looking for and choose a shop, or type a shop's address such as `zara.com`.
+   Pick your Amazon and eBay country from the lists.
+3. Sign in if you want your own prices. The sign-in goes to the shop, not to Vastra.
+4. Open a product and tap **Save to Vastra**. If it picks the wrong name, select the product's name
+   on the page and tap it again.
+
+On Windows and Linux the shop opens in its own window, with the button in the bottom-right corner.
+Some sign-ins, such as **Sign in with Google**, refuse to work inside apps. Use the shop's own email
+sign-in instead. Some shops show an error page or a check in Vastra's browser. Vastra does not get
+around these. Copy the link from your usual browser and paste it into Vastra instead. To forget
+every shop sign-in, choose **Settings → Sign out of shops**.
+</details>
+
+<details>
+<summary><b>How does reading a screenshot work?</b></summary>
+
+1. On **Discover**, choose **Shop in Vastra**, then **From a screenshot**, and pick the image.
+2. Vastra reads the text on your device and leaves out app clutter such as likes and buttons.
+3. Tap the words to add or remove them from the search, then choose a shop. Links in the screenshot
+   can be opened directly.
+
+Android reads text with an on-device recognizer that comes with the app. On Windows and Linux,
+install [Tesseract](https://github.com/tesseract-ocr/tesseract) and its English data first (Arch:
+`sudo pacman -S tesseract tesseract-data-eng`; Windows: the
+[UB Mannheim installer](https://github.com/UB-Mannheim/tesseract/wiki)). The image is never sent
+anywhere.
+</details>
+
+<details>
+<summary><b>Does Vastra find the cheapest seller for me?</b></summary>
+
+Not yet. **Shop in Vastra** opens shop searches and **Find similar elsewhere** searches for an item,
+but you compare the results yourself. Exact-product matching and delivered prices are on the
+[roadmap](docs/ROADMAP.md).
 </details>
 
 <details>
@@ -216,7 +253,8 @@ No. Samples carry a "Sample" label. Their prices and details are made up for ill
 <summary>Build from source, test and release</summary>
 
 You need [Git](https://git-scm.com) and [Flutter](https://flutter.dev) 3.47.7. Linux builds also
-need Clang, CMake, Ninja, pkg-config, GTK 3 development files and liblzma.
+need Clang, CMake, Ninja, pkg-config, GTK 3, GStreamer and WebKitGTK 4.1 development files,
+and liblzma.
 
 ```bash
 git clone https://github.com/sudharamachandranrajeev/vastra

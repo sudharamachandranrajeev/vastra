@@ -13,7 +13,8 @@ cp -a "$bundle/." "$stage/$name/"
 cp "$root/branding/vastra-512.png" "$stage/$name/vastra.png"
 cp "$root/scripts/install-linux.sh" "$stage/$name/install.sh"
 cat > "$stage/$name/README.txt" <<'README'
-Vastra for Linux x86-64. Requires GTK 3 and the system OpenGL libraries.
+Vastra for Linux x86-64. Requires GTK 3, GStreamer, WebKitGTK 4.1 and the system OpenGL libraries.
+Reading screenshots also needs Tesseract with English data (optional).
 ./vastra                  run from this folder
 ./install.sh              install for your user, including launcher and icon
 ./install.sh --uninstall  remove the program; your catalog remains

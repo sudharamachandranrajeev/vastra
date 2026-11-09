@@ -22,5 +22,9 @@ add_definitions(-DAPPLICATION_ID="${APPLICATION_ID}")
 # Add dependency libraries. Add any application-specific dependencies here.
 target_link_libraries(${BINARY_NAME} PRIVATE flutter)
 target_link_libraries(${BINARY_NAME} PRIVATE PkgConfig::GTK)
+# The shop browser (desktop_webview_window) uses WebKitGTK; the runner sets
+# where it keeps cookies.
+pkg_check_modules(WEBKIT REQUIRED IMPORTED_TARGET webkit2gtk-4.1)
+target_link_libraries(${BINARY_NAME} PRIVATE PkgConfig::WEBKIT)
 
 target_include_directories(${BINARY_NAME} PRIVATE "${CMAKE_SOURCE_DIR}")

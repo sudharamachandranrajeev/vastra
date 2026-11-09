@@ -74,6 +74,13 @@ Acceptance: an alert names the old and new price and their source, and turning a
 - Attribute tagging for links with sparse data, from the item's words and photo.
 - Follows the "Optional AI models" rules below: suggestions stay separate from store evidence, say where they came from, and every one can be used, edited, dismissed or cleared. A cloud vision model stays out unless the owner chooses one later.
 
+### Phase 7 — shop browser, sign-in and reading the screen (0.10.0)
+
+- Vastra's own browser for Amazon, eBay and any shop, embedded on Android and a separate window on Windows and Linux. The owner signs in to shops there; sign-ins stay in that browser's storage on the device, and one action forgets them all.
+- **Save to Vastra** reads what the signed-in page shows: structured data first, then the shop's name, price and brand elements, then the visible text. Form fields are removed before anything is read.
+- Screenshots are read on the device (ML Kit on Android, Tesseract on desktop) into search words, a price and links.
+- No marketplace API keys and no paid service. Shops that refuse embedded browsers or show bot checks are reported, not bypassed.
+
 Sources: [BEUC complaint about Shein](https://www.storyboard18.com/amp/brand-marketing/shein-hit-with-eu-complaint-over-dark-patterns-in-app-website-68964.htm), [Dark patterns at scale, 11K shopping sites](https://arxiv.org/pdf/2107.07893), [Forbes India on dark patterns](https://www.magzter.com/ja/stories/business/Forbes-India/CLICK-BUY-REGRET), [Universal wishlist apps compared](https://giftlist.com/blog/10-best-universal-wishlist-apps-in-2025-ranked-and-reviewed), [Good On You wardrobe app test](https://goodonyou.eco/wardrobe-organising-apps/), [Whering best wardrobe apps](https://whering.co.uk/best-wardrobe-apps-2025), [MediaPost on fit and returns](https://www.mediapost.com/publications/article/317614/retail-search-fit-recommendations-fail-to-curtai.html), [Baymard product page research](https://www.baymard.com/research/product-page), [Clutch on AI shopping features](https://clutch.co/resources/ai-shopping-features).
 
 ## Implemented foundation
