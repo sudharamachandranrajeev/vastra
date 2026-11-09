@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'categorizer.dart';
 import 'product.dart';
+import 'sharing.dart';
 
 enum ExportFormat {
   shopify('Shopify products CSV', 'csv', 'Import in Shopify admin: Products > Import.'),
@@ -14,16 +15,41 @@ enum ExportFormat {
     'Structured JSON (schema.org)',
     'json',
     'Every detail Vastra holds, as schema.org Product data for WooCommerce, BigCommerce or your own tools.',
+  ),
+  wishlistPage(
+    'Wish list page (opens in any browser)',
+    'html',
+    'One file anyone can open, no account needed. Items, shop links and optional prices. Choose a collection.',
+  ),
+  wishlistFile(
+    'Wish list file (for another Vastra)',
+    'json',
+    'A small file another Vastra can open as a collection. Choose a collection.',
   );
 
   const ExportFormat(this.label, this.extension, this.hint);
   final String label, extension, hint;
+
+  /// Wish lists share one named collection; the others export finds.
+  bool get isWishlist => this == wishlistPage || this == wishlistFile;
 }
 
-String exportCatalog(List<Product> products, ExportFormat format) => switch (format) {
+String exportCatalog(
+  List<Product> products,
+  ExportFormat format, {
+  String listName = 'Wish list',
+  String message = '',
+  bool prices = true,
+}) => switch (format) {
   ExportFormat.shopify => shopifyCsv(products),
   ExportFormat.merchantFeed => merchantFeed(products),
   ExportFormat.schemaJson => const JsonEncoder.withIndent('  ').convert(schemaOrg(products)),
+  ExportFormat.wishlistPage => sharePage(
+    sharedListFrom(listName, products, message: message, prices: prices),
+  ),
+  ExportFormat.wishlistFile => shareFile(
+    sharedListFrom(listName, products, message: message, prices: prices),
+  ),
 };
 
 String _csv(List<List<String>> rows) => rows

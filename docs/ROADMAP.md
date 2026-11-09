@@ -57,10 +57,10 @@ Acceptance: an alert names the old and new price and their source, and turning a
 - A calendar planner with optional reminders, and packing lists.
 - Cost-per-wear and wardrobe statistics.
 
-### Phase 4 — sharing and gifting
+### Phase 4 — sharing and gifting (0.7.0)
 
-- Read-only wishlist links or files that open without an account.
-- Gift reservation so people don't buy the same gift twice.
+- Read-only wishlist files that open without an account. Live links need a server, so they wait for Phase 5's optional sync.
+- Gift reservation so people don't buy the same gift twice, using codes givers pass to each other (no server, and the owner sees nothing).
 - Per-collection privacy.
 
 ### Phase 5 — backup and sync

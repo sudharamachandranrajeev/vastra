@@ -87,6 +87,20 @@ Reminders: `WatchService.remind` sends one notification per day for outfits plan
 bell on, only when `plan.reminders` is set. It runs when the app starts or resumes, and from the
 Android background job, which is scheduled while background checks or reminders are on.
 
+## Sharing
+
+`lib/domain/sharing.dart` builds two things from a collection: a standalone page (`sharePage`) and a
+JSON file (`shareFile`, `"vastraList": 1`). Both carry only name, brand, link, first HTTPS image and
+optionally the first offer's price. Nothing from the wardrobe, fit or watch tables goes in. The page
+has no outside resources; its content security policy allows only its own inline script and HTTPS
+images, every shared string is HTML-escaped and the script only toggles classes. Reservations are
+codes (`vastra-claim:<list id>:<item numbers>`) that gift givers pass on themselves; the list id is
+a hash of the name and links, so a code only matches its own list. `parseSharedList` caps the file
+at 2 MB and 500 items, refuses anything that is not a Vastra list, and drops items whose link fails
+the importer's public-HTTPS check and images that are not public HTTPS. Opened items are link-only
+finds in a "Shared: <name>" collection. The `private_collections` table (additive, version 1) lists
+locked collections; every export, including the wish list formats, leaves their finds out.
+
 ## Import policy
 
 The native apps accept a link from any public store. The link can arrive from the Android share

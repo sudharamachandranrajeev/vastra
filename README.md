@@ -47,6 +47,10 @@ releases** (0.x). It does not search shops for you yet.
   wear, most worn and never worn. Build outfits and moodboards from items you own or only want, plan
   them on a calendar (with an optional morning reminder), and make packing lists. No item limit, no
   ads, no account.
+- 🎁 **Share a wish list, no account** – save a collection as one web page that anyone can open in a
+  browser. Gift givers tap "I'll buy this" and send a short code to each other, so nobody buys the
+  same gift twice and the list's owner never sees who chose what. Lock a collection as private and it
+  is left out of every export and shared list.
 - 🔎 **Discover** – search your finds by name, brand, category, colour or material, and filter by
   category or currency. "More like this" suggests similar finds, worked out on your device.
 - 🏷️ **Sorted for you** – each find gets a category and type, and Vastra learns from your fixes.
@@ -117,6 +121,22 @@ alert. One switch in **Settings** turns every alert off.
 4. **Packing** lists can start from the outfits you planned between two dates.
 
 Everything stays on your device and is included in backups. Exports of your finds leave it out.
+</details>
+
+<details>
+<summary><b>How do I share a wish list?</b></summary>
+
+1. Put the items in a collection, then tap the export icon and choose **Wish list page**.
+2. Pick the collection, decide whether to show prices, add a message if you like, and save the file.
+   Send it by email or chat. It opens in any browser, with no account and nothing to install.
+3. A gift giver taps **I'll buy this** on what they will get. The page gives them a short code. They
+   send it to the other gift givers, who paste it into **Codes from others** to see what is taken.
+   Send the codes to each other, not to the owner, to keep the surprise.
+4. **Wish list file** makes a small file that another Vastra opens with **Open a shared list** in
+   the Collections tab.
+
+The page never shows what you paid, what you wore or your sizes. Tick **Private** on a collection
+to keep it out of exports and shared lists altogether.
 </details>
 
 <details>

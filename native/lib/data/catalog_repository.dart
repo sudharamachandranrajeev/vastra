@@ -48,6 +48,7 @@ class CatalogRepository {
     _db.execute('''CREATE TABLE IF NOT EXISTS fits (
       product_id TEXT PRIMARY KEY, brand TEXT NOT NULL, size TEXT NOT NULL, kept INTEGER NOT NULL,
       fit TEXT NOT NULL, note TEXT NOT NULL, item TEXT NOT NULL, recorded_at TEXT NOT NULL)''');
+    _db.execute('CREATE TABLE IF NOT EXISTS private_collections (name TEXT PRIMARY KEY)');
     // Wardrobe tables are additive too.
     _db.execute('''CREATE TABLE IF NOT EXISTS owned (
       product_id TEXT PRIMARY KEY, price REAL, currency TEXT NOT NULL, bought_on TEXT)''');
@@ -260,6 +261,18 @@ class CatalogRepository {
   );
 
   void clearFit(String productId) => _db.execute('DELETE FROM fits WHERE product_id = ?', [productId]);
+
+  // ---- Privacy ----
+
+  /// Collections the owner locked: their finds are left out of every export
+  /// and shared list.
+  Set<String> privateCollections() => {
+    for (final r in _db.select('SELECT name FROM private_collections')) r['name'] as String,
+  };
+
+  void setPrivate(String collection, bool locked) => locked
+      ? _db.execute('INSERT OR IGNORE INTO private_collections (name) VALUES (?)', [collection])
+      : _db.execute('DELETE FROM private_collections WHERE name = ?', [collection]);
 
   // ---- Wardrobe ----
 
@@ -500,7 +513,7 @@ class CatalogRepository {
   /// Returns how many finds were added.
   int restoreFrom(String path) {
     final backup = sqlite3.open(path, mode: OpenMode.readOnly);
-    final List<Row> rows, points, watched, fitted, ownedRows, wearRows;
+    final List<Row> rows, points, watched, fitted, ownedRows, wearRows, locked;
     final backupWardrobe = <String, List<Row>>{};
     try {
       final version = backup.select('PRAGMA user_version').first.values.first as int;
@@ -521,6 +534,9 @@ class CatalogRepository {
       fitted = has('fits') ? backup.select('SELECT * FROM fits').toList() : const [];
       ownedRows = has('owned') ? backup.select('SELECT * FROM owned').toList() : const [];
       wearRows = has('wears') ? backup.select('SELECT * FROM wears').toList() : const [];
+      locked = has('private_collections')
+          ? backup.select('SELECT name FROM private_collections').toList()
+          : const [];
       for (final t in ['outfits', 'outfit_items', 'plans', 'packs', 'pack_items']) {
         backupWardrobe[t] = has(t) ? backup.select('SELECT * FROM $t').toList() : const [];
       }
@@ -596,6 +612,9 @@ class CatalogRepository {
             [w['product_id'], w['variant'], w['price'], w['stock'], w['rule'], w['value'], w['immediate']],
           );
         }
+      }
+      for (final l in locked) {
+        _db.execute('INSERT OR IGNORE INTO private_collections (name) VALUES (?)', [l['name']]);
       }
       _restoreBoards(backupWardrobe);
       _db.execute('COMMIT');

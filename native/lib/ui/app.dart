@@ -20,6 +20,7 @@ import '../domain/categorizer.dart';
 import '../domain/product.dart';
 import '../domain/product_importer.dart';
 import '../domain/recommender.dart';
+import '../domain/sharing.dart';
 import '../domain/releases.dart';
 import 'feedback.dart';
 import 'fit_panel.dart';
@@ -514,9 +515,39 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
             if (!e.product.sample) e,
         ],
         collections: collections,
+        locked: widget.repository.privateCollections(),
         onDone: (message, ok) => _toast(ok ? ToastKind.success : ToastKind.error, message),
       ),
     );
+  }
+
+  /// Adds the items of a Vastra wish list file as a new collection. Items
+  /// already in the catalog stay where they are.
+  Future<void> _openSharedList() async {
+    try {
+      final picked = await FilePicker.pickFile(dialogTitle: 'Choose a Vastra wish list');
+      if (picked == null) return;
+      final list = parseSharedList(utf8.decode(await picked.readAsBytes()));
+      final known = {for (final e in _entries) e.product.sourceUrl};
+      final collection = 'Shared: ${list.name}'.substring(0, 'Shared: ${list.name}'.length.clamp(0, 60));
+      var added = 0;
+      for (final item in list.items.where((i) => !known.contains(i.url))) {
+        final stored = widget.repository.importProduct(productFromShared(item, categorizer: _categorizer));
+        widget.repository.save(stored, collection);
+        added++;
+      }
+      _reload();
+      _toast(
+        ToastKind.success,
+        added == 0
+            ? 'Everything on that list is already in your catalog.'
+            : 'Added $added ${added == 1 ? 'item' : 'items'} to "$collection".',
+      );
+    } on FormatException catch (e) {
+      _toast(ToastKind.error, e.message);
+    } on Object {
+      _toast(ToastKind.error, 'That file could not be read. Your catalog is unchanged.');
+    }
   }
 
   void _settings() {
@@ -1003,13 +1034,34 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
                     const Text('Watched only'),
                   ],
                 ),
-              if (_tab == 3)
+              if (_tab == 3) ...[
                 _dropdown(
                   _collection,
                   ['All collections', ...collections],
                   (v) => setState(() => _collection = v),
                   'Collection',
                 ),
+                if (_collection != 'All collections')
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Checkbox(
+                        value: widget.repository.privateCollections().contains(_collection),
+                        onChanged: (v) {
+                          FeedbackScope.of(context).play(Cue.toggle);
+                          setState(() => widget.repository.setPrivate(_collection, v!));
+                        },
+                      ),
+                      const Text('Private: left out of exports and shared lists'),
+                    ],
+                  ),
+                PaperButton(
+                  label: 'Open a shared list',
+                  icon: Icons.folder_open,
+                  compact: true,
+                  onPressed: _openSharedList,
+                ),
+              ],
             ],
           ),
         if (_tab == 2)
@@ -2200,9 +2252,18 @@ class _ImportSheetState extends State<ImportSheet> {
 
 /// Saves the catalog for another platform.
 class ExportSheet extends StatefulWidget {
-  const ExportSheet({super.key, required this.products, required this.collections, required this.onDone});
+  const ExportSheet({
+    super.key,
+    required this.products,
+    required this.collections,
+    required this.onDone,
+    this.locked = const {},
+  });
   final List<CatalogEntry> products;
   final List<String> collections;
+
+  /// Private collections. Their finds are never exported or shared.
+  final Set<String> locked;
   final void Function(String message, bool ok) onDone;
   @override
   State<ExportSheet> createState() => _ExportSheetState();
@@ -2211,26 +2272,44 @@ class ExportSheet extends StatefulWidget {
 class _ExportSheetState extends State<ExportSheet> {
   ExportFormat _format = ExportFormat.shopify;
   String _scope = 'Whole catalog';
-  bool _busy = false;
+  bool _busy = false, _prices = true;
+  final _message = TextEditingController();
+
+  @override
+  void dispose() {
+    _message.dispose();
+    super.dispose();
+  }
+
+  bool get _wishlist => _format.isWishlist;
+
+  List<String> get _open => widget.collections.where((c) => !widget.locked.contains(c)).toList();
 
   List<Product> get _chosen => [
     for (final e in widget.products)
-      if (_scope == 'Whole catalog' || e.collection == _scope) e.product,
+      if (!widget.locked.contains(e.collection) &&
+          (_wishlist ? e.collection == _scope : (_scope == 'Whole catalog' || e.collection == _scope)))
+        e.product,
   ];
+
+  int get _leftOut => widget.products.where((e) => widget.locked.contains(e.collection)).length;
 
   Future<void> _save() async {
     setState(() => _busy = true);
     try {
-      final text = exportCatalog(_chosen, _format);
+      final text = exportCatalog(_chosen, _format, listName: _scope, message: _message.text, prices: _prices);
       final stamp = DateTime.now().toIso8601String().split('T').first;
       final saved = await FilePicker.saveFile(
-        dialogTitle: 'Export Vastra catalog',
-        fileName: 'vastra-${_format.name}-$stamp.${_format.extension}',
+        dialogTitle: _wishlist ? 'Save wish list' : 'Export Vastra catalog',
+        fileName: _wishlist
+            ? 'vastra-wishlist-${fileSlug(_scope)}.${_format.extension}'
+            : 'vastra-${_format.name}-$stamp.${_format.extension}',
         bytes: Uint8List.fromList(utf8.encode(text)),
         mimeType: switch (_format) {
           ExportFormat.shopify => 'text/csv',
           ExportFormat.merchantFeed => 'text/tab-separated-values',
-          ExportFormat.schemaJson => 'application/json',
+          ExportFormat.schemaJson || ExportFormat.wishlistFile => 'application/json',
+          ExportFormat.wishlistPage => 'text/html',
         },
       );
       if (saved == null) {
@@ -2273,7 +2352,10 @@ class _ExportSheetState extends State<ExportSheet> {
               groupValue: _format,
               onChanged: (v) {
                 FeedbackScope.of(context).play(Cue.toggle);
-                setState(() => _format = v!);
+                setState(() {
+                  _format = v!;
+                  if (_format.isWishlist && !_open.contains(_scope)) _scope = _open.firstOrNull ?? _scope;
+                });
               },
               child: Column(
                 children: [
@@ -2294,7 +2376,7 @@ class _ExportSheetState extends State<ExportSheet> {
               spacing: Space.s,
               runSpacing: Space.s,
               children: [
-                for (final scope in ['Whole catalog', ...widget.collections])
+                for (final scope in [if (!_wishlist) 'Whole catalog', ..._open])
                   PaperButton(
                     label: scope,
                     compact: true,
@@ -2305,7 +2387,27 @@ class _ExportSheetState extends State<ExportSheet> {
               ],
             ),
             const SizedBox(height: Space.m),
-            Text('${_chosen.length} products', style: const TextStyle(fontSize: 12.5, color: Tone.inkSoft)),
+            Text(
+              '${_chosen.length} products${_leftOut == 0 ? '' : ' · $_leftOut in private collections are left out'}',
+              style: const TextStyle(fontSize: 12.5, color: Tone.inkSoft),
+            ),
+            if (_wishlist) ...[
+              if (_open.isEmpty)
+                const Text(
+                  'Save finds into a collection first, then share it.',
+                  style: TextStyle(color: Tone.inkSoft),
+                ),
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: const Text('Show prices'),
+                subtitle: const Text(
+                  'Prices are the last ones Vastra saw. The page never shows what you paid.',
+                ),
+                value: _prices,
+                onChanged: (v) => setState(() => _prices = v),
+              ),
+              PaperField(controller: _message, label: 'Message on the page (optional)', maxLength: 300),
+            ],
           ],
           const SizedBox(height: Space.xl),
           Wrap(

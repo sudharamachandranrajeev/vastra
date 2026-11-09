@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.7.0
+
+- Share a collection as a wish list page: one file that opens in any browser, with no account. It shows
+  names, photos, shop links and, if you choose, prices.
+- Gift reservation without a server: gift givers tap "I'll buy this" and swap short codes, so gifts are
+  not doubled and the owner does not see who chose what.
+- Wish list files that another Vastra opens as a collection ("Open a shared list").
+- Private collections: tick one and its finds are left out of every export and shared list.
+- Shared files are checked on opening: only public HTTPS links and images are kept.
+
 ## 0.6.0
 
 - New Wardrobe tab. Mark finds as owned with the price paid, and log the days you wore them.
