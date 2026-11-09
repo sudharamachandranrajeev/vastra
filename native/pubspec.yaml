@@ -15,7 +15,7 @@ dependencies:
   flutter:
     sdk: flutter
   # 23.x needs compileSdk 37, which the current Android Gradle plugin does not support.
-  flutter_local_notifications: ^22.3.3
+  flutter_local_notifications: ^23.0.0
   google_mlkit_text_recognition: ^1.0.1
   html: ^0.15.6
   http: ^1.6.0
