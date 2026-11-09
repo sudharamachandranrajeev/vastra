@@ -54,7 +54,7 @@
     "@vitejs/plugin-rsc": "0.5.39",
     "drizzle-kit": "0.31.11",
     "esbuild": "^0.28.0",
-    "eslint": "9.39.4",
+    "eslint": "10.14.0",
     "eslint-config-next": "16.4.5",
     "json-rpc-2.0": "1.7.1",
     "miniflare": "^4.20260730.0",
