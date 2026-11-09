@@ -14,7 +14,7 @@ jobs:
       run:
         working-directory: native
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
@@ -35,8 +35,8 @@ jobs:
       run:
         working-directory: native
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: 21
@@ -64,7 +64,7 @@ jobs:
           version=$(sed -n 's/^version: *\([^+]*\).*/\1/p' pubspec.yaml)
           mkdir -p ../outputs/native
           cp build/app/outputs/flutter-apk/app-release.apk "../outputs/native/Vastra-$version-android.apk"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: android
           path: outputs/native/*.apk
@@ -76,7 +76,7 @@ jobs:
         working-directory: native
         shell: pwsh
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
@@ -113,7 +113,7 @@ jobs:
           $u = Start-Process (Join-Path $appdir 'unins000.exe') -ArgumentList '/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART' -PassThru -Wait
           if ($u.ExitCode -ne 0) { throw 'Uninstall failed' }
           if (-not (Test-Path $db.FullName)) { throw 'Uninstall deleted catalog data' }
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: windows
           path: outputs/native/*
@@ -121,7 +121,7 @@ jobs:
     needs: test
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Install build dependencies
         run: |
           sudo apt-get update -qq
@@ -139,7 +139,7 @@ jobs:
         run: |
           version=$(sed -n 's/^version: *\([^+]*\).*/\1/p' native/pubspec.yaml)
           scripts/package-linux.sh "$version"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: linux
           path: outputs/native/*
@@ -153,7 +153,7 @@ jobs:
       matrix:
         image: ['ubuntu:24.04','archlinux:latest']
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: linux
           path: dist
@@ -186,7 +186,7 @@ jobs:
           "$app/install.sh" --uninstall --prefix "$PWD/test prefix"
           test ! -e "$PWD/test prefix/lib/vastra"
           test -s "$db"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: linux-smoke-${{ strategy.job-index }}
@@ -197,7 +197,7 @@ jobs:
     container:
       image: archlinux:base-devel
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: linux
           path: dist
@@ -209,7 +209,7 @@ jobs:
           chown -R builder:builder dist
           cd dist
           runuser -u builder -- makepkg --nodeps --nocheck
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: arch
           path: dist/*.pkg.tar.zst
@@ -217,7 +217,7 @@ jobs:
     needs: android
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: android
           path: dist
@@ -240,7 +240,7 @@ jobs:
             adb shell pidof io.github.sudharamachandranrajeev.vastra
             adb logcat -d > android.log
             ! grep -E 'FATAL EXCEPTION|Vastra startup failed|Unhandled Exception' android.log
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: android-smoke-log
@@ -252,7 +252,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           pattern: '{android,windows,linux,arch}'
           merge-multiple: true
