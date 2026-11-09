@@ -58,7 +58,7 @@
     "eslint-config-next": "16.4.5",
     "json-rpc-2.0": "1.7.1",
     "miniflare": "^4.20260730.0",
-    "raw-body": "3.0.2",
+    "raw-body": "4.0.0",
     "react-server-dom-webpack": "19.2.9",
     "tailwindcss": "4.2.1",
     "tsx": "^4.23.15",
