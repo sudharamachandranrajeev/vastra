@@ -63,10 +63,10 @@ Acceptance: an alert names the old and new price and their source, and turning a
 - Gift reservation so people don't buy the same gift twice, using codes givers pass to each other (no server, and the owner sees nothing).
 - Per-collection privacy.
 
-### Phase 5 — backup and sync
+### Phase 5 — backup and sync (0.8.0)
 
 - Encrypted backup and restore files.
-- Optional sync across devices, using a self-hosted or end-to-end encrypted service chosen by the owner.
+- Optional sync across devices, using a self-hosted or end-to-end encrypted service chosen by the owner. Built as an encrypted file in the owner's own WebDAV folder; it only adds, so removals do not yet follow between devices.
 
 ### Phase 6 — optional visual search and enrichment
 

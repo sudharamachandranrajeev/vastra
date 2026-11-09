@@ -51,6 +51,10 @@ releases** (0.x). It does not search shops for you yet.
   browser. Gift givers tap "I'll buy this" and send a short code to each other, so nobody buys the
   same gift twice and the list's owner never sees who chose what. Lock a collection as private and it
   is left out of every export and shared list.
+- 🔐 **Encrypted backup and your own sync** – back up everything to a file locked with a passphrase
+  you choose. To use several devices, point Vastra at a WebDAV folder you run (Nextcloud, a NAS). It
+  keeps one encrypted file there, so the server never sees your catalog. Syncing only adds, and never
+  deletes or overwrites.
 - 🔎 **Discover** – search your finds by name, brand, category, colour or material, and filter by
   category or currency. "More like this" suggests similar finds, worked out on your device.
 - 🏷️ **Sorted for you** – each find gets a category and type, and Vastra learns from your fixes.
@@ -137,6 +141,23 @@ Everything stays on your device and is included in backups. Exports of your find
 
 The page never shows what you paid, what you wore or your sizes. Tick **Private** on a collection
 to keep it out of exports and shared lists altogether.
+</details>
+
+<details>
+<summary><b>How do backup and sync work?</b></summary>
+
+1. **Backup:** in **Settings**, tap **Back up catalog** and choose a passphrase (at least 8 characters).
+   Vastra saves a `.vstrbk` file that cannot be read without it. **Restore from backup** asks for the
+   passphrase again. Vastra cannot recover a lost passphrase.
+2. **Sync:** tap **Sync with my server** and enter the address of a WebDAV folder, your user name and
+   password, and a passphrase. Use the same passphrase on every device. Vastra encrypts the catalog
+   on your device, uploads one file, and on the next device merges it in.
+3. The password and passphrase are kept only until you close Vastra. The address and user name are
+   remembered.
+
+Restoring and syncing only add: finds, price history, wear days, outfits and lists you do not have
+yet. They never delete or overwrite, so a removal on one device does not remove it on another. Plain
+`http://` addresses are accepted only on your own network.
 </details>
 
 <details>

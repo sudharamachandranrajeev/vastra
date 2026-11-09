@@ -1006,8 +1006,12 @@ class PaperField extends StatefulWidget {
     this.onChanged,
     this.onSubmitted,
     this.maxLines = 1,
+    this.obscure = false,
   });
   final TextEditingController controller;
+
+  /// Hides what is typed, for passwords and passphrases.
+  final bool obscure;
   final String label;
   final String? hint, helper, error;
   final bool enabled, autofocus;
@@ -1064,7 +1068,10 @@ class _PaperFieldState extends State<PaperField> {
             autofocus: widget.autofocus,
             keyboardType: widget.keyboardType,
             maxLength: widget.maxLength,
-            maxLines: widget.maxLines,
+            maxLines: widget.obscure ? 1 : widget.maxLines,
+            obscureText: widget.obscure,
+            enableSuggestions: !widget.obscure,
+            autocorrect: !widget.obscure,
             onChanged: widget.onChanged,
             onSubmitted: widget.onSubmitted,
             decoration: InputDecoration(

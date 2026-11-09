@@ -702,7 +702,7 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
                 const SectionHeader('Your data'),
                 const SizedBox(height: Space.s),
                 const Text(
-                  'Back up the whole catalog to a file. Restoring adds the finds that are missing and keeps everything already here.',
+                  'Back up the whole catalog to a file, encrypted with a passphrase you choose. Restoring and syncing only add what is missing and keep everything already here.',
                   style: TextStyle(color: Tone.inkSoft),
                 ),
                 const SizedBox(height: Space.m),
@@ -723,6 +723,19 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
                       onPressed: () async {
                         if ((await restoreCatalog(context, widget.repository) ?? 0) > 0) _reload();
                       },
+                    ),
+                    PaperButton(
+                      label: 'Sync with my server',
+                      icon: Icons.sync,
+                      compact: true,
+                      onPressed: () => showPaperDialog<void>(
+                        context,
+                        builder: (c) => SyncSheet(
+                          repository: widget.repository,
+                          settings: widget.settings,
+                          onChanged: _reload,
+                        ),
+                      ),
                     ),
                   ],
                 ),

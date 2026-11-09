@@ -508,9 +508,11 @@ class CatalogRepository {
   /// exist yet. The copy is an ordinary Vastra database.
   void backupTo(String path) => _db.execute('VACUUM INTO ?', [path]);
 
-  /// Adds the finds in the backup at [path] that this catalog lacks. Finds
-  /// already here are kept as they are, so a restore never loses data.
-  /// Returns how many finds were added.
+  /// Merges the backup at [path] into this catalog. It only adds: finds this
+  /// catalog lacks, and the history, wear days and boards the backup has
+  /// beyond what is here. Nothing already here is changed or removed, so a
+  /// restore or sync never loses data (and a removal on one device does not
+  /// follow to another). Returns how many finds were added.
   int restoreFrom(String path) {
     final backup = sqlite3.open(path, mode: OpenMode.readOnly);
     final List<Row> rows, points, watched, fitted, ownedRows, wearRows, locked;
@@ -546,6 +548,7 @@ class CatalogRepository {
       backup.close();
     }
     var added = 0;
+    final idMap = <String, String>{};
     _db.execute('BEGIN IMMEDIATE');
     try {
       for (final r in rows) {
@@ -561,14 +564,32 @@ class CatalogRepository {
           r['document'],
           r['collection'],
         ]);
-        if (_db.updatedRows == 0) continue;
-        added++;
-        // History and watches come along only with finds that are new here.
+        final inserted = _db.updatedRows > 0;
+        if (inserted) added++;
+        // The same store page imported on two devices has two ids; follow the source.
+        final local =
+            _db.select('SELECT id FROM products WHERE id = ? OR source = ?', [
+                  r['id'],
+                  r['source'],
+                ]).firstOrNull?['id']
+                as String? ??
+            r['id'] as String;
+        idMap[r['id'] as String] = local;
+        if (!inserted && r['collection'] != null) {
+          _db.execute('UPDATE products SET collection = ? WHERE id = ? AND collection IS NULL', [
+            r['collection'],
+            local,
+          ]);
+        }
+        // Everything recorded about a find is added, never replaced: history,
+        // wear days, and (where this device has none) the fit, ownership and watch.
         for (final p in points.where((p) => p['product_id'] == r['id'])) {
           _db.execute(
-            'INSERT INTO price_points (product_id, seller, variant, checked_at, ok, price, currency, availability) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+            '''INSERT INTO price_points (product_id, seller, variant, checked_at, ok, price, currency, availability)
+               SELECT ?, ?, ?, ?, ?, ?, ?, ? WHERE NOT EXISTS (
+                 SELECT 1 FROM price_points WHERE product_id = ? AND seller = ? AND variant = ? AND checked_at = ?)''',
             [
-              p['product_id'],
+              local,
               p['seller'],
               p['variant'],
               p['checked_at'],
@@ -576,47 +597,39 @@ class CatalogRepository {
               p['price'],
               p['currency'],
               p['availability'],
+              local,
+              p['seller'],
+              p['variant'],
+              p['checked_at'],
             ],
           );
         }
         for (final f in fitted.where((f) => f['product_id'] == r['id'])) {
           _db.execute(
             'INSERT OR IGNORE INTO fits (product_id, brand, size, kept, fit, note, item, recorded_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-            [
-              f['product_id'],
-              f['brand'],
-              f['size'],
-              f['kept'],
-              f['fit'],
-              f['note'],
-              f['item'],
-              f['recorded_at'],
-            ],
+            [local, f['brand'], f['size'], f['kept'], f['fit'], f['note'], f['item'], f['recorded_at']],
           );
         }
         for (final o in ownedRows.where((o) => o['product_id'] == r['id'])) {
           _db.execute(
             'INSERT OR IGNORE INTO owned (product_id, price, currency, bought_on) VALUES (?, ?, ?, ?)',
-            [o['product_id'], o['price'], o['currency'], o['bought_on']],
+            [local, o['price'], o['currency'], o['bought_on']],
           );
         }
         for (final w in wearRows.where((w) => w['product_id'] == r['id'])) {
-          _db.execute('INSERT OR IGNORE INTO wears (product_id, day) VALUES (?, ?)', [
-            w['product_id'],
-            w['day'],
-          ]);
+          _db.execute('INSERT OR IGNORE INTO wears (product_id, day) VALUES (?, ?)', [local, w['day']]);
         }
         for (final w in watched.where((w) => w['product_id'] == r['id'])) {
           _db.execute(
             'INSERT OR IGNORE INTO watches (product_id, variant, price, stock, rule, value, immediate) VALUES (?, ?, ?, ?, ?, ?, ?)',
-            [w['product_id'], w['variant'], w['price'], w['stock'], w['rule'], w['value'], w['immediate']],
+            [local, w['variant'], w['price'], w['stock'], w['rule'], w['value'], w['immediate']],
           );
         }
       }
       for (final l in locked) {
         _db.execute('INSERT OR IGNORE INTO private_collections (name) VALUES (?)', [l['name']]);
       }
-      _restoreBoards(backupWardrobe);
+      _restoreBoards(backupWardrobe, idMap);
       _db.execute('COMMIT');
       return added;
     } catch (_) {
@@ -627,8 +640,7 @@ class CatalogRepository {
 
   /// Outfits and packing lists come back by name: one already here under the
   /// same name is left alone. Items that are not in this catalog are dropped.
-  void _restoreBoards(Map<String, List<Row>> b) {
-    final have = {for (final r in _db.select('SELECT id FROM products')) r['id'] as String};
+  void _restoreBoards(Map<String, List<Row>> b, Map<String, String> idMap) {
     final outfitNames = {for (final r in _db.select('SELECT name FROM outfits')) r['name'] as String};
     final newOutfit = <int, int>{};
     for (final o in b['outfits']!) {
@@ -640,11 +652,11 @@ class CatalogRepository {
       ]);
       newOutfit[o['id'] as int] = _db.lastInsertRowId;
       for (final i in b['outfit_items']!.where(
-        (i) => i['outfit_id'] == o['id'] && have.contains(i['product_id']),
+        (i) => i['outfit_id'] == o['id'] && idMap.containsKey(i['product_id']),
       )) {
         _db.execute('INSERT OR IGNORE INTO outfit_items (outfit_id, product_id, pos) VALUES (?, ?, ?)', [
           newOutfit[o['id']],
-          i['product_id'],
+          idMap[i['product_id']],
           i['pos'],
         ]);
       }
@@ -664,7 +676,7 @@ class CatalogRepository {
       for (final i in b['pack_items']!.where((i) => i['pack_id'] == p['id'])) {
         _db.execute(
           'INSERT INTO pack_items (pack_id, pos, label, product_id, packed) VALUES (?, ?, ?, ?, ?)',
-          [id, i['pos'], i['label'], have.contains(i['product_id']) ? i['product_id'] : null, i['packed']],
+          [id, i['pos'], i['label'], idMap[i['product_id']], i['packed']],
         );
       }
     }

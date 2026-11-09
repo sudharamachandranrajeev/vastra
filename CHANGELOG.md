@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.8.0
+
+- Encrypted backups: choose a passphrase and Vastra saves a `.vstrbk` file (AES-256-GCM, key from
+  Argon2id). A wrong passphrase or a changed file is refused. Unencrypted backups are still possible
+  if you choose them, and old ones restore as before.
+- Sync with your own server: one encrypted file in a WebDAV folder you run, such as Nextcloud. It is
+  encrypted on your device, so the server cannot read it. The password and passphrase are never saved.
+- Restore and sync now also add price history, wear days, outfits, plans and packing lists to finds you
+  already have, and recognise the same store page saved on two devices. They still never delete or
+  overwrite anything.
+
 ## 0.7.0
 
 - Share a collection as a wish list page: one file that opens in any browser, with no account. It shows

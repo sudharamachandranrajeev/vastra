@@ -3,13 +3,17 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:path/path.dart' as path;
 import 'package:url_launcher/url_launcher.dart';
 
+import '../data/backup_crypto.dart';
 import '../data/catalog_repository.dart';
 import '../data/diagnostics.dart';
+import '../data/settings_store.dart';
+import '../data/sync_service.dart';
 import '../data/updater.dart';
 import '../domain/releases.dart';
 import 'feedback.dart';
@@ -34,20 +38,139 @@ Widget _sheetTitle(BuildContext context, String title, String closeTooltip) => R
 
 String _stamp() => DateFormat('yyyyMMdd-HHmm').format(DateTime.now());
 
-/// Saves a full copy of the catalog wherever the user chooses.
+/// Asks for a passphrase. Returns null if cancelled, '' to continue without
+/// one (only when [allowNone]), otherwise the passphrase.
+Future<String?> askPassphrase(
+  BuildContext context, {
+  required String title,
+  required String explain,
+  bool confirm = false,
+  bool allowNone = false,
+}) => showPaperDialog<String>(
+  context,
+  builder: (context) =>
+      _PassphraseSheet(title: title, explain: explain, confirm: confirm, allowNone: allowNone),
+);
+
+class _PassphraseSheet extends StatefulWidget {
+  const _PassphraseSheet({
+    required this.title,
+    required this.explain,
+    required this.confirm,
+    required this.allowNone,
+  });
+  final String title, explain;
+  final bool confirm, allowNone;
+  @override
+  State<_PassphraseSheet> createState() => _PassphraseSheetState();
+}
+
+class _PassphraseSheetState extends State<_PassphraseSheet> {
+  final _first = TextEditingController(), _second = TextEditingController();
+
+  @override
+  void dispose() {
+    _first.dispose();
+    _second.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final short = _first.text.isNotEmpty && _first.text.length < minPassphraseLength;
+    final mismatch = widget.confirm && _second.text.isNotEmpty && _second.text != _first.text;
+    final ready =
+        _first.text.length >= minPassphraseLength && (!widget.confirm || _second.text == _first.text);
+    return PaperSheet(
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(widget.title, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w600)),
+            const SizedBox(height: Space.s),
+            Text(widget.explain, style: const TextStyle(color: Tone.inkSoft)),
+            const SizedBox(height: Space.l),
+            PaperField(
+              controller: _first,
+              label: 'Passphrase',
+              obscure: true,
+              autofocus: true,
+              error: short ? 'Use at least $minPassphraseLength characters.' : null,
+              onChanged: (_) => setState(() {}),
+            ),
+            if (widget.confirm) ...[
+              PaperField(
+                controller: _second,
+                label: 'Type it again',
+                obscure: true,
+                error: mismatch ? 'The two do not match.' : null,
+                onChanged: (_) => setState(() {}),
+              ),
+              const Padding(
+                padding: EdgeInsets.only(top: Space.s),
+                child: Text(
+                  'Vastra cannot recover a lost passphrase. Without it the backup cannot be opened.',
+                  style: TextStyle(fontSize: 12.5),
+                ),
+              ),
+            ],
+            const SizedBox(height: Space.l),
+            Wrap(
+              alignment: WrapAlignment.end,
+              spacing: Space.m,
+              runSpacing: Space.s,
+              children: [
+                PaperButton(label: 'Cancel', onPressed: () => Navigator.pop(context)),
+                if (widget.allowNone)
+                  PaperButton(label: 'Save without one', onPressed: () => Navigator.pop(context, '')),
+                CopperButton(
+                  label: 'Continue',
+                  icon: Icons.lock_outline,
+                  onPressed: ready ? () => Navigator.pop(context, _first.text) : null,
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Saves a full copy of the catalog wherever the user chooses, encrypted with
+/// a passphrase unless the owner chooses otherwise.
 Future<void> backupCatalog(BuildContext context, CatalogRepository repository) async {
   final toasts = ToastHost.of(context);
+  final passphrase = await askPassphrase(
+    context,
+    title: 'Protect this backup',
+    explain:
+        'The backup file will be encrypted. Anyone who finds the file cannot read it without the passphrase.',
+    confirm: true,
+    allowNone: true,
+  );
+  if (passphrase == null) return;
   final temp = await Directory.systemTemp.createTemp('vastra-backup');
   try {
     final file = File(path.join(temp.path, 'catalog.sqlite'));
     repository.backupTo(file.path);
+    final plain = await file.readAsBytes();
+    final encrypted = passphrase.isNotEmpty;
     final saved = await FilePicker.saveFile(
       dialogTitle: 'Back up Vastra catalog',
-      fileName: 'vastra-backup-${_stamp()}.sqlite',
-      bytes: await file.readAsBytes(),
-      mimeType: 'application/vnd.sqlite3',
+      fileName: 'vastra-backup-${_stamp()}.${encrypted ? 'vstrbk' : 'sqlite'}',
+      bytes: encrypted ? await encryptBackup(plain, passphrase) : plain,
+      mimeType: encrypted ? 'application/octet-stream' : 'application/vnd.sqlite3',
     );
-    if (saved != null) toasts.show(ToastKind.success, 'Catalog backed up. Keep the file somewhere safe.');
+    if (saved != null) {
+      toasts.show(
+        ToastKind.success,
+        encrypted
+            ? 'Encrypted backup saved. Keep the file and the passphrase somewhere safe.'
+            : 'Catalog backed up. This copy is not encrypted, so keep it somewhere private.',
+      );
+    }
   } on Object {
     toasts.show(ToastKind.error, 'The backup could not be saved. Your catalog is unchanged.');
   } finally {
@@ -63,7 +186,18 @@ Future<int?> restoreCatalog(BuildContext context, CatalogRepository repository) 
   final temp = await Directory.systemTemp.createTemp('vastra-restore');
   try {
     final file = File(path.join(temp.path, 'backup.sqlite'));
-    await file.writeAsBytes(await picked.readAsBytes());
+    Uint8List bytes = await picked.readAsBytes();
+    if (isEncryptedBackup(bytes)) {
+      if (!context.mounted) return null;
+      final passphrase = await askPassphrase(
+        context,
+        title: 'Open encrypted backup',
+        explain: 'Enter the passphrase you chose when you saved this backup.',
+      );
+      if (passphrase == null) return null;
+      bytes = await decryptBackup(bytes, passphrase);
+    }
+    await file.writeAsBytes(bytes);
     final added = repository.restoreFrom(file.path);
     toasts.show(
       ToastKind.success,
@@ -592,6 +726,164 @@ class _ReportSheetState extends State<ReportSheet> {
                       );
                     }
                   },
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Held only in memory until Vastra closes, so a second sync does not ask again.
+class _Session {
+  static String? password, passphrase;
+}
+
+const syncFolderKey = 'sync.folder', syncUserKey = 'sync.user', syncLastKey = 'sync.last';
+
+/// Sync with the owner's own WebDAV folder. See [SyncService].
+class SyncSheet extends StatefulWidget {
+  const SyncSheet({
+    super.key,
+    required this.repository,
+    required this.settings,
+    required this.onChanged,
+    this.clientFactory,
+    this.memoryKiB = defaultMemoryKiB,
+    this.passes = defaultPasses,
+  });
+  final CatalogRepository repository;
+  final SettingsStore settings;
+
+  /// Called after a sync that added finds, so the lists redraw.
+  final VoidCallback onChanged;
+  final http.Client Function()? clientFactory;
+  final int memoryKiB, passes;
+  @override
+  State<SyncSheet> createState() => _SyncSheetState();
+}
+
+class _SyncSheetState extends State<SyncSheet> {
+  late final _folder = TextEditingController(text: widget.settings.get<String>(syncFolderKey) ?? '');
+  late final _user = TextEditingController(text: widget.settings.get<String>(syncUserKey) ?? '');
+  late final _password = TextEditingController(text: _Session.password ?? '');
+  late final _passphrase = TextEditingController(text: _Session.passphrase ?? '');
+  bool _busy = false;
+  String? _result;
+  bool _failed = false;
+
+  @override
+  void dispose() {
+    for (final c in [_folder, _user, _password, _passphrase]) {
+      c.dispose();
+    }
+    super.dispose();
+  }
+
+  Future<void> _sync() async {
+    setState(() {
+      _busy = true;
+      _result = null;
+    });
+    final scratch = await Directory.systemTemp.createTemp('vastra-sync-work');
+    try {
+      final r =
+          await SyncService(
+            repository: widget.repository,
+            workDirectory: scratch,
+            clientFactory: widget.clientFactory,
+          ).sync(
+            folder: _folder.text,
+            user: _user.text.trim(),
+            password: _password.text,
+            passphrase: _passphrase.text,
+            memoryKiB: widget.memoryKiB,
+            passes: widget.passes,
+          );
+      widget.settings
+        ..set(syncFolderKey, _folder.text.trim())
+        ..set(syncUserKey, _user.text.trim())
+        ..set(syncLastKey, DateTime.now().toUtc().toIso8601String());
+      _Session.password = _password.text;
+      _Session.passphrase = _passphrase.text;
+      if (r.added > 0) widget.onChanged();
+      _result = r.firstUpload
+          ? 'Synced. The folder had no catalog yet, so this one is now there, encrypted.'
+          : r.added == 0
+          ? 'Synced. This device already had everything in the folder.'
+          : 'Synced. Added ${r.added} ${r.added == 1 ? 'find' : 'finds'} from your other devices.';
+      _failed = false;
+    } on SyncFailure catch (e) {
+      _result = e.message;
+      _failed = true;
+    } on Object {
+      _result = 'The sync did not finish. Your catalog is unchanged.';
+      _failed = true;
+    } finally {
+      await scratch.delete(recursive: true);
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final last = DateTime.tryParse(widget.settings.get<String>(syncLastKey) ?? '');
+    return PaperSheet(
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _sheetTitle(context, 'Sync with your own server', 'Close sync'),
+            const SizedBox(height: Space.s),
+            const Text(
+              'Vastra keeps one encrypted file in a WebDAV folder you run, such as Nextcloud. It is encrypted here, with your passphrase, before it leaves this device, so the server cannot read it. Syncing only adds: nothing on either side is deleted or overwritten.',
+              style: TextStyle(color: Tone.inkSoft),
+            ),
+            const SizedBox(height: Space.l),
+            PaperField(
+              controller: _folder,
+              label: 'Folder address',
+              hint: 'https://cloud.example.com/remote.php/dav/files/me/Vastra/',
+              keyboardType: TextInputType.url,
+            ),
+            PaperField(controller: _user, label: 'User name'),
+            PaperField(controller: _password, label: 'Password or app password', obscure: true),
+            PaperField(
+              controller: _passphrase,
+              label: 'Backup passphrase',
+              helper: 'Use the same one on every device. Vastra cannot recover it.',
+              obscure: true,
+            ),
+            const SizedBox(height: Space.s),
+            const Text(
+              'The password and passphrase are kept only until you close Vastra. The address and user name are remembered.',
+              style: TextStyle(fontSize: 12.5, color: Tone.inkSoft),
+            ),
+            if (last != null)
+              Text(
+                'Last synced ${DateFormat.yMMMd().add_Hm().format(last.toLocal())}.',
+                style: const TextStyle(fontSize: 12.5, color: Tone.inkSoft),
+              ),
+            if (_result != null) ...[
+              const SizedBox(height: Space.m),
+              Semantics(
+                liveRegion: true,
+                child: Text(_result!, style: TextStyle(color: _failed ? Colors.red.shade800 : Tone.ink)),
+              ),
+            ],
+            const SizedBox(height: Space.l),
+            Wrap(
+              alignment: WrapAlignment.end,
+              spacing: Space.m,
+              children: [
+                CopperButton(
+                  label: 'Sync now',
+                  icon: Icons.sync,
+                  busy: _busy,
+                  onPressed: _busy ? null : _sync,
                 ),
               ],
             ),

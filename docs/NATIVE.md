@@ -101,6 +101,28 @@ the importer's public-HTTPS check and images that are not public HTTPS. Opened i
 finds in a "Shared: <name>" collection. The `private_collections` table (additive, version 1) lists
 locked collections; every export, including the wish list formats, leaves their finds out.
 
+## Encrypted backup and sync
+
+`lib/data/backup_crypto.dart` writes `.vstrbk` files: 8-byte magic, KDF id, Argon2id memory (KiB),
+passes and lanes, 16-byte salt, 12-byte nonce, then AES-256-GCM ciphertext and tag. The whole header
+is the authenticated data, so changing any byte fails decryption. Defaults are 19 MiB and 2 passes
+(OWASP's minimum), run in an isolate; files that ask for more than 256 MiB or 10 passes are refused.
+Passphrases need 8 characters and are never stored. The `cryptography` package is pure Dart and adds
+no native code.
+
+`lib/data/sync_service.dart` syncs through WebDAV: GET the file (404 means none yet), decrypt, merge
+with `restoreFrom`, back up the merged catalog, encrypt and PUT with `If-Match` (or `If-None-Match: *`
+for the first upload). A 412 means another device wrote first, so the cycle repeats, up to four
+times. Redirects are refused so credentials never follow them, and `http://` is accepted only for
+localhost, `.local`, single-label names and private addresses. The address and user name live in
+settings; the password and passphrase live in memory until the app closes.
+
+`restoreFrom` is a union merge: new finds, then for every find (matched by id or store page, since
+two devices give one page two ids) the price points, wear days and, where this device has none, the
+fit, ownership and watch. Outfits and packing lists merge by name. Collections only fill when empty,
+and private collections are added, never removed. It deletes and overwrites nothing, so removals do
+not propagate; tombstones would be needed for that.
+
 ## Import policy
 
 The native apps accept a link from any public store. The link can arrive from the Android share
