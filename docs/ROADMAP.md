@@ -68,11 +68,11 @@ Acceptance: an alert names the old and new price and their source, and turning a
 - Encrypted backup and restore files.
 - Optional sync across devices, using a self-hosted or end-to-end encrypted service chosen by the owner. Built as an encrypted file in the owner's own WebDAV folder; it only adds, so removals do not yet follow between devices.
 
-### Phase 6 — optional visual search and enrichment
+### Phase 6 — visual search and enrichment, on the device (0.9.0)
 
-- Similar items from a photo.
-- Attribute tagging for links with sparse data.
-- Uses the "Optional AI models" rules below: evidence stays separate from suggestions, and every tag can be corrected.
+- Similar items from a photo, by colour and pattern, worked out on the device with no AI service.
+- Attribute tagging for links with sparse data, from the item's words and photo.
+- Follows the "Optional AI models" rules below: suggestions stay separate from store evidence, say where they came from, and every one can be used, edited, dismissed or cleared. A cloud vision model stays out unless the owner chooses one later.
 
 Sources: [BEUC complaint about Shein](https://www.storyboard18.com/amp/brand-marketing/shein-hit-with-eu-complaint-over-dark-patterns-in-app-website-68964.htm), [Dark patterns at scale, 11K shopping sites](https://arxiv.org/pdf/2107.07893), [Forbes India on dark patterns](https://www.magzter.com/ja/stories/business/Forbes-India/CLICK-BUY-REGRET), [Universal wishlist apps compared](https://giftlist.com/blog/10-best-universal-wishlist-apps-in-2025-ranked-and-reviewed), [Good On You wardrobe app test](https://goodonyou.eco/wardrobe-organising-apps/), [Whering best wardrobe apps](https://whering.co.uk/best-wardrobe-apps-2025), [MediaPost on fit and returns](https://www.mediapost.com/publications/article/317614/retail-search-fit-recommendations-fail-to-curtai.html), [Baymard product page research](https://www.baymard.com/research/product-page), [Clutch on AI shopping features](https://clutch.co/resources/ai-shopping-features).
 

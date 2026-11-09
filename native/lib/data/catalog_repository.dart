@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:sqlite3/sqlite3.dart';
 
 import '../domain/fit.dart';
+import '../domain/look.dart';
 import '../domain/product.dart';
 import '../domain/wardrobe.dart';
 import '../domain/watching.dart';
@@ -67,6 +68,13 @@ class CatalogRepository {
     _db.execute('''CREATE TABLE IF NOT EXISTS pack_items (
       pack_id INTEGER NOT NULL, pos INTEGER NOT NULL, label TEXT NOT NULL, product_id TEXT,
       packed INTEGER NOT NULL)''');
+    // Photo looks are a cache: [look] is null when the photo could not be read.
+    _db.execute('''CREATE TABLE IF NOT EXISTS looks (
+      product_id TEXT PRIMARY KEY, image TEXT NOT NULL, look TEXT, checked_at TEXT NOT NULL)''');
+    // The owner's answers to suggested details: accepted (1) or dismissed (0).
+    _db.execute('''CREATE TABLE IF NOT EXISTS tag_choices (
+      product_id TEXT NOT NULL, field TEXT NOT NULL, value TEXT NOT NULL, accepted INTEGER NOT NULL,
+      PRIMARY KEY (product_id, field, value))''');
   }
   factory CatalogRepository.memory() => CatalogRepository(sqlite3.openInMemory());
   final Database _db;
@@ -104,6 +112,17 @@ class CatalogRepository {
         stored = product.withId(existing.id);
         if (existing.categorySource == 'user') {
           stored = stored.withCategory(existing.category, existing.productType);
+        }
+        // Details the owner accepted come back when the store still leaves them out.
+        for (final r in _db.select(
+          'SELECT field, value FROM tag_choices WHERE product_id = ? AND accepted = 1',
+          [existing.id],
+        )) {
+          final field = r['field'] as String;
+          final current = stored.toJson()[field];
+          if (current == null || (current is String && current.trim().isEmpty)) {
+            stored = Product.fromJson({...stored.toJson(), field: r['value']});
+          }
         }
       }
       _db.execute(
@@ -166,6 +185,8 @@ class CatalogRepository {
       'owned WHERE product_id',
       'wears WHERE product_id',
       'outfit_items WHERE product_id',
+      'looks WHERE product_id',
+      'tag_choices WHERE product_id',
     ]) {
       _db.execute('DELETE FROM $table = ?', [id]);
     }
@@ -508,6 +529,77 @@ class CatalogRepository {
   /// exist yet. The copy is an ordinary Vastra database.
   void backupTo(String path) => _db.execute('VACUUM INTO ?', [path]);
 
+  /// The cached look of each item's photo, with the photo it came from.
+  Map<String, ({String image, LookDescriptor? look, DateTime at})> looks() => {
+    for (final r in _db.select('SELECT * FROM looks'))
+      r['product_id'] as String: (
+        image: r['image'] as String,
+        look: r['look'] == null
+            ? null
+            : LookDescriptor.fromJson(jsonDecode(r['look'] as String) as List<dynamic>),
+        at: DateTime.parse(r['checked_at'] as String),
+      ),
+  };
+
+  void setLook(String productId, String image, LookDescriptor? look, DateTime at) => _db.execute(
+    'INSERT OR REPLACE INTO looks (product_id, image, look, checked_at) VALUES (?, ?, ?, ?)',
+    [productId, image, look == null ? null : jsonEncode(look.toJson()), at.toUtc().toIso8601String()],
+  );
+
+  /// The owner's answers for one item, keyed `field|value`: true accepted.
+  Map<String, bool> tagChoices(String productId) => {
+    for (final r in _db.select('SELECT * FROM tag_choices WHERE product_id = ?', [productId]))
+      '${r['field']}|${r['value']}': r['accepted'] == 1,
+  };
+
+  /// Writes [value] into the item's [field] and remembers it was the owner's
+  /// choice, so a refresh that still lacks the detail keeps it.
+  Product acceptTag(Product product, String field, String value) {
+    final updated = Product.fromJson({...product.toJson(), field: value});
+    _db.execute('BEGIN IMMEDIATE');
+    try {
+      _db.execute('DELETE FROM tag_choices WHERE product_id = ? AND field = ? AND accepted = 1', [
+        product.id,
+        field,
+      ]);
+      _db.execute(
+        'INSERT OR REPLACE INTO tag_choices (product_id, field, value, accepted) VALUES (?, ?, ?, 1)',
+        [product.id, field, value],
+      );
+      update(updated);
+      _db.execute('COMMIT');
+    } catch (_) {
+      _db.execute('ROLLBACK');
+      rethrow;
+    }
+    return updated;
+  }
+
+  void dismissTag(String productId, String field, String value) => _db.execute(
+    'INSERT OR REPLACE INTO tag_choices (product_id, field, value, accepted) VALUES (?, ?, ?, 0)',
+    [productId, field, value],
+  );
+
+  /// Removes a detail the owner accepted earlier; it is not suggested again.
+  Product clearTag(Product product, String field) {
+    final value = product.toJson()[field] as String?;
+    final updated = Product.fromJson({...product.toJson(), field: null});
+    _db.execute('BEGIN IMMEDIATE');
+    try {
+      _db.execute('DELETE FROM tag_choices WHERE product_id = ? AND field = ? AND accepted = 1', [
+        product.id,
+        field,
+      ]);
+      if (value != null) dismissTag(product.id, field, value);
+      update(updated);
+      _db.execute('COMMIT');
+    } catch (_) {
+      _db.execute('ROLLBACK');
+      rethrow;
+    }
+    return updated;
+  }
+
   /// Merges the backup at [path] into this catalog. It only adds: finds this
   /// catalog lacks, and the history, wear days and boards the backup has
   /// beyond what is here. Nothing already here is changed or removed, so a
@@ -515,7 +607,7 @@ class CatalogRepository {
   /// follow to another). Returns how many finds were added.
   int restoreFrom(String path) {
     final backup = sqlite3.open(path, mode: OpenMode.readOnly);
-    final List<Row> rows, points, watched, fitted, ownedRows, wearRows, locked;
+    final List<Row> rows, points, watched, fitted, ownedRows, wearRows, locked, choices;
     final backupWardrobe = <String, List<Row>>{};
     try {
       final version = backup.select('PRAGMA user_version').first.values.first as int;
@@ -536,6 +628,7 @@ class CatalogRepository {
       fitted = has('fits') ? backup.select('SELECT * FROM fits').toList() : const [];
       ownedRows = has('owned') ? backup.select('SELECT * FROM owned').toList() : const [];
       wearRows = has('wears') ? backup.select('SELECT * FROM wears').toList() : const [];
+      choices = has('tag_choices') ? backup.select('SELECT * FROM tag_choices').toList() : const [];
       locked = has('private_collections')
           ? backup.select('SELECT name FROM private_collections').toList()
           : const [];
@@ -618,6 +711,15 @@ class CatalogRepository {
         }
         for (final w in wearRows.where((w) => w['product_id'] == r['id'])) {
           _db.execute('INSERT OR IGNORE INTO wears (product_id, day) VALUES (?, ?)', [local, w['day']]);
+        }
+        for (final c in choices.where((c) => c['product_id'] == r['id'])) {
+          // One accepted value per detail: the one on this device wins.
+          _db.execute(
+            '''INSERT OR IGNORE INTO tag_choices (product_id, field, value, accepted) SELECT ?, ?, ?, ?
+               WHERE ? = 0 OR NOT EXISTS (
+                 SELECT 1 FROM tag_choices WHERE product_id = ? AND field = ? AND accepted = 1)''',
+            [local, c['field'], c['value'], c['accepted'], c['accepted'], local, c['field']],
+          );
         }
         for (final w in watched.where((w) => w['product_id'] == r['id'])) {
           _db.execute(

@@ -123,6 +123,27 @@ fit, ownership and watch. Outfits and packing lists merge by name. Collections o
 and private collections are added, never removed. It deletes and overwrites nothing, so removals do
 not propagate; tombstones would be needed for that.
 
+## Photo looks and suggested details
+
+`lib/domain/look.dart` describes a photo as 14 colour shares (black, gray, white, beige, brown, red,
+orange, yellow, green, teal, blue, navy, purple, pink) plus a 0–1 "busy" score from neighbouring
+brightness changes. The middle of the photo counts fully and the rest at 0.35; near-white pixels
+outside the middle are treated as background. Distance is 0.8 × (1 − histogram intersection) +
+0.2 × busy difference, and matches beyond 0.6 are dropped.
+
+`lib/data/look_service.dart` decodes with `dart:ui` at 32 pixels wide, refusing files over 2 MB or
+40 megapixels. Samples are read from the app bundle. An imported item's first photo is fetched only
+from a public HTTPS address (redirects must stay public HTTPS), must be `image/*`, and has 10-second
+timeouts. Only the descriptor is kept, in the additive `looks` table keyed by item and photo URL;
+failures are retried after 7 days. Photos picked for **Search by photo** are never stored.
+
+`lib/domain/tag_suggestions.dart` proposes colour, material and pattern for empty fields from whole
+words in the name, description, store category, tags and URL path, and from a photo's dominant
+colour (at least 40% of it) or a plain surface. The `tag_choices` table records accepted (1) and
+dismissed (0) values. Accepting writes the field and is re-applied on refresh only while the store
+still leaves it empty. Backups carry choices, keeping one accepted value per field; the look cache is
+not restored and rebuilds on demand.
+
 ## Import policy
 
 The native apps accept a link from any public store. The link can arrive from the Android share

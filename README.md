@@ -57,6 +57,9 @@ releases** (0.x). It does not search shops for you yet.
   deletes or overwrites.
 - 🔎 **Discover** – search your finds by name, brand, category, colour or material, and filter by
   category or currency. "More like this" suggests similar finds, worked out on your device.
+- 📷 **Search by photo** – pick a photo and Vastra finds the items with the closest colours and
+  pattern. When a shop leaves out the colour, material or pattern, Vastra suggests them and you
+  decide. All of it happens on your device, with no AI service and no photo sent anywhere.
 - 🏷️ **Sorted for you** – each find gets a category and type, and Vastra learns from your fixes.
 - 🗂️ **Collections** – save finds into named edits, such as a travel wardrobe or a gift list.
 - ⚖️ **Compare** – put up to four products side by side. Prices stay in their own currency.
@@ -97,6 +100,26 @@ flowchart LR
 
 Some shops block automatic reading or hide their product details. Vastra saves the link anyway.
 Try adding the same link again later to refresh it.
+</details>
+
+<details>
+<summary><b>How good is Search by photo?</b></summary>
+
+It compares colour and how plain or busy the pattern is. It does not see shape, so a red scarf and a
+red dress can match. Photos with a busy background or a model match less well. It runs on your
+device, so nothing is sent to an AI service. To try it:
+
+1. On **Discover**, choose **Search by photo** and pick a photo.
+2. Wait while Vastra reads the catalog photos (only the first time for each item).
+3. Tap a match to open it. Open any item and choose **Find this look** to search from its photo.
+</details>
+
+<details>
+<summary><b>Where do suggested colours and materials come from?</b></summary>
+
+From the item's own name, description and link, and, if you choose **Suggest from the photo**, from
+its main photo. Each suggestion says which. Nothing changes until you choose **Use it** or **Edit**.
+**Not right** hides a suggestion for good. A detail you chose shows "(you chose)" and can be cleared.
 </details>
 
 <details>

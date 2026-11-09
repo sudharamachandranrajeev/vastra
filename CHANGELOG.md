@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.9.0
+
+- Search by photo: pick a photo of something you like and Vastra lists the finds and samples with the
+  closest colours and pattern. **Find this look** on any item does the same from its photo. Matching
+  happens on your device; the photo is not saved or sent anywhere. It compares colour and pattern,
+  not shape or cut, and leaves out weak matches.
+- Suggested details: when a shop leaves out the colour, material or pattern, Vastra suggests them from
+  the item's own words and, if you ask, its photo. Each suggestion says where it came from. Use it,
+  edit it, or mark it "Not right"; nothing changes until you choose, and a refresh keeps what you
+  chose unless the shop now states it.
+- No AI service, account or cost: everything is worked out on the device.
+
 ## 0.8.0
 
 - Encrypted backups: choose a passphrase and Vastra saves a `.vstrbk` file (AES-256-GCM, key from

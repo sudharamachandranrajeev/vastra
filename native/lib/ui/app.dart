@@ -11,12 +11,14 @@ import 'package:url_launcher/url_launcher.dart';
 import '../data/catalog_data.dart';
 import '../data/catalog_repository.dart';
 import '../data/diagnostics.dart';
+import '../data/look_service.dart';
 import '../data/settings_store.dart';
 import '../data/share_intake.dart';
 import '../data/updater.dart';
 import '../data/watcher.dart';
 import '../domain/catalog_export.dart';
 import '../domain/categorizer.dart';
+import '../domain/look.dart';
 import '../domain/product.dart';
 import '../domain/product_importer.dart';
 import '../domain/recommender.dart';
@@ -24,6 +26,7 @@ import '../domain/sharing.dart';
 import '../domain/releases.dart';
 import 'feedback.dart';
 import 'fit_panel.dart';
+import 'look_panels.dart';
 import 'maintenance.dart';
 import 'paper.dart';
 import 'wardrobe_screen.dart';
@@ -130,6 +133,7 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
     importer: () => widget.importer?.call(_categorizer) ?? ProductImporter(categorizer: _categorizer),
     notify: widget.notify,
   );
+  late final _looks = LookService(widget.repository);
   Timer? _watchTimer;
   String? _copiedLink, _dismissedLink;
   Release? _available;
@@ -384,6 +388,33 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
     }
     await _detail(product);
   }
+
+  /// Finds items that look like a photo the owner picks. The photo is read
+  /// on this device and never stored or sent.
+  Future<void> _searchByPhoto() async {
+    final picked = await FilePicker.pickFile(
+      dialogTitle: 'Choose a photo of something you like',
+      type: FileType.image,
+    );
+    if (picked == null || !mounted) return;
+    final bytes = await picked.readAsBytes();
+    await _findLook(() => describeImage(bytes), 'your photo');
+  }
+
+  Future<void> _findLook(Future<LookDescriptor> Function() query, String label, {String? exclude}) =>
+      showPaperDialog<void>(
+        context,
+        builder: (c) => LookSearchSheet(
+          query: query,
+          label: label,
+          candidates: _all.where((p) => p.id != exclude).toList(),
+          service: _looks,
+          onOpen: (p) {
+            Navigator.pop(c);
+            _detail(p);
+          },
+        ),
+      );
 
   Future<void> _detail(Product product) => showPaperDialog<void>(
     context,
@@ -937,6 +968,11 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
                   runSpacing: Space.s,
                   children: [
                     CopperButton(label: 'Add a product link', icon: Icons.add_link, onPressed: _import),
+                    PaperButton(
+                      label: 'Search by photo',
+                      icon: Icons.image_search,
+                      onPressed: _searchByPhoto,
+                    ),
                     if (_entries.any((e) => !e.product.sample))
                       PaperButton(label: 'Export catalog', icon: Icons.ios_share, onPressed: _export),
                   ],
@@ -1960,6 +1996,17 @@ class _ProductDetailState extends State<_ProductDetail> {
                   onWatchStarted: home._askToNotify,
                 ),
                 const SizedBox(height: Space.xl),
+                DetailsPanel(
+                  key: ValueKey('details-${p.id}'),
+                  product: p,
+                  repository: home.widget.repository,
+                  service: home._looks,
+                  onChanged: (updated) {
+                    setState(() => _product = updated);
+                    home._reload();
+                  },
+                ),
+                const SizedBox(height: Space.xl),
                 FitPanel(key: ValueKey('fit-${p.id}'), product: p, repository: home.widget.repository),
                 const SizedBox(height: Space.xl),
                 OwnPanel(key: ValueKey('own-${p.id}'), product: p, repository: home.widget.repository),
@@ -2009,6 +2056,31 @@ class _ProductDetailState extends State<_ProductDetail> {
                     widget.close();
                     home._detail(s);
                   },
+                ),
+              ],
+              if (LookService.imageOf(p) != null) ...[
+                const SizedBox(height: Space.l),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: PaperButton(
+                    label: 'Find this look',
+                    icon: Icons.palette_outlined,
+                    compact: true,
+                    onPressed: () {
+                      widget.close();
+                      home._findLook(
+                        () async {
+                          final look = (await home._looks.prepare([p]))[p.id];
+                          if (look == null) {
+                            throw const FormatException('This item’s photo could not be read.');
+                          }
+                          return look;
+                        },
+                        p.name,
+                        exclude: p.id,
+                      );
+                    },
+                  ),
                 ),
               ],
               const SizedBox(height: Space.l),

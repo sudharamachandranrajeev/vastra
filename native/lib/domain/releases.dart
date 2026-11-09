@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 /// The running version. A test keeps it equal to `pubspec.yaml`.
-const appVersion = '0.8.0';
+const appVersion = '0.9.0';
 const repositorySlug = 'sudharamachandranrajeev/vastra';
 final releasesApi = Uri.parse('https://api.github.com/repos/$repositorySlug/releases?per_page=50');
 final releasesPage = Uri.parse('https://github.com/$repositorySlug/releases');
