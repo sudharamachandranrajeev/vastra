@@ -11,7 +11,7 @@ let mf: Miniflare;
 before(async () => {
   const bundle = await build({ entryPoints: ["tests/import.worker.ts"], bundle: true, write: false, format: "esm", platform: "browser", target: "es2022" });
   mf = new Miniflare({ modules: true, script: bundle.outputFiles[0].text, compatibilityDate: "2026-05-15", cf: false,
-    outboundService(request) {
+    outboundService(request: { url: string }) {
       requests.push(request.url);
       return responses.get(request.url)?.() ?? new Response("Unexpected outbound request", { status: 599 });
     },

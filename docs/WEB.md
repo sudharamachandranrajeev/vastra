@@ -26,7 +26,7 @@ Requires Node.js 22.13+ and npm. The app uses Vinext (Next.js App Router on Vite
 npm ci
 npm run build
 node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0000_thick_carlie_cooper.sql
-npm run dev -- --hostname 127.0.0.1 --port 5173
+npm run dev -- --host 127.0.0.1 --port 5173
 ```
 
 Apply that initial migration once to a new local database. Keep `.wrangler/state` between sessions. Later schema changes must append migrations; never replay or edit applied migrations. Local and hosted databases are separate.
