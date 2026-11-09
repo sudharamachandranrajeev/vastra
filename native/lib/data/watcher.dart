@@ -56,20 +56,34 @@ class WatchService {
   /// Checks every watched item that is due, or all of them when [all] is
   /// true, one at a time and a few seconds apart on the same store. Returns
   /// how many were checked.
-  Future<int> checkDue({bool all = false, Duration spacing = const Duration(seconds: 3)}) async {
+  Future<int> checkDue({bool all = false, Duration spacing = const Duration(seconds: 3)}) {
+    final now = DateTime.now().toUtc();
+    final due = [
+      for (final watch in repository.watches())
+        if (all ||
+            switch (repository.lastChecked(watch.productId)) {
+              null => true,
+              final last => now.difference(last) >= checkInterval(watch),
+            })
+          watch.productId,
+    ];
+    return refresh(due, spacing: spacing);
+  }
+
+  /// Fetches the given finds again, one at a time and a few seconds apart on
+  /// the same store, then delivers any alerts. Notes and corrections stay.
+  /// Returns how many were checked; 0 while another run is going.
+  Future<int> refresh(Iterable<String> ids, {Duration spacing = const Duration(seconds: 3)}) async {
     if (_running) return 0;
     _running = true;
     try {
-      final now = DateTime.now().toUtc();
       final products = {for (final e in repository.readAll()) e.product.id: e.product};
       var checked = 0;
       String? lastHost;
       final fetcher = importer();
-      for (final watch in repository.watches()) {
-        final product = products[watch.productId];
-        if (product == null || product.sample) continue;
-        final last = repository.lastChecked(product.id);
-        if (!all && last != null && now.difference(last) < checkInterval(watch)) continue;
+      for (final id in ids) {
+        final product = products[id];
+        if (product == null || product.sample || product.sourceUrl.isEmpty) continue;
         final host = Uri.tryParse(product.sourceUrl)?.host;
         if (host != null && host == lastHost) {
           await Future<void>.delayed(spacing + spacing * _random.nextDouble());
@@ -80,7 +94,7 @@ class WatchService {
           checked++;
         } on Object catch (error) {
           // One unreachable store never stops the other checks.
-          debugPrint('Vastra watch check failed: $error');
+          debugPrint('Vastra check failed: $error');
         }
       }
       await deliver();

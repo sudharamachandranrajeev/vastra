@@ -8,6 +8,12 @@ import '../domain/product.dart';
 import '../domain/wardrobe.dart';
 import '../domain/watching.dart';
 
+/// Details the owner may correct. Prices and stock stay the store's.
+const editableFields = ['name', 'brand', 'color', 'material', 'sizes', 'description'];
+
+/// Long enough for sizes, codes and a few links; short enough to stay a note.
+const maxNoteLength = 2000;
+
 class CatalogEntry {
   const CatalogEntry(this.product, this.collection);
   final Product product;
@@ -75,6 +81,14 @@ class CatalogRepository {
     _db.execute('''CREATE TABLE IF NOT EXISTS tag_choices (
       product_id TEXT NOT NULL, field TEXT NOT NULL, value TEXT NOT NULL, accepted INTEGER NOT NULL,
       PRIMARY KEY (product_id, field, value))''');
+    // The owner's own words about a find. Never touched by a refresh.
+    _db.execute('''CREATE TABLE IF NOT EXISTS notes (
+      product_id TEXT PRIMARY KEY, text TEXT NOT NULL, updated_at TEXT NOT NULL)''');
+    // The owner's corrections, kept apart from what the store published:
+    // [value] is the owner's, [original] the store's latest (JSON both).
+    _db.execute('''CREATE TABLE IF NOT EXISTS edits (
+      product_id TEXT NOT NULL, field TEXT NOT NULL, value TEXT NOT NULL, original TEXT NOT NULL,
+      PRIMARY KEY (product_id, field))''');
   }
   factory CatalogRepository.memory() => CatalogRepository(sqlite3.openInMemory());
   final Database _db;
@@ -123,6 +137,17 @@ class CatalogRepository {
           if (current == null || (current is String && current.trim().isEmpty)) {
             stored = Product.fromJson({...stored.toJson(), field: r['value']});
           }
+        }
+        // The owner's corrections win over the store; the store's new value
+        // is kept so "Use the store's" shows what the store says today.
+        for (final r in _db.select('SELECT field, value FROM edits WHERE product_id = ?', [existing.id])) {
+          final field = r['field'] as String;
+          _db.execute('UPDATE edits SET original = ? WHERE product_id = ? AND field = ?', [
+            jsonEncode(stored.toJson()[field]),
+            existing.id,
+            field,
+          ]);
+          stored = Product.fromJson({...stored.toJson(), field: jsonDecode(r['value'] as String)});
         }
       }
       _db.execute(
@@ -187,6 +212,8 @@ class CatalogRepository {
       'outfit_items WHERE product_id',
       'looks WHERE product_id',
       'tag_choices WHERE product_id',
+      'notes WHERE product_id',
+      'edits WHERE product_id',
     ]) {
       _db.execute('DELETE FROM $table = ?', [id]);
     }
@@ -227,6 +254,154 @@ class CatalogRepository {
         ),
       )
       .toList();
+
+  /// Moves finds into [collection], whether or not they were saved before.
+  void moveTo(Iterable<String> ids, String collection) {
+    final name = collection.trim();
+    if (name.isEmpty || name.length > 60) {
+      throw ArgumentError('Use a collection name between 1 and 60 characters.');
+    }
+    _db.execute('BEGIN IMMEDIATE');
+    try {
+      for (final id in ids) {
+        _db.execute('UPDATE products SET collection = ? WHERE id = ?', [name, id]);
+      }
+      _db.execute('COMMIT');
+    } catch (_) {
+      _db.execute('ROLLBACK');
+      rethrow;
+    }
+  }
+
+  /// Removes several finds and everything recorded about them, together.
+  void removeAll(Iterable<String> ids) {
+    _db.execute('BEGIN IMMEDIATE');
+    try {
+      ids.forEach(remove);
+      _db.execute('COMMIT');
+    } catch (_) {
+      _db.execute('ROLLBACK');
+      rethrow;
+    }
+  }
+
+  /// Deletes every row Vastra keeps on this device. Settings live elsewhere.
+  void eraseEverything() {
+    final tables = _db
+        .select("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'")
+        .map((r) => r['name'] as String)
+        .toList();
+    _db.execute('BEGIN IMMEDIATE');
+    try {
+      for (final t in tables) {
+        _db.execute('DELETE FROM "$t"');
+      }
+      _db.execute('COMMIT');
+    } catch (_) {
+      _db.execute('ROLLBACK');
+      rethrow;
+    }
+    _db.execute('VACUUM');
+  }
+
+  String noteFor(String productId) =>
+      _db.select('SELECT text FROM notes WHERE product_id = ?', [productId]).firstOrNull?['text']
+          as String? ??
+      '';
+
+  /// Every note, by product id.
+  Map<String, String> notes() => {
+    for (final r in _db.select('SELECT product_id, text FROM notes'))
+      r['product_id'] as String: r['text'] as String,
+  };
+
+  /// Saves the owner's note; an empty note is deleted.
+  void setNote(String productId, String text, {DateTime? at}) {
+    final value = text.trim();
+    if (value.length > maxNoteLength) throw ArgumentError('Keep notes under $maxNoteLength characters.');
+    if (value.isEmpty) {
+      _db.execute('DELETE FROM notes WHERE product_id = ?', [productId]);
+    } else {
+      _db.execute(
+        'INSERT INTO notes (product_id, text, updated_at) VALUES (?, ?, ?) '
+        'ON CONFLICT(product_id) DO UPDATE SET text = excluded.text, updated_at = excluded.updated_at',
+        [productId, value, (at ?? DateTime.now()).toUtc().toIso8601String()],
+      );
+    }
+  }
+
+  /// Fields the owner corrected, with the store's own (latest) value.
+  Map<String, Object?> editsFor(String productId) => {
+    for (final r in _db.select('SELECT field, original FROM edits WHERE product_id = ?', [productId]))
+      r['field'] as String: jsonDecode(r['original'] as String),
+  };
+
+  /// Product ids with at least one correction.
+  Set<String> editedIds() => {
+    for (final r in _db.select('SELECT DISTINCT product_id FROM edits')) r['product_id'] as String,
+  };
+
+  /// Applies the owner's correction to [field]. Setting it back to the
+  /// store's value drops the correction.
+  Product correct(Product product, String field, Object? value) {
+    if (!editableFields.contains(field)) throw ArgumentError('$field cannot be edited.');
+    final cleaned = switch (value) {
+      String v => v.trim(),
+      List v => [for (final x in v) '$x'.trim()].where((x) => x.isNotEmpty).toList(),
+      _ => value,
+    };
+    if ((field == 'name' || field == 'brand') && (cleaned is! String || cleaned.isEmpty)) {
+      throw ArgumentError('A $field cannot be empty.');
+    }
+    final edits = editsFor(product.id);
+    final original = edits.containsKey(field) ? edits[field] : product.toJson()[field];
+    final next = Product.fromJson({
+      ...product.toJson(),
+      field: (cleaned is String && cleaned.isEmpty && field != 'description') ? null : cleaned,
+    });
+    _db.execute('BEGIN IMMEDIATE');
+    try {
+      if (jsonEncode(next.toJson()[field]) == jsonEncode(original)) {
+        _db.execute('DELETE FROM edits WHERE product_id = ? AND field = ?', [product.id, field]);
+      } else {
+        _db.execute(
+          'INSERT INTO edits (product_id, field, value, original) VALUES (?, ?, ?, ?) '
+          'ON CONFLICT(product_id, field) DO UPDATE SET value = excluded.value',
+          [product.id, field, jsonEncode(next.toJson()[field]), jsonEncode(original)],
+        );
+      }
+      update(next);
+      _db.execute('COMMIT');
+    } catch (_) {
+      _db.execute('ROLLBACK');
+      rethrow;
+    }
+    return next;
+  }
+
+  /// Drops the owner's correction and puts the store's value back.
+  Product useStoreValue(Product product, String field) {
+    final edits = editsFor(product.id);
+    if (!edits.containsKey(field)) return product;
+    return correct(product, field, edits[field]);
+  }
+
+  /// Imported finds whose prices may be out of date, with the reason.
+  Map<String, String> staleItems(Iterable<Product> products, {DateTime? now}) {
+    final at = (now ?? DateTime.now()).toUtc();
+    final out = <String, String>{};
+    for (final p in products) {
+      if (p.sample || p.sourceUrl.isEmpty) continue;
+      final f = freshness(p.id);
+      final reason = staleReason(
+        lastOk: f.lastOk ?? DateTime.tryParse(p.checkedAt),
+        lastFailed: f.lastFailed,
+        now: at,
+      );
+      if (reason != null) out[p.id] = reason;
+    }
+    return out;
+  }
 
   /// The latest successful check and whether a later one was blocked.
   ({DateTime? lastOk, bool lastFailed}) freshness(String productId) {
@@ -607,7 +782,7 @@ class CatalogRepository {
   /// follow to another). Returns how many finds were added.
   int restoreFrom(String path) {
     final backup = sqlite3.open(path, mode: OpenMode.readOnly);
-    final List<Row> rows, points, watched, fitted, ownedRows, wearRows, locked, choices;
+    final List<Row> rows, points, watched, fitted, ownedRows, wearRows, locked, choices, noteRows, editRows;
     final backupWardrobe = <String, List<Row>>{};
     try {
       final version = backup.select('PRAGMA user_version').first.values.first as int;
@@ -629,6 +804,8 @@ class CatalogRepository {
       ownedRows = has('owned') ? backup.select('SELECT * FROM owned').toList() : const [];
       wearRows = has('wears') ? backup.select('SELECT * FROM wears').toList() : const [];
       choices = has('tag_choices') ? backup.select('SELECT * FROM tag_choices').toList() : const [];
+      noteRows = has('notes') ? backup.select('SELECT * FROM notes').toList() : const [];
+      editRows = has('edits') ? backup.select('SELECT * FROM edits').toList() : const [];
       locked = has('private_collections')
           ? backup.select('SELECT name FROM private_collections').toList()
           : const [];
@@ -720,6 +897,34 @@ class CatalogRepository {
                  SELECT 1 FROM tag_choices WHERE product_id = ? AND field = ? AND accepted = 1)''',
             [local, c['field'], c['value'], c['accepted'], c['accepted'], local, c['field']],
           );
+        }
+        // A note or correction already on this device wins; the backup's
+        // fills in only what is missing.
+        for (final n in noteRows.where((n) => n['product_id'] == r['id'])) {
+          _db.execute('INSERT OR IGNORE INTO notes (product_id, text, updated_at) VALUES (?, ?, ?)', [
+            local,
+            n['text'],
+            n['updated_at'],
+          ]);
+        }
+        for (final e in editRows.where((e) => e['product_id'] == r['id'])) {
+          final field = e['field'] as String;
+          if (!editableFields.contains(field)) continue;
+          _db.execute(
+            'INSERT OR IGNORE INTO edits (product_id, field, value, original) VALUES (?, ?, ?, ?)',
+            [local, field, e['value'], e['original']],
+          );
+          if (!inserted && _db.updatedRows > 0) {
+            final doc = _db.select('SELECT document FROM products WHERE id = ?', [local]).first['document'];
+            final json = jsonDecode(doc as String) as Map<String, dynamic>;
+            _db.execute('UPDATE edits SET original = ? WHERE product_id = ? AND field = ?', [
+              jsonEncode(json[field]),
+              local,
+              field,
+            ]);
+            json[field] = jsonDecode(e['value'] as String);
+            _db.execute('UPDATE products SET document = ? WHERE id = ?', [jsonEncode(json), local]);
+          }
         }
         for (final w in watched.where((w) => w['product_id'] == r['id'])) {
           _db.execute(

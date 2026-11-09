@@ -5,6 +5,11 @@ import 'product.dart';
 import 'sharing.dart';
 
 enum ExportFormat {
+  spreadsheet(
+    'Spreadsheet (CSV): everything, with your notes',
+    'csv',
+    'Every find, its collection, your notes and corrections, prices as last checked. Opens in any spreadsheet.',
+  ),
   shopify('Shopify products CSV', 'csv', 'Import in Shopify admin: Products > Import.'),
   merchantFeed(
     'Product feed (Google, Meta, Pinterest, TikTok)',
@@ -40,7 +45,9 @@ String exportCatalog(
   String listName = 'Wish list',
   String message = '',
   bool prices = true,
+  Map<String, CatalogRowExtras> extras = const {},
 }) => switch (format) {
+  ExportFormat.spreadsheet => spreadsheetCsv(products, extras),
   ExportFormat.shopify => shopifyCsv(products),
   ExportFormat.merchantFeed => merchantFeed(products),
   ExportFormat.schemaJson => const JsonEncoder.withIndent('  ').convert(schemaOrg(products)),
@@ -59,6 +66,62 @@ String _csv(List<List<String>> rows) => rows
           .join(','),
     )
     .join('\r\n');
+
+/// What the owner added to a find, for the spreadsheet export.
+class CatalogRowExtras {
+  const CatalogRowExtras({this.collection, this.note = '', this.edited = const [], this.lastChecked});
+  final String? collection;
+  final String note;
+  final List<String> edited;
+  final DateTime? lastChecked;
+}
+
+const spreadsheetColumns = [
+  'Name', 'Brand', 'Category', 'Type', 'Collection', 'Your notes', 'Edited by you', //
+  'Price', 'Currency', 'Seller', 'Availability', 'Last checked', 'Colour', 'Material', 'Sizes',
+  'SKU', 'GTIN', 'MPN', 'Tags', 'Link', 'Image', 'Description',
+];
+
+/// A plain spreadsheet of the whole catalog: one row per find, nothing left
+/// out that the owner wrote. Prices stay in their original currency.
+String spreadsheetCsv(List<Product> products, [Map<String, CatalogRowExtras> extras = const {}]) {
+  final rows = <List<String>>[spreadsheetColumns];
+  for (final p in products) {
+    final x = extras[p.id] ?? const CatalogRowExtras();
+    final offer = p.displayOffer;
+    rows.add(
+      [
+        p.name,
+        p.brand,
+        p.category,
+        p.productType ?? '',
+        x.collection ?? '',
+        x.note,
+        x.edited.join(', '),
+        _money(offer?.price),
+        offer?.currency ?? '',
+        offer?.seller ?? '',
+        offer?.availability ?? '',
+        (x.lastChecked ?? DateTime.tryParse(p.checkedAt))?.toUtc().toIso8601String() ?? '',
+        p.color ?? '',
+        p.material ?? '',
+        p.sizes.join(', '),
+        p.sku ?? '',
+        p.gtin ?? '',
+        p.mpn ?? '',
+        p.tags.join(', '),
+        p.sourceUrl,
+        p.images.firstOrNull ?? '',
+        p.description,
+      ].map(_cell).toList(),
+    );
+  }
+  return '${_csv(rows)}\r\n';
+}
+
+/// Spreadsheets run cells that start with = + - @ as formulas; a leading
+/// apostrophe keeps them as text.
+String _cell(String v) => RegExp(r'^[=+\-@\t\r]').hasMatch(v) ? "'$v" : v;
 
 String _escape(String text) =>
     text.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;');

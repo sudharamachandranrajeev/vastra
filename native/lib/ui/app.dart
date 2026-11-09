@@ -17,6 +17,7 @@ import '../data/settings_store.dart';
 import '../data/share_intake.dart';
 import '../data/updater.dart';
 import '../data/watcher.dart';
+import 'notes_panel.dart';
 import '../domain/catalog_export.dart';
 import '../domain/categorizer.dart';
 import '../domain/look.dart';
@@ -144,7 +145,11 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
       _sort = 'Curated order',
       _collection = 'All collections',
       _sellerKind = 'All sellers';
-  bool _samples = true, _watchedOnly = false;
+  bool _samples = true, _watchedOnly = false, _staleOnly = false, _selecting = false, _checking = false;
+  final Set<String> _selected = {};
+
+  /// Imported finds whose prices may be out of date, with the reason.
+  Map<String, String> _stale = const {};
   late final _watch = WatchService(
     repository: widget.repository,
     settings: widget.settings,
@@ -168,6 +173,7 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
     _entries = widget.repository.readAll();
     _recommender = Recommender(_all);
+    _stale = widget.repository.staleItems(_entries.map((e) => e.product));
     _shares = widget.intake.shared.listen(_receive);
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final initial = await widget.intake.initial();
@@ -314,7 +320,144 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
   void _reload() => setState(() {
     _entries = widget.repository.readAll();
     _recommender = Recommender(_all);
+    _stale = widget.repository.staleItems(_entries.map((e) => e.product));
+    _selected.retainWhere((id) => _entries.any((e) => e.product.id == id));
   });
+
+  /// Fetches every out-of-date find again. Notes and corrections stay.
+  Future<void> _checkStale() async {
+    final ids = _stale.keys.toList();
+    if (ids.isEmpty || _checking) return;
+    setState(() => _checking = true);
+    _toast(
+      ToastKind.info,
+      'Checking ${ids.length} ${ids.length == 1 ? 'find' : 'finds'}, a few seconds apart.',
+    );
+    final checked = await _watch.refresh(ids);
+    if (!mounted) return;
+    setState(() => _checking = false);
+    _reload();
+    final left = _stale.length;
+    _toast(
+      checked == 0 ? ToastKind.error : ToastKind.success,
+      checked == 0
+          ? 'No stores could be reached. Try again later.'
+          : 'Checked $checked.${left == 0 ? ' Everything is current.' : ' $left still out of date.'}',
+    );
+  }
+
+  void _toggleSelect(Product p) => setState(() {
+    if (!_selected.remove(p.id)) _selected.add(p.id);
+  });
+
+  void _endSelecting() => setState(() {
+    _selecting = false;
+    _selected.clear();
+  });
+
+  Future<void> _moveSelected() async {
+    final collections = _entries.map((e) => e.collection).whereType<String>().toSet().toList()..sort();
+    final name = await showPaperDialog<String>(
+      context,
+      builder: (c) => _MoveSheet(count: _selected.length, collections: collections),
+    );
+    if (name == null) return;
+    final n = _selected.length;
+    if (_write(() => widget.repository.moveTo(_selected, name))) {
+      _endSelecting();
+      _toast(ToastKind.success, 'Moved $n ${n == 1 ? 'find' : 'finds'} to "$name".');
+    }
+  }
+
+  Future<void> _removeSelected() async {
+    final n = _selected.length;
+    final confirmed = await showPaperDialog<bool>(
+      context,
+      builder: (c) => PaperSheet(
+        maxWidth: 400,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Remove $n ${n == 1 ? 'find' : 'finds'}?',
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: Space.s),
+            const Text(
+              'Their notes, price history, fit, wear days and watches go too. Outfits keep their other pieces.',
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: Space.xl),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                PaperButton(label: 'Cancel', onPressed: () => Navigator.pop(c, false)),
+                const SizedBox(width: Space.m),
+                CopperButton(label: 'Remove $n', onPressed: () => Navigator.pop(c, true)),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+    if (confirmed != true) return;
+    final ids = _selected.toList();
+    if (_write(() => widget.repository.removeAll(ids))) {
+      _comparison.removeAll(ids);
+      _endSelecting();
+      _toast(ToastKind.info, 'Removed $n ${n == 1 ? 'find' : 'finds'}.');
+    }
+  }
+
+  Future<void> _erase(BuildContext settingsContext) async {
+    final typed = TextEditingController();
+    final confirmed = await showPaperDialog<bool>(
+      context,
+      builder: (c) => StatefulBuilder(
+        builder: (c, set) => PaperSheet(
+          maxWidth: 440,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Text(
+                'Erase everything on this device?',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: Space.s),
+              const Text(
+                'Every find, collection, note, price history, wardrobe item, outfit and packing list on this device is deleted. This cannot be undone. Your backup files and your sync folder are not touched; syncing again brings their contents back. Settings stay.',
+              ),
+              const SizedBox(height: Space.l),
+              PaperField(controller: typed, label: 'Type ERASE to confirm', onChanged: (_) => set(() {})),
+              const SizedBox(height: Space.l),
+              Wrap(
+                alignment: WrapAlignment.end,
+                spacing: Space.m,
+                runSpacing: Space.s,
+                children: [
+                  PaperButton(label: 'Cancel', onPressed: () => Navigator.pop(c, false)),
+                  CopperButton(
+                    label: 'Erase everything',
+                    icon: Icons.delete_forever,
+                    onPressed: typed.text.trim() == 'ERASE' ? () => Navigator.pop(c, true) : null,
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    typed.dispose();
+    if (confirmed != true) return;
+    if (_write(widget.repository.eraseEverything)) {
+      _comparison.clear();
+      _endSelecting();
+      if (settingsContext.mounted) Navigator.pop(settingsContext);
+      _toast(ToastKind.success, 'Everything on this device was erased.');
+    }
+  }
 
   List<Product> get _all {
     final products = {for (final p in widget.data.samples) p.id: p};
@@ -635,6 +778,22 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
         ],
         collections: collections,
         locked: widget.repository.privateCollections(),
+        extras: () {
+          final notes = widget.repository.notes();
+          final edited = widget.repository.editedIds();
+          return {
+            for (final e in _entries)
+              if (!e.product.sample)
+                e.product.id: CatalogRowExtras(
+                  collection: e.collection,
+                  note: notes[e.product.id] ?? '',
+                  edited: edited.contains(e.product.id)
+                      ? widget.repository.editsFor(e.product.id).keys.toList()
+                      : const [],
+                  lastChecked: widget.repository.freshness(e.product.id).lastOk,
+                ),
+          };
+        },
         onDone: (message, ok) => _toast(ok ? ToastKind.success : ToastKind.error, message),
       ),
     );
@@ -857,6 +1016,12 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
                       },
                     ),
                     PaperButton(
+                      label: 'Erase everything',
+                      icon: Icons.delete_forever,
+                      compact: true,
+                      onPressed: () => _erase(c),
+                    ),
+                    PaperButton(
                       label: 'Sync with my server',
                       icon: Icons.sync,
                       compact: true,
@@ -937,7 +1102,14 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
         .toList();
     if (_tab == 1) {
       final watched = {for (final w in widget.repository.watches()) w.productId};
-      products = products.where((p) => !p.sample && (!_watchedOnly || watched.contains(p.id))).toList();
+      products = products
+          .where(
+            (p) =>
+                !p.sample &&
+                (!_watchedOnly || watched.contains(p.id)) &&
+                (!_staleOnly || _stale.containsKey(p.id)),
+          )
+          .toList();
     }
     if (_tab == 3) {
       products = products
@@ -1185,6 +1357,39 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
                     const Text('Watched only'),
                   ],
                 ),
+              if (_tab == 1 && _stale.isNotEmpty) ...[
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Checkbox(
+                      value: _staleOnly,
+                      onChanged: (v) {
+                        FeedbackScope.of(context).play(Cue.toggle);
+                        setState(() {
+                          _staleOnly = v!;
+                          _page = 0;
+                        });
+                      },
+                    ),
+                    Text('Needs a check (${_stale.length})'),
+                  ],
+                ),
+                PaperButton(
+                  label: _checking ? 'Checking…' : 'Check ${_stale.length} now',
+                  icon: Icons.refresh,
+                  compact: true,
+                  onPressed: _checking ? null : _checkStale,
+                ),
+              ],
+              if (_tab == 1 || _tab == 3)
+                PaperButton(
+                  label: _selecting ? 'Done selecting' : 'Select',
+                  icon: _selecting ? Icons.done : Icons.checklist,
+                  compact: true,
+                  selected: _selecting,
+                  cue: Cue.toggle,
+                  onPressed: () => _selecting ? _endSelecting() : setState(() => _selecting = true),
+                ),
               if (_tab == 3) ...[
                 _dropdown(
                   _collection,
@@ -1379,7 +1584,9 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
                         product: p,
                         saved: _saved(p) != null,
                         compared: _comparison.contains(p.id),
-                        onOpen: () => _detail(p),
+                        stale: _stale.containsKey(p.id),
+                        selected: _selecting && !p.sample ? _selected.contains(p.id) : null,
+                        onOpen: () => _selecting && !p.sample ? _toggleSelect(p) : _detail(p),
                         onSave: () => _save(p),
                         onCompare: () => _toggleCompare(p),
                       ),
@@ -1560,16 +1767,42 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
                 ),
               ),
             ),
-      floatingActionButton: AnimatedScale(
-        scale: _comparison.isEmpty ? 0 : 1,
-        duration: Motion.medium,
-        curve: Motion.settle,
-        child: CopperButton(
-          label: 'Compare ${_comparison.length}',
-          icon: Icons.compare_arrows,
-          onPressed: _comparison.isEmpty ? null : _compare,
-        ),
-      ),
+      floatingActionButton: _selecting && (_tab == 1 || _tab == 3)
+          ? Paper(
+              level: 3,
+              radius: Radii.m,
+              padding: const EdgeInsets.symmetric(horizontal: Space.l, vertical: Space.s),
+              child: Wrap(
+                spacing: Space.s,
+                runSpacing: Space.s,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  Text('${_selected.length} selected', style: const TextStyle(fontWeight: FontWeight.w600)),
+                  PaperButton(
+                    label: 'Move to…',
+                    icon: Icons.drive_file_move_outline,
+                    compact: true,
+                    onPressed: _selected.isEmpty ? null : _moveSelected,
+                  ),
+                  PaperButton(
+                    label: 'Remove',
+                    icon: Icons.delete_outline,
+                    compact: true,
+                    onPressed: _selected.isEmpty ? null : _removeSelected,
+                  ),
+                ],
+              ),
+            )
+          : AnimatedScale(
+              scale: _comparison.isEmpty ? 0 : 1,
+              duration: Motion.medium,
+              curve: Motion.settle,
+              child: CopperButton(
+                label: 'Compare ${_comparison.length}',
+                icon: Icons.compare_arrows,
+                onPressed: _comparison.isEmpty ? null : _compare,
+              ),
+            ),
     );
   }
 }
@@ -1623,9 +1856,17 @@ class ProductCard extends StatelessWidget {
     required this.onOpen,
     required this.onSave,
     required this.onCompare,
+    this.stale = false,
+    this.selected,
   });
   final Product product;
   final bool saved, compared;
+
+  /// The last check is old or was blocked, so prices may be out of date.
+  final bool stale;
+
+  /// Null when not selecting; otherwise whether this card is picked.
+  final bool? selected;
   final VoidCallback onOpen, onSave, onCompare;
   @override
   Widget build(BuildContext context) {
@@ -1638,13 +1879,19 @@ class ProductCard extends StatelessWidget {
       cue: Cue.open,
       radius: Radii.s,
       padding: const EdgeInsets.all(Space.m - 2),
-      semanticLabel: 'View ${product.name}',
+      semanticLabel: selected == null
+          ? 'View ${product.name}'
+          : '${selected! ? 'Deselect' : 'Select'} ${product.name}',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Expanded(
             child: Container(
-              decoration: paperDecoration(surface: Surface.inset, radius: Radii.xs),
+              decoration: paperDecoration(
+                surface: Surface.inset,
+                radius: Radii.xs,
+                border: selected == true ? Tone.copper : null,
+              ),
               padding: const EdgeInsets.all(2),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(Radii.xs - 1),
@@ -1658,21 +1905,27 @@ class ProductCard extends StatelessWidget {
                       child: RibbonBadge(
                         product.sample
                             ? 'Sample'
+                            : stale
+                            ? 'Out of date'
                             : (fresh ? 'New' : (product.extraction == 'link' ? 'Link' : 'Yours')),
-                        color: product.sample ? Tone.inkSoft : Tone.copper,
+                        color: product.sample ? Tone.inkSoft : (stale ? Tone.error : Tone.copper),
                       ),
                     ),
                     Positioned(
                       top: Space.xs,
                       right: Space.xs,
-                      child: PaperIconButton(
-                        icon: saved ? Icons.favorite : Icons.favorite_border,
-                        tooltip: saved ? 'Unsave ${product.name}' : 'Save ${product.name}',
-                        onPressed: onSave,
-                        active: saved,
-                        cue: Cue.toggle,
-                        size: 36,
-                      ),
+                      child: selected != null
+                          ? ExcludeSemantics(
+                              child: Checkbox(value: selected, onChanged: (_) => onOpen()),
+                            )
+                          : PaperIconButton(
+                              icon: saved ? Icons.favorite : Icons.favorite_border,
+                              tooltip: saved ? 'Unsave ${product.name}' : 'Save ${product.name}',
+                              onPressed: onSave,
+                              active: saved,
+                              cue: Cue.toggle,
+                              size: 36,
+                            ),
                     ),
                   ],
                 ),
@@ -2091,6 +2344,17 @@ class _ProductDetailState extends State<_ProductDetail> {
               ],
               if (!p.sample) ...[
                 const SizedBox(height: Space.xl),
+                NotesPanel(
+                  key: ValueKey('notes-${p.id}'),
+                  product: p,
+                  repository: home.widget.repository,
+                  onOpenLink: home._open,
+                  onChanged: (updated) {
+                    setState(() => _product = updated);
+                    home._reload();
+                  },
+                ),
+                const SizedBox(height: Space.xl),
                 WatchPanel(
                   key: ValueKey('watch-${p.id}'),
                   product: p,
@@ -2119,8 +2383,8 @@ class _ProductDetailState extends State<_ProductDetail> {
               PaperField(
                 controller: _collection,
                 label: 'Collection name',
-                enabled: saved == null,
                 maxLength: 60,
+                onChanged: (_) => setState(() {}),
               ),
               const SizedBox(height: Space.m),
               Wrap(
@@ -2136,6 +2400,19 @@ class _ProductDetailState extends State<_ProductDetail> {
                       setState(() {});
                     },
                   ),
+                  if (saved != null && _collection.text.trim().isNotEmpty && _collection.text.trim() != saved)
+                    PaperButton(
+                      label: 'Move to "${_collection.text.trim()}"',
+                      icon: Icons.drive_file_move_outline,
+                      compact: true,
+                      onPressed: () {
+                        final name = _collection.text.trim();
+                        if (home._write(() => home.widget.repository.moveTo([p.id], name))) {
+                          home._toast(ToastKind.success, 'Moved to "$name".');
+                          setState(() {});
+                        }
+                      },
+                    ),
                   PaperButton(
                     label: home._comparison.contains(p.id) ? 'In comparison' : 'Compare',
                     icon: home._comparison.contains(p.id) ? Icons.check : Icons.add,
@@ -2447,9 +2724,14 @@ class ExportSheet extends StatefulWidget {
     required this.collections,
     required this.onDone,
     this.locked = const {},
+    this.extras,
   });
   final List<CatalogEntry> products;
   final List<String> collections;
+
+  /// Notes, corrections and freshness for the spreadsheet export, read only
+  /// when that format is saved.
+  final Map<String, CatalogRowExtras> Function()? extras;
 
   /// Private collections. Their finds are never exported or shared.
   final Set<String> locked;
@@ -2459,7 +2741,7 @@ class ExportSheet extends StatefulWidget {
 }
 
 class _ExportSheetState extends State<ExportSheet> {
-  ExportFormat _format = ExportFormat.shopify;
+  ExportFormat _format = ExportFormat.spreadsheet;
   String _scope = 'Whole catalog';
   bool _busy = false, _prices = true;
   final _message = TextEditingController();
@@ -2486,7 +2768,14 @@ class _ExportSheetState extends State<ExportSheet> {
   Future<void> _save() async {
     setState(() => _busy = true);
     try {
-      final text = exportCatalog(_chosen, _format, listName: _scope, message: _message.text, prices: _prices);
+      final text = exportCatalog(
+        _chosen,
+        _format,
+        listName: _scope,
+        message: _message.text,
+        prices: _prices,
+        extras: _format == ExportFormat.spreadsheet ? widget.extras?.call() ?? const {} : const {},
+      );
       final stamp = DateTime.now().toIso8601String().split('T').first;
       final saved = await FilePicker.saveFile(
         dialogTitle: _wishlist ? 'Save wish list' : 'Export Vastra catalog',
@@ -2495,7 +2784,7 @@ class _ExportSheetState extends State<ExportSheet> {
             : 'vastra-${_format.name}-$stamp.${_format.extension}',
         bytes: Uint8List.fromList(utf8.encode(text)),
         mimeType: switch (_format) {
-          ExportFormat.shopify => 'text/csv',
+          ExportFormat.spreadsheet || ExportFormat.shopify => 'text/csv',
           ExportFormat.merchantFeed => 'text/tab-separated-values',
           ExportFormat.schemaJson || ExportFormat.wishlistFile => 'application/json',
           ExportFormat.wishlistPage => 'text/html',
@@ -2610,6 +2899,75 @@ class _ExportSheetState extends State<ExportSheet> {
                 icon: Icons.download,
                 busy: _busy,
                 onPressed: _chosen.isEmpty ? null : _save,
+              ),
+            ],
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+/// Picks the collection to move selected finds into: an existing one or a new name.
+class _MoveSheet extends StatefulWidget {
+  const _MoveSheet({required this.count, required this.collections});
+  final int count;
+  final List<String> collections;
+  @override
+  State<_MoveSheet> createState() => _MoveSheetState();
+}
+
+class _MoveSheetState extends State<_MoveSheet> {
+  final _name = TextEditingController();
+
+  @override
+  void dispose() {
+    _name.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => PaperSheet(
+    maxWidth: 440,
+    child: SingleChildScrollView(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            'Move ${widget.count} ${widget.count == 1 ? 'find' : 'finds'} to',
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: Space.m),
+          if (widget.collections.isNotEmpty)
+            Wrap(
+              spacing: Space.s,
+              runSpacing: Space.s,
+              children: [
+                for (final c in widget.collections)
+                  PaperButton(label: c, compact: true, onPressed: () => Navigator.pop(context, c)),
+              ],
+            ),
+          const SizedBox(height: Space.l),
+          PaperField(
+            controller: _name,
+            label: 'Or a new collection',
+            maxLength: 60,
+            onChanged: (_) => setState(() {}),
+            onSubmitted: (v) {
+              if (v.trim().isNotEmpty) Navigator.pop(context, v.trim());
+            },
+          ),
+          const SizedBox(height: Space.m),
+          Wrap(
+            alignment: WrapAlignment.end,
+            spacing: Space.m,
+            children: [
+              PaperButton(label: 'Cancel', onPressed: () => Navigator.pop(context)),
+              CopperButton(
+                label: 'Move',
+                icon: Icons.drive_file_move_outline,
+                onPressed: _name.text.trim().isEmpty ? null : () => Navigator.pop(context, _name.text.trim()),
               ),
             ],
           ),

@@ -81,6 +81,14 @@ Acceptance: an alert names the old and new price and their source, and turning a
 - Screenshots are read on the device (ML Kit on Android, Tesseract on desktop) into search words, a price and links.
 - No marketplace API keys and no paid service. Shops that refuse embedded browsers or show bot checks are reported, not bypassed.
 
+### Phase 8 — catalog refinement and freshness (0.11.0)
+
+- Owner notes per find, with tappable links, stored apart from store data.
+- Owner corrections (name, brand, colour, material, sizes, description) kept in their own table with the store's latest value, re-applied on every refresh and reversible per field. Prices and stock are never editable: they stay store evidence.
+- Out-of-date finds marked across the catalog, with a filter and a one-tap re-check of just those.
+- Multi-select move and remove; move from an item's sheet.
+- A complete, free spreadsheet export including notes and corrections, and an erase-everything control.
+
 Sources: [BEUC complaint about Shein](https://www.storyboard18.com/amp/brand-marketing/shein-hit-with-eu-complaint-over-dark-patterns-in-app-website-68964.htm), [Dark patterns at scale, 11K shopping sites](https://arxiv.org/pdf/2107.07893), [Forbes India on dark patterns](https://www.magzter.com/ja/stories/business/Forbes-India/CLICK-BUY-REGRET), [Universal wishlist apps compared](https://giftlist.com/blog/10-best-universal-wishlist-apps-in-2025-ranked-and-reviewed), [Good On You wardrobe app test](https://goodonyou.eco/wardrobe-organising-apps/), [Whering best wardrobe apps](https://whering.co.uk/best-wardrobe-apps-2025), [MediaPost on fit and returns](https://www.mediapost.com/publications/article/317614/retail-search-fit-recommendations-fail-to-curtai.html), [Baymard product page research](https://www.baymard.com/research/product-page), [Clutch on AI shopping features](https://clutch.co/resources/ai-shopping-features).
 
 ## Implemented foundation
@@ -105,7 +113,7 @@ Acceptance: sourcing filters return specific sellers with traceable, appropriate
 
 ## Next: catalog refinement and freshness
 
-Add editable product annotations, refresh-from-source actions, saved collection reassignment, price history, stale-offer warnings, deletion/export controls, and update jobs. Preserve imported evidence separately from user annotations. On the hosted web app, expand the merchant allowlist after fixture and live validation; do not replace the server's SSRF boundary with unchecked arbitrary fetches. Native clients fetch from the user's own device, so they accept any public host (no address literals or local names).
+Native: done in Phase 8 (notes, corrections, refresh, reassignment, price history, stale warnings, export and erase). Still open on the hosted web app: editable product annotations, refresh-from-source actions, saved collection reassignment, price history, stale-offer warnings, deletion/export controls, and update jobs. Preserve imported evidence separately from user annotations. On the hosted web app, expand the merchant allowlist after fixture and live validation; do not replace the server's SSRF boundary with unchecked arbitrary fetches. Native clients fetch from the user's own device, so they accept any public host (no address literals or local names).
 
 Acceptance: users can correct their catalog, refresh a listing without losing notes, and distinguish current facts from stale or user-entered information.
 

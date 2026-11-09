@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.11.0
+
+- **Your notes** on every find: sizes to ask about, a discount code, links. Links in a note open with
+  one tap. Notes stay on your devices and a refresh never changes them.
+- **Correct the details**: fix a find's name, brand, colour, material, sizes or description when the
+  store got them wrong. Your version is kept when the item is refreshed, marked "Edited by you" with
+  what the store says now, and one tap puts the store's value back. Prices and stock stay as the store
+  reports them.
+- Out-of-date finds are marked on their card. In **My catalog**, **Needs a check** shows only those,
+  and **Check now** fetches them again, a few seconds apart.
+- **Select** in My catalog and Collections: pick several finds, then move them to a collection or
+  remove them together. An item's own sheet can also move it to another collection.
+- New export format, **Spreadsheet (CSV)**: every find with its collection, your notes, which details
+  you corrected and when its price was last checked. It is the default and opens in any spreadsheet.
+- **Settings → Erase everything** deletes every find, note and list on this device after you type
+  ERASE. Backup files and your sync folder are not touched.
+- Notes and corrections are included in backups and sync. A note or correction already on a device is
+  kept; the backup only fills in what is missing.
+
 ## 0.10.0
 
 - Shop in Vastra: search Amazon, eBay, Google Shopping, Etsy or Pinterest, return to a shop already in

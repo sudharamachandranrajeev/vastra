@@ -63,6 +63,11 @@ releases** (0.x). It does not search shops for you yet.
 - 📷 **Search by photo** – pick a photo and Vastra finds the items with the closest colours and
   pattern. When a shop leaves out the colour, material or pattern, Vastra suggests them and you
   decide. All of it happens on your device, with no AI service and no photo sent anywhere.
+- 📝 **Your notes and corrections** – add a note to any find, with sizes, codes or links. Fix a
+  name, colour or size the shop got wrong; your version survives every refresh and the shop's value
+  is one tap away. Out-of-date prices are marked, and one tap checks them all again.
+- 📤 **Your data is yours** – export the whole catalog as a spreadsheet, notes included, for free.
+  Move or remove many finds at once, or erase everything on the device.
 - 🏷️ **Sorted for you** – each find gets a category and type, and Vastra learns from your fixes.
 - 🗂️ **Collections** – save finds into named edits, such as a travel wardrobe or a gift list.
 - ⚖️ **Compare** – put up to four products side by side. Prices stay in their own currency.
@@ -202,6 +207,40 @@ Some sign-ins, such as **Sign in with Google**, refuse to work inside apps. Use 
 sign-in instead. Some shops show an error page or a check in Vastra's browser. Vastra does not get
 around these. Copy the link from your usual browser and paste it into Vastra instead. To forget
 every shop sign-in, choose **Settings → Sign out of shops**.
+</details>
+
+<details>
+<summary><b>How do I fix a detail the shop got wrong, or add a note?</b></summary>
+
+1. Open the find.
+2. Under **Your notes**, type anything you want to remember, then tap **Save note**. Links in the
+   note become buttons.
+3. Under **Correct the details**, tap the pencil next to a detail, type the right value and tap
+   **Save**.
+
+Your note and corrections stay when the find is refreshed. A corrected detail says what the shop
+lists now; tap the undo arrow to use the shop's value again. Prices and stock always come from the
+shop.
+</details>
+
+<details>
+<summary><b>How do I keep prices current?</b></summary>
+
+A find whose price was last checked more than 7 days ago, or whose shop blocked the last check, shows
+**Out of date** on its card. In **My catalog**, tick **Needs a check** to see only those, and tap
+**Check now** to fetch them again. Your notes and corrections are kept.
+</details>
+
+<details>
+<summary><b>How do I take my data out, or delete it?</b></summary>
+
+- **Export:** tap the share icon at the top, choose **Spreadsheet (CSV)** and save. You get every
+  find with its collection, your notes and the date its price was last checked.
+- **Move or remove many finds:** in **My catalog** or **Collections**, tap **Select**, tick the
+  finds, then **Move to…** or **Remove**.
+- **Erase everything:** **Settings → Erase everything**, then type ERASE. This deletes everything on
+  this device. Back up first if you might want it again. Backup files and your sync folder are not
+  touched.
 </details>
 
 <details>
