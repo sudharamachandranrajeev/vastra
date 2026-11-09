@@ -98,11 +98,15 @@ class Product {
     this.reviewCount,
     this.tags = const [],
     this.variants = const [],
+    this.sizeChart = const [],
   });
   final String id, name, brand, category, description, sourceUrl, checkedAt, extraction;
   final List<String> images, sizes, tags;
   final List<Offer> offers;
   final List<Variant> variants;
+
+  /// The store's size chart as published, header row first.
+  final List<List<String>> sizeChart;
   final String? material, color;
 
   /// Finer type within [category], such as Dresses or Serum.
@@ -149,6 +153,7 @@ class Product {
     variants: (json['variants'] as List? ?? [])
         .map((e) => Variant.fromJson(Map<String, dynamic>.from(e as Map)))
         .toList(),
+    sizeChart: (json['sizeChart'] as List? ?? []).map((r) => List<String>.from(r as List)).toList(),
   );
   Map<String, dynamic> toJson() => {
     'id': id,
@@ -179,6 +184,7 @@ class Product {
     'reviewCount': reviewCount,
     'tags': tags,
     'variants': variants.map((v) => v.toJson()).toList(),
+    if (sizeChart.isNotEmpty) 'sizeChart': sizeChart,
   };
   Product withId(String value) => Product.fromJson({...toJson(), 'id': value});
   Product withCategory(String value, String? type) =>

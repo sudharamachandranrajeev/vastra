@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:sqlite3/sqlite3.dart';
 
+import '../domain/fit.dart';
 import '../domain/product.dart';
 import '../domain/watching.dart';
 
@@ -43,6 +44,9 @@ class CatalogRepository {
     _db.execute('''CREATE TABLE IF NOT EXISTS alerts (
       id INTEGER PRIMARY KEY, product_id TEXT NOT NULL, title TEXT NOT NULL, body TEXT NOT NULL,
       immediate INTEGER NOT NULL, created_at TEXT NOT NULL, delivered_at TEXT)''');
+    _db.execute('''CREATE TABLE IF NOT EXISTS fits (
+      product_id TEXT PRIMARY KEY, brand TEXT NOT NULL, size TEXT NOT NULL, kept INTEGER NOT NULL,
+      fit TEXT NOT NULL, note TEXT NOT NULL, item TEXT NOT NULL, recorded_at TEXT NOT NULL)''');
   }
   factory CatalogRepository.memory() => CatalogRepository(sqlite3.openInMemory());
   final Database _db;
@@ -137,6 +141,7 @@ class CatalogRepository {
       'products WHERE id',
       'price_points WHERE product_id',
       'watches WHERE product_id',
+      'fits WHERE product_id',
       'alerts WHERE product_id',
     ]) {
       _db.execute('DELETE FROM $table = ?', [id]);
@@ -199,6 +204,40 @@ class CatalogRepository {
     return value == null ? null : DateTime.parse(value as String);
   }
 
+  /// Every fit the owner recorded, across all brands.
+  List<FitRecord> fits() => _db
+      .select('SELECT * FROM fits ORDER BY recorded_at')
+      .map(
+        (r) => FitRecord(
+          productId: r['product_id'] as String,
+          brand: r['brand'] as String,
+          size: r['size'] as String,
+          kept: r['kept'] == 1,
+          fit: r['fit'] as String,
+          note: r['note'] as String,
+          item: r['item'] as String,
+        ),
+      )
+      .toList();
+
+  FitRecord? fitFor(String productId) => fits().where((f) => f.productId == productId).firstOrNull;
+
+  void setFit(FitRecord f) => _db.execute(
+    'INSERT OR REPLACE INTO fits (product_id, brand, size, kept, fit, note, item, recorded_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+    [
+      f.productId,
+      f.brand,
+      f.size,
+      f.kept ? 1 : 0,
+      f.fit,
+      f.note,
+      f.item,
+      DateTime.now().toUtc().toIso8601String(),
+    ],
+  );
+
+  void clearFit(String productId) => _db.execute('DELETE FROM fits WHERE product_id = ?', [productId]);
+
   Watch? watchFor(String productId) =>
       _db.select('SELECT * FROM watches WHERE product_id = ?', [productId]).map(_watch).firstOrNull;
 
@@ -256,7 +295,7 @@ class CatalogRepository {
   /// Returns how many finds were added.
   int restoreFrom(String path) {
     final backup = sqlite3.open(path, mode: OpenMode.readOnly);
-    final List<Row> rows, points, watched;
+    final List<Row> rows, points, watched, fitted;
     try {
       final version = backup.select('PRAGMA user_version').first.values.first as int;
       if (version > 1) {
@@ -273,6 +312,7 @@ class CatalogRepository {
           backup.select("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ?", [table]).isNotEmpty;
       points = has('price_points') ? backup.select('SELECT * FROM price_points').toList() : const [];
       watched = has('watches') ? backup.select('SELECT * FROM watches').toList() : const [];
+      fitted = has('fits') ? backup.select('SELECT * FROM fits').toList() : const [];
     } on SqliteException {
       throw const FormatException('This file is not a Vastra catalog backup.');
     } finally {
@@ -309,6 +349,21 @@ class CatalogRepository {
               p['price'],
               p['currency'],
               p['availability'],
+            ],
+          );
+        }
+        for (final f in fitted.where((f) => f['product_id'] == r['id'])) {
+          _db.execute(
+            'INSERT OR IGNORE INTO fits (product_id, brand, size, kept, fit, note, item, recorded_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+            [
+              f['product_id'],
+              f['brand'],
+              f['size'],
+              f['kept'],
+              f['fit'],
+              f['note'],
+              f['item'],
+              f['recorded_at'],
             ],
           );
         }

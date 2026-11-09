@@ -22,6 +22,7 @@ import '../domain/product_importer.dart';
 import '../domain/recommender.dart';
 import '../domain/releases.dart';
 import 'feedback.dart';
+import 'fit_panel.dart';
 import 'maintenance.dart';
 import 'paper.dart';
 import 'watch_panel.dart';
@@ -1847,6 +1848,8 @@ class _ProductDetailState extends State<_ProductDetail> {
                   repository: home.widget.repository,
                   onWatchStarted: home._askToNotify,
                 ),
+                const SizedBox(height: Space.xl),
+                FitPanel(key: ValueKey('fit-${p.id}'), product: p, repository: home.widget.repository),
               ],
               const SizedBox(height: Space.xl),
               const SectionHeader('Keep it'),

@@ -107,7 +107,7 @@ class ProductImporter {
       request.headers.addAll({
         'Accept': 'text/html,application/xhtml+xml',
         'Accept-Language': 'en',
-        'User-Agent': 'Vastra/0.4 (+https://github.com/sudharamachandranrajeev/vastra)',
+        'User-Agent': 'Vastra/0.5 (+https://github.com/sudharamachandranrajeev/vastra)',
       });
       final response = await client.send(request);
       if ([301, 302, 303, 307, 308].contains(response.statusCode)) {
@@ -224,6 +224,38 @@ class _Page {
   final dom.Document document;
   final metadata = <String, String>{};
   final json = <dynamic>[];
+
+  /// The first table the page marks as a size chart or size guide, header
+  /// row first, trimmed to a sensible size. Empty when there is none.
+  List<List<String>> sizeChart() {
+    final label = RegExp(
+      r'size[\s_-]*(chart|guide|table)|measurements?|größentabelle|guide des tailles|tabla de tallas',
+      caseSensitive: false,
+    );
+    for (final table in document.querySelectorAll('table')) {
+      var marked = false;
+      dom.Element? node = table;
+      for (var depth = 0; node != null && depth < 5 && !marked; depth++, node = node.parent) {
+        final a = node.attributes;
+        marked = label.hasMatch(
+          '${a['id'] ?? ''} ${a['class'] ?? ''} ${a['aria-label'] ?? ''} ${a['data-testid'] ?? ''}',
+        );
+      }
+      final caption = table.querySelector('caption')?.text ?? '';
+      final rows = table
+          .querySelectorAll('tr')
+          .take(25)
+          .map((r) => r.children.take(12).map((c) => _text(c.text, 40)).toList())
+          .where((r) => r.any((c) => c.isNotEmpty))
+          .toList();
+      final header = rows.firstOrNull?.join(' ') ?? '';
+      if (rows.length < 2 || rows.first.length < 2) continue;
+      if (marked || label.hasMatch(caption) || RegExp(r'\bsize\b', caseSensitive: false).hasMatch(header)) {
+        return rows;
+      }
+    }
+    return const [];
+  }
 
   List<Json> typed(List<String> types) => json.expand((j) => _nodes(j, types)).toList();
   String? meta(List<String> keys) =>
@@ -443,6 +475,7 @@ Product extractProduct(String markup, Uri source, {Categorizer? categorizer}) {
         .take(20)
         .toList(),
     variants: variantList,
+    sizeChart: page.sizeChart(),
   );
 }
 

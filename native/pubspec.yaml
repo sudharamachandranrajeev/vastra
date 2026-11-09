@@ -1,7 +1,7 @@
 name: vastra
 description: Standalone fashion and personal-care discovery for Android, Windows and Linux.
 publish_to: none
-version: 0.4.0+4
+version: 0.5.0+5
 
 environment:
   sdk: ^3.13.5

@@ -43,7 +43,7 @@ What users hate, which Vastra never does:
 
 Acceptance: an alert names the old and new price and their source, and turning alerts off is one tap.
 
-### Phase 2 — size and fit confidence
+### Phase 2 — size and fit confidence (0.5.0)
 
 - A private size profile per brand: what you bought, what you kept, how it fit.
 - Size charts captured when stores publish them.

@@ -62,6 +62,17 @@ notification channel. The new tables are additive, so the catalog stays at `user
 older versions can still open it after a rollback. Restore brings history and watches only for
 the finds it adds.
 
+## Size and fit
+
+`fits` keeps one record per item: brand, size, kept or returned, fit (small, right or large) and
+a free note. `suggestSize` in `lib/domain/fit.dart` compares brands without case or punctuation.
+It scores each size: +2 if kept and fit right, +1 if kept but small or large, -1 if returned. It
+suggests the top size only when that score is positive, and lists the records behind it. The
+importer saves the first page table marked as a size chart or guide (by id, class, aria-label or
+caption), or one whose header names a size, at up to 25 rows and 12 columns, as
+`Product.sizeChart`. Fit data is never sent anywhere and is not part of any export. Backups and
+restores include it.
+
 ## Import policy
 
 The native apps accept a link from any public store. The link can arrive from the Android share

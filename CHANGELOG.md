@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.5.0
+
+- Size and fit: after buying, record the size, whether you kept it, and how it fit, plus an optional
+  "fits me" note.
+- Your size per brand: any item from a brand you have bought before shows the size your own history
+  points to, with the records behind it.
+- The store's size chart is captured when the page publishes one and shown on the item.
+- Sizes and fit notes stay on the device. Exports leave them out, and backups keep them.
+
 ## 0.4.0
 
 - Watch any find for price drops and back-in-stock, for the whole item or one size and colour.

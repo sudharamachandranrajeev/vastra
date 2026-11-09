@@ -40,6 +40,9 @@ releases** (0.x). It does not search shops for you yet.
 - 📉 **Watch prices and stock** – choose an item, and a size or colour if you like. Vastra tells you
   when the price drops or it comes back in stock: once a day in one short summary, or straight
   away for things that sell out fast. Each find keeps its price history, and old prices are marked.
+- 📏 **Your size, per brand** – note the size you bought, whether you kept it and how it fit. Next
+  time you look at that brand, Vastra shows the size your own history points to, and why. Store
+  size charts are saved with the item.
 - 🔎 **Discover** – search your finds by name, brand, category, colour or material, and filter by
   category or currency. "More like this" suggests similar finds, worked out on your device.
 - 🏷️ **Sorted for you** – each find gets a category and type, and Vastra learns from your fixes.
