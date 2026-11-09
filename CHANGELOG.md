@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.6.0
+
+- New Wardrobe tab. Mark finds as owned with the price paid, and log the days you wore them.
+- Statistics: items owned, total paid per currency, most worn, best cost per wear, never worn.
+- Outfit boards and moodboards built from items you own or only want.
+- A 14-day planner. Move an outfit to another day, mark what you wore, and ask for a reminder that
+  morning. Reminders are off until you turn on **Outfit reminders** in Settings.
+- Packing lists, by hand, from an outfit, or from the outfits planned between two dates.
+- No item limit, no ads, no account. Backups carry the wardrobe and restoring never duplicates
+  outfits or lists.
+
 ## 0.5.0
 
 - Size and fit: after buying, record the size, whether you kept it, and how it fit, plus an optional

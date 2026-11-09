@@ -25,7 +25,9 @@ import 'feedback.dart';
 import 'fit_panel.dart';
 import 'maintenance.dart';
 import 'paper.dart';
+import 'wardrobe_screen.dart';
 import 'watch_panel.dart';
+import 'own_panel.dart';
 
 class VastraApp extends StatelessWidget {
   const VastraApp({
@@ -103,12 +105,13 @@ class Home extends StatefulWidget {
   State<Home> createState() => _HomeState();
 }
 
-const _tabs = ['Discover', 'My catalog', 'Sellers', 'Collections'];
+const _tabs = ['Discover', 'My catalog', 'Sellers', 'Collections', 'Wardrobe'];
 const _tabIcons = [
   Icons.explore_outlined,
   Icons.inventory_2_outlined,
   Icons.storefront_outlined,
   Icons.bookmarks_outlined,
+  Icons.checkroom_outlined,
 ];
 
 class _HomeState extends State<Home> with WidgetsBindingObserver {
@@ -149,6 +152,7 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
       unawaited(_checkClipboard());
       if (widget.updates?.checkOnStartup ?? false) unawaited(_checkForUpdate(quiet: true));
       if (_watch.backgroundOn) _startWatching();
+      unawaited(_watch.remind());
     });
   }
 
@@ -172,8 +176,22 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
     } else {
       _watchTimer?.cancel();
     }
+    await _scheduleJob();
+  }
+
+  Future<void> _setReminders(bool on) async {
+    widget.settings.set(remindersKey, on);
+    if (on) {
+      unawaited(_askToNotify());
+      unawaited(_watch.remind());
+    }
+    await _scheduleJob();
+  }
+
+  /// The Android job runs while either background checks or reminders are on.
+  Future<void> _scheduleJob() async {
     try {
-      await scheduleBackground(on);
+      await scheduleBackground(_watch.backgroundOn || _watch.remindersOn);
     } on Object catch (error) {
       debugPrint('Vastra background schedule failed: $error');
     }
@@ -243,7 +261,10 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) unawaited(_checkClipboard());
+    if (state == AppLifecycleState.resumed) {
+      unawaited(_checkClipboard());
+      unawaited(_watch.remind());
+    }
   }
 
   bool get _desktop => !kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS);
@@ -560,6 +581,19 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
                         value: _watch.alertsOn,
                         onChanged: (v) {
                           setLocal(() => widget.settings.set(alertsKey, v));
+                          feedback.play(Cue.toggle);
+                        },
+                      ),
+                      SwitchListTile(
+                        contentPadding: EdgeInsets.zero,
+                        title: const Text('Outfit reminders'),
+                        subtitle: const Text(
+                          'One notification on the morning of a day where you asked for a reminder. Needs Vastra open, or the Android background job.',
+                        ),
+                        value: _watch.remindersOn,
+                        onChanged: (v) {
+                          setLocal(() {});
+                          unawaited(_setReminders(v));
                           feedback.play(Cue.toggle);
                         },
                       ),
@@ -1242,7 +1276,19 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
             if (wide) const Divider(height: 1, thickness: 2, color: Tone.copper),
             Expanded(
               child: FadeThrough(
-                child: KeyedSubtree(key: ValueKey(_tab), child: body),
+                child: KeyedSubtree(
+                  key: ValueKey(_tab),
+                  child: _tab == 4
+                      ? WardrobeScreen(
+                          repository: widget.repository,
+                          products: [
+                            for (final e in _entries)
+                              if (!e.product.sample || e.collection != null) e.product,
+                          ],
+                          gutter: gutter,
+                        )
+                      : body,
+                ),
               ),
             ),
           ],
@@ -1850,6 +1896,8 @@ class _ProductDetailState extends State<_ProductDetail> {
                 ),
                 const SizedBox(height: Space.xl),
                 FitPanel(key: ValueKey('fit-${p.id}'), product: p, repository: home.widget.repository),
+                const SizedBox(height: Space.xl),
+                OwnPanel(key: ValueKey('own-${p.id}'), product: p, repository: home.widget.repository),
               ],
               const SizedBox(height: Space.xl),
               const SectionHeader('Keep it'),

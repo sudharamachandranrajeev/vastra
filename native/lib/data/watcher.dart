@@ -10,6 +10,7 @@ import 'package:sqlite3/sqlite3.dart';
 import 'package:workmanager/workmanager.dart';
 
 import '../domain/product_importer.dart';
+import '../domain/wardrobe.dart';
 import '../domain/watching.dart';
 import 'catalog_repository.dart';
 import 'settings_store.dart';
@@ -19,7 +20,11 @@ typedef Notify = Future<void> Function(int id, String title, String body);
 
 /// Settings keys. Alerts are on by default; background checks are off until
 /// the owner turns them on.
-const alertsKey = 'watch.alerts', backgroundKey = 'watch.background', _digestKey = 'watch.lastDigest';
+const alertsKey = 'watch.alerts',
+    backgroundKey = 'watch.background',
+    _digestKey = 'watch.lastDigest',
+    remindersKey = 'plan.reminders',
+    _reminderKey = 'plan.lastReminder';
 
 /// How often a watched item is checked: hourly when the owner asked to hear
 /// at once, otherwise daily.
@@ -45,6 +50,7 @@ class WatchService {
   bool _running = false;
 
   bool get alertsOn => settings.get<bool>(alertsKey) ?? true;
+  bool get remindersOn => settings.get<bool>(remindersKey) ?? false;
   bool get backgroundOn => settings.get<bool>(backgroundKey) ?? false;
 
   /// Checks every watched item that is due, or all of them when [all] is
@@ -82,6 +88,22 @@ class WatchService {
     } finally {
       _running = false;
     }
+  }
+
+  /// Tells the owner once a day which outfits they planned for today, when
+  /// they asked for a reminder on that day. Returns whether one was sent.
+  Future<bool> remind({DateTime? at}) async {
+    final now = at ?? DateTime.now();
+    final today = dayKey(now);
+    if (!remindersOn || notify == null || settings.get<String>(_reminderKey) == today) return false;
+    final due = repository.plans().where((p) => p.day == today && p.remind).map((p) => p.outfitId).toSet();
+    final planned = repository.outfits().where((o) => due.contains(o.id)).toList();
+    final names = {for (final e in repository.readAll()) e.product.id: e.product.name};
+    final text = reminderFor(planned, names);
+    if (text == null) return false;
+    settings.set(_reminderKey, today);
+    await notify!(1, text.title, text.body);
+    return true;
   }
 
   /// Sends what is waiting: alerts marked "at once" right away, the rest as
@@ -192,7 +214,7 @@ void backgroundDispatcher() {
     WidgetsFlutterBinding.ensureInitialized();
     final directory = await getApplicationSupportDirectory();
     final settings = SettingsStore(File(path.join(directory.path, 'settings.json')));
-    if (settings.get<bool>(backgroundKey) != true) return true;
+    if (settings.get<bool>(backgroundKey) != true && settings.get<bool>(remindersKey) != true) return true;
     final database = sqlite3.open(path.join(directory.path, 'vastra.sqlite'));
     try {
       final service = WatchService(
@@ -201,7 +223,8 @@ void backgroundDispatcher() {
         importer: ProductImporter.new,
         notify: systemNotify,
       );
-      await service.checkDue();
+      if (service.backgroundOn) await service.checkDue();
+      await service.remind();
     } on Object catch (error) {
       debugPrint('Vastra background check failed: $error');
     } finally {

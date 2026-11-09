@@ -50,7 +50,7 @@ Acceptance: an alert names the old and new price and their source, and turning a
 - A "fits me" note on each item.
 - Suggestions explain their evidence, and size data never leaves the device.
 
-### Phase 3 — wardrobe and outfits
+### Phase 3 — wardrobe and outfits (0.6.0)
 
 - Mark items as owned.
 - Outfit boards built from catalog items, plus moodboards.

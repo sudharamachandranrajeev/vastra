@@ -251,6 +251,8 @@ void main() {
     await tester.tap(find.byTooltip('Settings'));
     await tester.pumpAndSettle();
     expect(find.text('Report a problem'), findsOneWidget);
+    await tester.ensureVisible(find.text('All versions and rollback'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('All versions and rollback'));
     for (var i = 0; i < 20 && find.text('Vastra 0.1.0').evaluate().isEmpty; i++) {
       await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 20)));

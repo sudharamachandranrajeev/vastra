@@ -43,6 +43,10 @@ releases** (0.x). It does not search shops for you yet.
 - 📏 **Your size, per brand** – note the size you bought, whether you kept it and how it fit. Next
   time you look at that brand, Vastra shows the size your own history points to, and why. Store
   size charts are saved with the item.
+- 👗 **Your wardrobe** – mark what you own and what you paid, log what you wear, and see cost per
+  wear, most worn and never worn. Build outfits and moodboards from items you own or only want, plan
+  them on a calendar (with an optional morning reminder), and make packing lists. No item limit, no
+  ads, no account.
 - 🔎 **Discover** – search your finds by name, brand, category, colour or material, and filter by
   category or currency. "More like this" suggests similar finds, worked out on your device.
 - 🏷️ **Sorted for you** – each find gets a category and type, and Vastra learns from your fixes.
@@ -100,6 +104,19 @@ Try adding the same link again later to refresh it.
 Vastra only alerts after a check that just succeeded, and each alert shows the old and new price,
 the shop and when it checked. If a shop blocks a check, you get a "may be out of date" note, not an
 alert. One switch in **Settings** turns every alert off.
+</details>
+
+<details>
+<summary><b>How do outfits, the planner and cost per wear work?</b></summary>
+
+1. Open a find and turn on **I own this**. Add the price you paid if you want cost per wear.
+2. Tap **Wore it today** on an item, or on an outfit. Cost per wear is the price divided by the days
+   you wore it, and shows after the first wear.
+3. In the **Wardrobe** tab, make an outfit or moodboard, plan it on a day, and tap the bell for a
+   reminder that morning. Turn on **Outfit reminders** in **Settings** to receive them.
+4. **Packing** lists can start from the outfits you planned between two dates.
+
+Everything stays on your device and is included in backups. Exports of your finds leave it out.
 </details>
 
 <details>

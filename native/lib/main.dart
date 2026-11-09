@@ -47,7 +47,7 @@ Future<void> start(ShareIntake intake) async {
       rethrow;
     }
     debugPrint('Vastra catalog opened');
-    if (settings.get<bool>(backgroundKey) == true) {
+    if (settings.get<bool>(backgroundKey) == true || settings.get<bool>(remindersKey) == true) {
       // Re-registering keeps the Android job alive after an update.
       scheduleBackground(true)
           .catchError((Object error) => debugPrint('Vastra background schedule failed: $error'));

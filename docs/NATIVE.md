@@ -73,6 +73,20 @@ caption), or one whose header names a size, at up to 25 rows and 12 columns, as
 `Product.sizeChart`. Fit data is never sent anywhere and is not part of any export. Backups and
 restores include it.
 
+## Wardrobe
+
+Additive tables again (`user_version` stays 1): `owned` (price, currency, bought day), `wears`
+(one row per item per day), `outfits` and `outfit_items` (a moodboard is an outfit with `mood`),
+`plans` (day, outfit, remind), `packs` and `pack_items`. `lib/domain/wardrobe.dart` holds the pure
+rules: `costPerWear` returns null without a price or a wear, and `wardrobeStats` never adds
+different currencies together. Removing a find deletes its ownership, wears and outfit entries and
+unlinks (but keeps the label of) packing items. Restore brings owned, wears and plans with new finds;
+outfits and packing lists come back by name, so a board with the same name is left alone.
+
+Reminders: `WatchService.remind` sends one notification per day for outfits planned today with the
+bell on, only when `plan.reminders` is set. It runs when the app starts or resumes, and from the
+Android background job, which is scheduled while background checks or reminders are on.
+
 ## Import policy
 
 The native apps accept a link from any public store. The link can arrive from the Android share
