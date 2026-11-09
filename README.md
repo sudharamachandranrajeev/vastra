@@ -125,7 +125,8 @@ Prefer no installer? Download `…-windows-x64-portable.zip`, unzip the whole fo
    ```
 3. Open **Vastra** from your app menu.
 
-Vastra needs GTK 3 and the system OpenGL libraries (`gtk3` and `libglvnd` on Arch). To remove it,
+Vastra needs GTK 3, GStreamer (for its interface sounds) and the system OpenGL libraries (`gtk3`,
+`gstreamer`, `gst-plugins-base-libs` and `libglvnd` on Arch). To remove it,
 run `./install.sh --uninstall`. Your catalogue stays.
 
 </details>

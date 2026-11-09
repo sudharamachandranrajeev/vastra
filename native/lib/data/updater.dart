@@ -74,19 +74,26 @@ class UpdateService {
   /// Android refuses to install an older version over a newer one, so a
   /// rollback there means uninstalling first.
   bool canInstall(Release release) =>
-      mode == InstallMode.automatic && release.packageFor(target!) != null && release.checksums != null &&
+      mode == InstallMode.automatic &&
+      release.packageFor(target!) != null &&
+      release.checksums != null &&
       (target != Target.android || !(Version.current > release.version));
 
   Future<List<Release>> releases() async {
     final client = _clientFactory();
     try {
       final response = await client
-          .get(releasesApi, headers: {'accept': 'application/vnd.github+json', 'user-agent': 'Vastra/$appVersion'})
+          .get(
+            releasesApi,
+            headers: {'accept': 'application/vnd.github+json', 'user-agent': 'Vastra/$appVersion'},
+          )
           .timeout(const Duration(seconds: 15));
       if (response.statusCode == 403 || response.statusCode == 429) {
         throw const UpdateFailure('GitHub is limiting update checks right now. Try again in an hour.');
       }
-      if (response.statusCode != 200) throw UpdateFailure('GitHub answered ${response.statusCode}. Try again later.');
+      if (response.statusCode != 200) {
+        throw UpdateFailure('GitHub answered ${response.statusCode}. Try again later.');
+      }
       return Release.parseList(response.body);
     } on UpdateFailure {
       rethrow;
@@ -109,18 +116,24 @@ class UpdateService {
     final asset = target == null ? null : release.packageFor(target!);
     final sums = release.checksums;
     if (asset == null) throw UpdateFailure('Vastra ${release.version} has no package for this device.');
-    if (sums == null) throw UpdateFailure('Vastra ${release.version} has no published checksums, so it cannot be verified.');
+    if (sums == null) {
+      throw UpdateFailure('Vastra ${release.version} has no published checksums, so it cannot be verified.');
+    }
     final client = _clientFactory();
     final folder = Directory(path.join(workDirectory.path, 'updates'));
     final partial = File(path.join(folder.path, '${asset.name}.part'));
     try {
       final expected = parseChecksums(await _text(client, sums.url))[asset.name];
-      if (expected == null) throw UpdateFailure('The checksums for Vastra ${release.version} do not list ${asset.name}.');
+      if (expected == null) {
+        throw UpdateFailure('The checksums for Vastra ${release.version} do not list ${asset.name}.');
+      }
       await folder.create(recursive: true);
       final response = await client.send(http.Request('GET', asset.url)).timeout(const Duration(seconds: 30));
       if (response.statusCode != 200) throw UpdateFailure('The download failed (${response.statusCode}).');
       final total = response.contentLength ?? asset.size;
-      if (total > 400 << 20) throw const UpdateFailure('The download is larger than any Vastra package should be.');
+      if (total > 400 << 20) {
+        throw const UpdateFailure('The download is larger than any Vastra package should be.');
+      }
       final digest = _DigestSink();
       final hasher = sha256.startChunkedConversion(digest);
       final sink = partial.openWrite();
@@ -128,7 +141,9 @@ class UpdateService {
       try {
         await for (final chunk in response.stream.timeout(const Duration(seconds: 30))) {
           received += chunk.length;
-          if (received > 400 << 20) throw const UpdateFailure('The download is larger than any Vastra package should be.');
+          if (received > 400 << 20) {
+            throw const UpdateFailure('The download is larger than any Vastra package should be.');
+          }
           hasher.add(chunk);
           sink.add(chunk);
           progress?.call(total > 0 ? received / total : null);
@@ -184,11 +199,13 @@ class UpdateService {
         // "permission" means Android first asks the user to allow installs from Vastra.
         return await _channel.invokeMethod<String>('install', {'path': package.path}) ?? 'started';
       case Target.windows:
-        await Process.start(
-          package.path,
-          ['/SILENT', '/SUPPRESSMSGBOXES', '/NORESTART', '/CLOSEAPPLICATIONS', '/relaunch=1'],
-          mode: ProcessStartMode.detached,
-        );
+        await Process.start(package.path, [
+          '/SILENT',
+          '/SUPPRESSMSGBOXES',
+          '/NORESTART',
+          '/CLOSEAPPLICATIONS',
+          '/relaunch=1',
+        ], mode: ProcessStartMode.detached);
         quit();
         return 'started';
       case Target.linux:

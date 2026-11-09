@@ -29,9 +29,19 @@ const kinds = [
   ),
   ProductKind('Beauty', 'Serum', r'serum|essence|ampoule', '$_cosmetics > Skin Care'),
   ProductKind('Beauty', 'Cleanser', r'cleanser|face ?wash|micellar', '$_cosmetics > Skin Care'),
-  ProductKind('Beauty', 'Moisturiser', r'moisturi[sz]er|face cream|night cream|gel cream', '$_cosmetics > Skin Care'),
+  ProductKind(
+    'Beauty',
+    'Moisturiser',
+    r'moisturi[sz]er|face cream|night cream|gel cream',
+    '$_cosmetics > Skin Care',
+  ),
   ProductKind('Beauty', 'Sun care', r'sunscreen|sun ?cream|spf', '$_cosmetics > Skin Care'),
-  ProductKind('Beauty', 'Skin care', r'skin ?care|toner|face mask|exfoliant|retinol', '$_cosmetics > Skin Care'),
+  ProductKind(
+    'Beauty',
+    'Skin care',
+    r'skin ?care|toner|face mask|exfoliant|retinol',
+    '$_cosmetics > Skin Care',
+  ),
   ProductKind(
     'Beauty',
     'Makeup',
@@ -46,7 +56,12 @@ const kinds = [
   ),
   ProductKind('Footwear', 'Sneakers', r'sneakers?|trainers?|runners?|running shoes?', '$_apparel > Shoes'),
   ProductKind('Footwear', 'Boots', r'boots?|booties', '$_apparel > Shoes'),
-  ProductKind('Footwear', 'Sandals', r'sandals?|slides|flip[- ]?flops?|chappals?|kolhapuris?', '$_apparel > Shoes'),
+  ProductKind(
+    'Footwear',
+    'Sandals',
+    r'sandals?|slides|flip[- ]?flops?|chappals?|kolhapuris?',
+    '$_apparel > Shoes',
+  ),
   ProductKind('Footwear', 'Heels', r'heels?|pumps|stilettos?|wedges', '$_apparel > Shoes'),
   ProductKind(
     'Footwear',
@@ -68,7 +83,12 @@ const kinds = [
     '$_apparel > Jewelry',
   ),
   ProductKind('Accessories', 'Watches', r'watch(?:es)?|smartwatch', '$_apparel > Jewelry > Watches'),
-  ProductKind('Accessories', 'Sunglasses', r'sunglass(?:es)?|eyewear', '$_apparel > Clothing Accessories > Sunglasses'),
+  ProductKind(
+    'Accessories',
+    'Sunglasses',
+    r'sunglass(?:es)?|eyewear',
+    '$_apparel > Clothing Accessories > Sunglasses',
+  ),
   ProductKind('Accessories', 'Belts', r'belts?', '$_apparel > Clothing Accessories > Belts'),
   ProductKind(
     'Accessories',
@@ -102,7 +122,12 @@ const kinds = [
     r'shirts?|t-shirts?|tees?|tops?|blouses?|tanks?|camisoles?|polos?|kurtis?|kurtas?|tunics?',
     '$_clothing > Shirts & Tops',
   ),
-  ProductKind('Clothing', 'Trousers', r'trousers?|pants|jeans|chinos?|leggings|joggers', '$_clothing > Pants'),
+  ProductKind(
+    'Clothing',
+    'Trousers',
+    r'trousers?|pants|jeans|chinos?|leggings|joggers',
+    '$_clothing > Pants',
+  ),
   ProductKind('Clothing', 'Shorts', r'shorts', '$_clothing > Shorts'),
   ProductKind('Clothing', 'Skirts', r'skirts?', '$_clothing > Skirts'),
   ProductKind(
@@ -212,7 +237,9 @@ class Categorizer {
     final learned = _vote('$name ${sourceCategory ?? ''}');
     if (learned != null) return learned;
     final byDescription = _firstNamed(description);
-    if (byDescription != null) return Classification(byDescription.category, byDescription.type, 'description');
+    if (byDescription != null) {
+      return Classification(byDescription.category, byDescription.type, 'description');
+    }
     return const Classification('Clothing', null, 'default');
   }
 
@@ -245,7 +272,22 @@ class Categorizer {
 }
 
 const _stopWords = {
-  'the', 'and', 'for', 'with', 'from', 'this', 'that', 'your', 'our', 'new', 'in', 'of', 'a', 'an', 'to', 'by', //
+  'the',
+  'and',
+  'for',
+  'with',
+  'from',
+  'this',
+  'that',
+  'your',
+  'our',
+  'new',
+  'in',
+  'of',
+  'a',
+  'an',
+  'to',
+  'by', //
   'on', 'at', 'is', 'it', 'or', 'all', 'buy', 'online', 'shop', 'sale', 'free', 'women', 'men', 'size',
 };
 

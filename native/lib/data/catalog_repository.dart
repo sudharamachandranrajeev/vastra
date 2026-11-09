@@ -52,14 +52,18 @@ class CatalogRepository {
       final rows = _db.select('SELECT id, document FROM products WHERE source = ?', [product.sourceUrl]);
       var stored = product;
       if (rows.isNotEmpty) {
-        final existing = Product.fromJson(jsonDecode(rows.first['document'] as String) as Map<String, dynamic>);
+        final existing = Product.fromJson(
+          jsonDecode(rows.first['document'] as String) as Map<String, dynamic>,
+        );
         // A refresh the store blocked keeps the details gathered earlier.
         if (product.extraction == 'link' && existing.extraction != 'link') {
           _db.execute('COMMIT');
           return existing;
         }
         stored = product.withId(existing.id);
-        if (existing.categorySource == 'user') stored = stored.withCategory(existing.category, existing.productType);
+        if (existing.categorySource == 'user') {
+          stored = stored.withCategory(existing.category, existing.productType);
+        }
       }
       _db.execute(
         'INSERT INTO products (id, source, document) VALUES (?, ?, ?) ON CONFLICT(source) DO UPDATE SET document = excluded.document',
@@ -85,8 +89,10 @@ class CatalogRepository {
   }
 
   /// Replaces an imported product's details, keeping its collection.
-  void update(Product product) =>
-      _db.execute('UPDATE products SET document = ? WHERE id = ?', [jsonEncode(product.toJson()), product.id]);
+  void update(Product product) => _db.execute('UPDATE products SET document = ? WHERE id = ?', [
+    jsonEncode(product.toJson()),
+    product.id,
+  ]);
 
   void unsave(Product product) {
     if (product.sample) {
@@ -111,9 +117,13 @@ class CatalogRepository {
     try {
       final version = backup.select('PRAGMA user_version').first.values.first as int;
       if (version > 1) {
-        throw const FormatException('This backup was made by a newer version of Vastra. Update Vastra, then restore it.');
+        throw const FormatException(
+          'This backup was made by a newer version of Vastra. Update Vastra, then restore it.',
+        );
       }
-      final hasTable = backup.select("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'products'").isNotEmpty;
+      final hasTable = backup
+          .select("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'products'")
+          .isNotEmpty;
       if (version != 1 || !hasTable) throw const FormatException('This file is not a Vastra catalog backup.');
       rows = backup.select('SELECT id, source, document, collection FROM products').toList();
     } on SqliteException {
@@ -131,10 +141,12 @@ class CatalogRepository {
         } on Object {
           continue;
         }
-        _db.execute(
-          'INSERT OR IGNORE INTO products (id, source, document, collection) VALUES (?, ?, ?, ?)',
-          [r['id'], r['source'], r['document'], r['collection']],
-        );
+        _db.execute('INSERT OR IGNORE INTO products (id, source, document, collection) VALUES (?, ?, ?, ?)', [
+          r['id'],
+          r['source'],
+          r['document'],
+          r['collection'],
+        ]);
         added += _db.updatedRows;
       }
       _db.execute('COMMIT');

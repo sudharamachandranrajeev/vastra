@@ -21,7 +21,13 @@ Product imported() => Product.fromJson({
   'description': 'Breezy linen,\nwrap front.',
   'images': ['https://cdn.store.com/a.jpg', 'https://cdn.store.com/b.jpg'],
   'offers': [
-    {'seller': 'store.com', 'url': 'https://store.com/p/1', 'price': 89, 'currency': 'GBP', 'availability': 'InStock'},
+    {
+      'seller': 'store.com',
+      'url': 'https://store.com/p/1',
+      'price': 89,
+      'currency': 'GBP',
+      'availability': 'InStock',
+    },
   ],
   'sourceUrl': 'https://store.com/p/1',
   'checkedAt': '2026-10-27T10:00:00Z',
@@ -105,7 +111,11 @@ void main() {
 
   test('product feed maps stock, gender and taxonomy, and leaves unknowns blank', () {
     // Trailing blank cells are tabs, so split without trimming the row.
-    final lines = merchantFeed([imported(), samples().first]).split('\n').where((l) => l.isNotEmpty).map((l) => l.split('\t')).toList();
+    final lines = merchantFeed([imported(), samples().first])
+        .split('\n')
+        .where((l) => l.isNotEmpty)
+        .map((l) => l.split('\t'))
+        .toList();
     final column = {for (final (i, c) in feedColumns.indexed) c: i};
     expect(lines.first, feedColumns);
     expect(lines.every((l) => l.length == feedColumns.length), true);
@@ -136,7 +146,9 @@ void main() {
     repo.update(first.withCategory('Clothing', 'Jumpsuits'));
     final blocked = repo.importProduct(linkProduct(Uri.parse(first.sourceUrl)));
     expect(blocked.name, first.name);
-    final refreshed = repo.importProduct(Product.fromJson({...imported().toJson(), 'id': 'other', 'name': 'New name'}));
+    final refreshed = repo.importProduct(
+      Product.fromJson({...imported().toJson(), 'id': 'other', 'name': 'New name'}),
+    );
     expect(refreshed.id, first.id);
     expect(refreshed.name, 'New name');
     expect([refreshed.productType, refreshed.categorySource], ['Jumpsuits', 'user']);
@@ -145,7 +157,9 @@ void main() {
 
   test('older saved products without new fields still load', () {
     final legacy = Map<String, dynamic>.from(imported().toJson())
-      ..removeWhere((k, _) => ['productType', 'variants', 'tags', 'categorySource', 'gtin', 'gender'].contains(k));
+      ..removeWhere(
+        (k, _) => ['productType', 'variants', 'tags', 'categorySource', 'gtin', 'gender'].contains(k),
+      );
     final p = Product.fromJson(legacy);
     expect([p.productType, p.variants, p.tags, p.categorySource], [null, isEmpty, isEmpty, 'auto']);
   });

@@ -25,7 +25,9 @@ Future<bool> openExternal(Uri uri) async {
 
 Widget _sheetTitle(BuildContext context, String title, String closeTooltip) => Row(
   children: [
-    Expanded(child: Text(title, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w600))),
+    Expanded(
+      child: Text(title, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w600)),
+    ),
     PaperIconButton(icon: Icons.close, tooltip: closeTooltip, onPressed: () => Navigator.pop(context)),
   ],
 );
@@ -65,7 +67,9 @@ Future<int?> restoreCatalog(BuildContext context, CatalogRepository repository) 
     final added = repository.restoreFrom(file.path);
     toasts.show(
       ToastKind.success,
-      added == 0 ? 'Everything in that backup is already in your catalog.' : 'Restored $added finds. Finds already here were kept.',
+      added == 0
+          ? 'Everything in that backup is already in your catalog.'
+          : 'Restored $added finds. Finds already here were kept.',
     );
     return added;
   } on FormatException catch (e) {
@@ -80,7 +84,13 @@ Future<int?> restoreCatalog(BuildContext context, CatalogRepository repository) 
 
 /// Downloads, verifies and installs one release, newer or older.
 class UpdateSheet extends StatefulWidget {
-  const UpdateSheet({super.key, required this.release, required this.updates, required this.repository, required this.quit});
+  const UpdateSheet({
+    super.key,
+    required this.release,
+    required this.updates,
+    required this.repository,
+    required this.quit,
+  });
   final Release release;
   final UpdateService updates;
   final CatalogRepository repository;
@@ -129,7 +139,9 @@ class _UpdateSheetState extends State<UpdateSheet> {
       unawaited(feedback.play(Cue.error));
       if (mounted) {
         setState(() {
-          _error = e is UpdateFailure ? e.message : 'The update stopped unexpectedly. Your catalog is unchanged.';
+          _error = e is UpdateFailure
+              ? e.message
+              : 'The update stopped unexpectedly. Your catalog is unchanged.';
           _step = -1;
         });
       }
@@ -188,9 +200,16 @@ class _UpdateSheetState extends State<UpdateSheet> {
               runSpacing: Space.s,
               alignment: WrapAlignment.end,
               children: [
-                PaperButton(label: 'Release page', icon: Icons.north_east, compact: true, onPressed: () => openExternal(r.page)),
+                PaperButton(
+                  label: 'Release page',
+                  icon: Icons.north_east,
+                  compact: true,
+                  onPressed: () => openExternal(r.page),
+                ),
                 CopperButton(
-                  label: _rollback ? 'Roll back' : (_error != null || _notice != null ? 'Install again' : 'Install'),
+                  label: _rollback
+                      ? 'Roll back'
+                      : (_error != null || _notice != null ? 'Install again' : 'Install'),
                   icon: _rollback ? Icons.history : Icons.system_update_alt,
                   busy: busy,
                   onPressed: busy ? null : _run,
@@ -207,7 +226,12 @@ class _UpdateSheetState extends State<UpdateSheet> {
 /// Android only installs an older version after the newer one is removed,
 /// which also removes the catalog. This walks through doing that safely.
 class AndroidRollbackSheet extends StatefulWidget {
-  const AndroidRollbackSheet({super.key, required this.release, required this.updates, required this.repository});
+  const AndroidRollbackSheet({
+    super.key,
+    required this.release,
+    required this.updates,
+    required this.repository,
+  });
   final Release release;
   final UpdateService updates;
   final CatalogRepository repository;
@@ -223,14 +247,22 @@ class _AndroidRollbackSheetState extends State<AndroidRollbackSheet> {
     final toasts = ToastHost.of(context);
     setState(() => _busy = true);
     try {
-      final file = await widget.updates.download(widget.release, progress: (f) => mounted ? setState(() => _progress = f) : null);
+      final file = await widget.updates.download(
+        widget.release,
+        progress: (f) => mounted ? setState(() => _progress = f) : null,
+      );
       final saved = await FilePicker.saveFile(
         dialogTitle: 'Save Vastra ${widget.release.version}',
         fileName: path.basename(file.path),
         bytes: await file.readAsBytes(),
         mimeType: 'application/vnd.android.package-archive',
       );
-      if (saved != null) toasts.show(ToastKind.success, 'Saved Vastra ${widget.release.version}. It matched its published checksum.');
+      if (saved != null) {
+        toasts.show(
+          ToastKind.success,
+          'Saved Vastra ${widget.release.version}. It matched its published checksum.',
+        );
+      }
     } on UpdateFailure catch (e) {
       toasts.show(ToastKind.error, e.message);
     } on Object {
@@ -253,7 +285,10 @@ class _AndroidRollbackSheetState extends State<AndroidRollbackSheet> {
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: [Text(text), if (action != null) ...[const SizedBox(height: Space.s), action]],
+              children: [
+                Text(text),
+                if (action != null) ...[const SizedBox(height: Space.s), action],
+              ],
             ),
           ),
         ],
@@ -273,15 +308,28 @@ class _AndroidRollbackSheetState extends State<AndroidRollbackSheet> {
               style: TextStyle(color: Tone.inkSoft),
             ),
             const SizedBox(height: Space.xl),
-            step('1', 'Back up your catalog to a file you can find again.', PaperButton(
-              label: 'Back up catalog',
-              icon: Icons.save_alt,
-              compact: true,
-              onPressed: () => backupCatalog(context, widget.repository),
-            )),
-            step('2', 'Save the verified Vastra $v package.', _busy
-                ? CopperProgress(value: _progress, label: 'Downloading Vastra $v')
-                : PaperButton(label: 'Save package', icon: Icons.download, compact: true, onPressed: _savePackage)),
+            step(
+              '1',
+              'Back up your catalog to a file you can find again.',
+              PaperButton(
+                label: 'Back up catalog',
+                icon: Icons.save_alt,
+                compact: true,
+                onPressed: () => backupCatalog(context, widget.repository),
+              ),
+            ),
+            step(
+              '2',
+              'Save the verified Vastra $v package.',
+              _busy
+                  ? CopperProgress(value: _progress, label: 'Downloading Vastra $v')
+                  : PaperButton(
+                      label: 'Save package',
+                      icon: Icons.download,
+                      compact: true,
+                      onPressed: _savePackage,
+                    ),
+            ),
             step('3', 'Uninstall Vastra from Android settings, then open the saved package to install $v.'),
             step(
               '4',
@@ -317,7 +365,10 @@ class _VersionsSheetState extends State<VersionsSheet> {
         builder: (_) => UpdateSheet(release: r, updates: u, repository: widget.repository, quit: widget.quit),
       );
     } else if (u.target == Target.android && r.packageFor(Target.android) != null && r.checksums != null) {
-      showPaperDialog<void>(context, builder: (_) => AndroidRollbackSheet(release: r, updates: u, repository: widget.repository));
+      showPaperDialog<void>(
+        context,
+        builder: (_) => AndroidRollbackSheet(release: r, updates: u, repository: widget.repository),
+      );
     } else {
       openExternal(r.page);
     }
@@ -347,7 +398,9 @@ class _VersionsSheetState extends State<VersionsSheet> {
               if (snap.hasError || (snap.data?.isEmpty ?? true)) {
                 return EmptyState(
                   title: snap.hasError ? 'Versions unavailable' : 'No published versions yet',
-                  message: snap.error is UpdateFailure ? (snap.error! as UpdateFailure).message : 'Releases appear here once they are published.',
+                  message: snap.error is UpdateFailure
+                      ? (snap.error! as UpdateFailure).message
+                      : 'Releases appear here once they are published.',
                   action: 'Try again',
                   onAction: () => setState(() => _releases = widget.updates.releases()),
                 );
@@ -373,15 +426,22 @@ class _VersionsSheetState extends State<VersionsSheet> {
                               children: [
                                 Row(
                                   children: [
-                                    Text('Vastra ${r.version}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                                    Text(
+                                      'Vastra ${r.version}',
+                                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                                    ),
                                     const SizedBox(width: Space.s),
-                                    if (current) const RibbonBadge('Installed') else if (i == 0) const RibbonBadge('Latest'),
+                                    if (current)
+                                      const RibbonBadge('Installed')
+                                    else if (i == 0)
+                                      const RibbonBadge('Latest'),
                                   ],
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
                                   [
-                                    if (r.published != null) DateFormat.yMMMd().format(r.published!.toLocal()),
+                                    if (r.published != null)
+                                      DateFormat.yMMMd().format(r.published!.toLocal()),
                                     if (r.prerelease) 'Pre-release',
                                   ].join(' · '),
                                   style: const TextStyle(fontSize: 12.5, color: Tone.inkSoft),
@@ -421,7 +481,9 @@ class ReportSheet extends StatefulWidget {
 }
 
 class _ReportSheetState extends State<ReportSheet> {
-  final _title = TextEditingController(), _summary = TextEditingController(), _steps = TextEditingController();
+  final _title = TextEditingController(),
+      _summary = TextEditingController(),
+      _steps = TextEditingController();
   late bool _errors = widget.diagnostics.recent.isNotEmpty;
 
   @override
@@ -456,11 +518,26 @@ class _ReportSheetState extends State<ReportSheet> {
               style: TextStyle(color: Tone.inkSoft),
             ),
             const SizedBox(height: Space.l),
-            PaperField(controller: _title, label: 'Title', hint: 'Sharing from my browser does nothing', maxLength: 120),
+            PaperField(
+              controller: _title,
+              label: 'Title',
+              hint: 'Sharing from my browser does nothing',
+              maxLength: 120,
+            ),
             const SizedBox(height: Space.m),
-            PaperField(controller: _summary, label: 'What happened, and what did you expect?', maxLines: 4, onChanged: (_) => setState(() {})),
+            PaperField(
+              controller: _summary,
+              label: 'What happened, and what did you expect?',
+              maxLines: 4,
+              onChanged: (_) => setState(() {}),
+            ),
             const SizedBox(height: Space.m),
-            PaperField(controller: _steps, label: 'Steps to reproduce', maxLines: 4, onChanged: (_) => setState(() {})),
+            PaperField(
+              controller: _steps,
+              label: 'Steps to reproduce',
+              maxLines: 4,
+              onChanged: (_) => setState(() {}),
+            ),
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
               title: const Text('Include recent errors'),
@@ -509,7 +586,10 @@ class _ReportSheetState extends State<ReportSheet> {
                     if (await openExternal(issueLink(_title.text, _body))) {
                       navigator.pop();
                     } else {
-                      toasts.show(ToastKind.warning, 'No browser opened. Copy the report and post it on the project page.');
+                      toasts.show(
+                        ToastKind.warning,
+                        'No browser opened. Copy the report and post it on the project page.',
+                      );
                     }
                   },
                 ),

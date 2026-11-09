@@ -48,10 +48,7 @@ class Diagnostics {
 /// Removes link paths and queries, which can identify what someone browsed,
 /// and the user's home folder from file paths.
 String redact(String text) {
-  var out = text.replaceAllMapped(
-    RegExp(r'https?://([^/\s?#]+)[^\s)"]*'),
-    (m) => 'https://${m[1]}/…',
-  );
+  var out = text.replaceAllMapped(RegExp(r'https?://([^/\s?#]+)[^\s)"]*'), (m) => 'https://${m[1]}/…');
   final home = Platform.environment['HOME'] ?? Platform.environment['USERPROFILE'];
   if (home != null && home.length > 3) out = out.replaceAll(home, '~');
   return out;
@@ -59,7 +56,12 @@ String redact(String text) {
 
 /// A bug report as GitHub issue text. [errors] are included only when the
 /// user leaves them in.
-String bugReport({required String summary, required String steps, List<String> errors = const [], int finds = 0}) {
+String bugReport({
+  required String summary,
+  required String steps,
+  List<String> errors = const [],
+  int finds = 0,
+}) {
   final environment = [
     '- Vastra: $appVersion',
     '- System: ${Platform.operatingSystem} ${Platform.operatingSystemVersion}',

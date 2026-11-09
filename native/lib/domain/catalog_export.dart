@@ -48,9 +48,22 @@ String handle(Product p) {
 const shopifyColumns = [
   'Handle', 'Title', 'Body (HTML)', 'Vendor', 'Product Category', 'Type', 'Tags', 'Published', //
   'Option1 Name', 'Option1 Value', 'Option2 Name', 'Option2 Value', 'Variant SKU', 'Variant Grams',
-  'Variant Inventory Tracker', 'Variant Inventory Qty', 'Variant Inventory Policy', 'Variant Fulfillment Service',
-  'Variant Price', 'Variant Compare At Price', 'Variant Requires Shipping', 'Variant Taxable', 'Variant Barcode',
-  'Image Src', 'Image Position', 'Image Alt Text', 'Gift Card', 'SEO Title', 'SEO Description', 'Variant Image',
+  'Variant Inventory Tracker',
+  'Variant Inventory Qty',
+  'Variant Inventory Policy',
+  'Variant Fulfillment Service',
+  'Variant Price',
+  'Variant Compare At Price',
+  'Variant Requires Shipping',
+  'Variant Taxable',
+  'Variant Barcode',
+  'Image Src',
+  'Image Position',
+  'Image Alt Text',
+  'Gift Card',
+  'SEO Title',
+  'SEO Description',
+  'Variant Image',
   'Variant Weight Unit', 'Status',
 ];
 
@@ -68,7 +81,11 @@ String shopifyCsv(List<Product> products) {
         : p.variants;
     final hasSize = variants.any((v) => v.size != null);
     final hasColor = variants.any((v) => v.color != null) && (p.variants.isNotEmpty || hasSize);
-    final option1 = hasSize ? 'Size' : hasColor ? 'Color' : 'Title';
+    final option1 = hasSize
+        ? 'Size'
+        : hasColor
+        ? 'Color'
+        : 'Title';
     final option2 = hasSize && hasColor ? 'Color' : '';
     final tags = {
       p.category,
@@ -94,7 +111,11 @@ String shopifyCsv(List<Product> products) {
         first ? tags : '',
         first ? 'FALSE' : '',
         first ? option1 : '',
-        option1 == 'Size' ? (v.size ?? '') : option1 == 'Color' ? (v.color ?? '') : 'Default Title',
+        option1 == 'Size'
+            ? (v.size ?? '')
+            : option1 == 'Color'
+            ? (v.color ?? '')
+            : 'Default Title',
         first ? option2 : '',
         option2.isEmpty ? '' : (v.color ?? ''),
         v.sku ?? '',
@@ -152,7 +173,14 @@ String? _feedGender(String? value) => switch ((value ?? '').toLowerCase()) {
 
 const feedColumns = [
   'id', 'item_group_id', 'title', 'description', 'link', 'image_link', 'additional_image_link', //
-  'availability', 'price', 'brand', 'gtin', 'mpn', 'identifier_exists', 'condition', 'google_product_category',
+  'availability',
+  'price',
+  'brand',
+  'gtin',
+  'mpn',
+  'identifier_exists',
+  'condition',
+  'google_product_category',
   'product_type', 'color', 'size', 'gender', 'age_group', 'material', 'pattern',
 ];
 
@@ -169,30 +197,32 @@ String merchantFeed(List<Product> products) {
       final price = v?.price ?? offer?.price;
       final currency = v?.currency ?? offer?.currency;
       final gtin = v?.gtin ?? p.gtin;
-      rows.add([
-        v == null ? p.id : '${p.id}-${v.sku ?? i}',
-        v == null ? '' : p.id,
-        p.name.length > 150 ? p.name.substring(0, 150) : p.name,
-        p.description.length > 5000 ? p.description.substring(0, 5000) : p.description,
-        offer?.url.isNotEmpty == true ? offer!.url : p.sourceUrl,
-        v?.image ?? p.images.firstOrNull,
-        p.images.skip(1).take(10).join(','),
-        _feedAvailability(v?.availability ?? offer?.availability),
-        price == null || currency == null ? '' : '${_money(price)} $currency',
-        p.brand,
-        gtin,
-        p.mpn,
-        gtin == null && p.mpn == null ? 'no' : '',
-        (p.condition ?? 'New').toLowerCase().replaceAll(RegExp(r'[^a-z]'), ''),
-        kindOf(p.category, p.productType)?.googleCategory ?? 'Apparel & Accessories',
-        [p.category, ?p.productType].join(' > '),
-        v?.color ?? p.color,
-        v?.size ?? (p.sizes.length == 1 ? p.sizes.single : ''),
-        _feedGender(p.gender),
-        p.ageGroup?.toLowerCase(),
-        p.material,
-        p.pattern,
-      ].map(cell).toList());
+      rows.add(
+        [
+          v == null ? p.id : '${p.id}-${v.sku ?? i}',
+          v == null ? '' : p.id,
+          p.name.length > 150 ? p.name.substring(0, 150) : p.name,
+          p.description.length > 5000 ? p.description.substring(0, 5000) : p.description,
+          offer?.url.isNotEmpty == true ? offer!.url : p.sourceUrl,
+          v?.image ?? p.images.firstOrNull,
+          p.images.skip(1).take(10).join(','),
+          _feedAvailability(v?.availability ?? offer?.availability),
+          price == null || currency == null ? '' : '${_money(price)} $currency',
+          p.brand,
+          gtin,
+          p.mpn,
+          gtin == null && p.mpn == null ? 'no' : '',
+          (p.condition ?? 'New').toLowerCase().replaceAll(RegExp(r'[^a-z]'), ''),
+          kindOf(p.category, p.productType)?.googleCategory ?? 'Apparel & Accessories',
+          [p.category, ?p.productType].join(' > '),
+          v?.color ?? p.color,
+          v?.size ?? (p.sizes.length == 1 ? p.sizes.single : ''),
+          _feedGender(p.gender),
+          p.ageGroup?.toLowerCase(),
+          p.material,
+          p.pattern,
+        ].map(cell).toList(),
+      );
     }
   }
   return '${rows.map((r) => r.join('\t')).join('\n')}\n';
@@ -262,7 +292,9 @@ Map<String, dynamic> schemaOrg(List<Product> products) {
                           '@type': 'Offer',
                           'price': v.price,
                           'priceCurrency': v.currency,
-                          'availability': v.availability == null ? null : 'https://schema.org/${v.availability}',
+                          'availability': v.availability == null
+                              ? null
+                              : 'https://schema.org/${v.availability}',
                         }),
                 }),
             ],

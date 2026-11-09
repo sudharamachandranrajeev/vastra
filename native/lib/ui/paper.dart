@@ -59,11 +59,16 @@ BoxDecoration paperDecoration({
   double borderWidth = 1,
   List<BoxShadow>? glow,
 }) {
-  final Color light = Color.lerp(color, Tone.paperHigh, 0.7)!, dark = Color.lerp(color, Tone.paperShade, 0.75)!;
+  final Color light = Color.lerp(color, Tone.paperHigh, 0.7)!,
+      dark = Color.lerp(color, Tone.paperShade, 0.75)!;
   return BoxDecoration(
     borderRadius: BorderRadius.circular(radius),
     border: Border.all(
-      color: border ?? (surface == Surface.inset || surface == Surface.pressed ? Tone.line : Colors.white.withValues(alpha: 0.7)),
+      color:
+          border ??
+          (surface == Surface.inset || surface == Surface.pressed
+              ? Tone.line
+              : Colors.white.withValues(alpha: 0.7)),
       width: borderWidth,
     ),
     gradient: LinearGradient(
@@ -78,7 +83,10 @@ BoxDecoration paperDecoration({
       },
       stops: surface == Surface.inset ? const [0, 0.18, 0.8, 1] : null,
     ),
-    boxShadow: [...?glow, ...surface == Surface.raised || surface == Surface.base ? elevation(level) : const []],
+    boxShadow: [
+      ...?glow,
+      ...surface == Surface.raised || surface == Surface.base ? elevation(level) : const [],
+    ],
   );
 }
 
@@ -201,7 +209,15 @@ class _PressableState extends State<Pressable> {
 
 /// The primary action: folded copper, which shows a pinwheel while [busy].
 class CopperButton extends StatefulWidget {
-  const CopperButton({super.key, required this.label, required this.onPressed, this.icon, this.busy = false, this.cue = Cue.tap, this.compact = false});
+  const CopperButton({
+    super.key,
+    required this.label,
+    required this.onPressed,
+    this.icon,
+    this.busy = false,
+    this.cue = Cue.tap,
+    this.compact = false,
+  });
   final String label;
   final IconData? icon;
   final VoidCallback? onPressed;
@@ -251,7 +267,9 @@ class _CopperButtonState extends State<CopperButton> {
                     : [Tone.copperLight, Tone.copper, Tone.copperDeep],
                 stops: pressed || widget.onPressed == null ? null : const [0, 0.45, 1],
               ),
-              boxShadow: pressed || widget.onPressed == null ? const [] : elevation(_hover ? 3 : 2, tint: Tone.copperDeep),
+              boxShadow: pressed || widget.onPressed == null
+                  ? const []
+                  : elevation(_hover ? 3 : 2, tint: Tone.copperDeep),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -269,7 +287,9 @@ class _CopperButtonState extends State<CopperButton> {
                       color: Colors.white,
                       fontWeight: FontWeight.w600,
                       fontSize: widget.compact ? 13 : 14,
-                      shadows: [Shadow(color: Tone.copperDeep.withValues(alpha: 0.6), offset: const Offset(0, 1))],
+                      shadows: [
+                        Shadow(color: Tone.copperDeep.withValues(alpha: 0.6), offset: const Offset(0, 1)),
+                      ],
                     ),
                   ),
                 ),
@@ -299,7 +319,15 @@ class _CopperButtonState extends State<CopperButton> {
 
 /// The secondary action: raised paper outlined in copper.
 class PaperButton extends StatelessWidget {
-  const PaperButton({super.key, required this.label, required this.onPressed, this.icon, this.cue = Cue.tap, this.compact = false, this.selected = false});
+  const PaperButton({
+    super.key,
+    required this.label,
+    required this.onPressed,
+    this.icon,
+    this.cue = Cue.tap,
+    this.compact = false,
+    this.selected = false,
+  });
   final String label;
   final IconData? icon;
   final VoidCallback? onPressed;
@@ -342,7 +370,15 @@ class PaperButton extends StatelessWidget {
 
 /// A quiet copper icon on raised paper.
 class PaperIconButton extends StatelessWidget {
-  const PaperIconButton({super.key, required this.icon, required this.tooltip, required this.onPressed, this.active = false, this.cue = Cue.tap, this.size = 40});
+  const PaperIconButton({
+    super.key,
+    required this.icon,
+    required this.tooltip,
+    required this.onPressed,
+    this.active = false,
+    this.cue = Cue.tap,
+    this.size = 40,
+  });
   final IconData icon;
   final String tooltip;
   final VoidCallback? onPressed;
@@ -383,7 +419,12 @@ class SectionHeader extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: Space.m, vertical: Space.s),
           child: Text(
             title.toUpperCase(),
-            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13, letterSpacing: 0.8, color: Tone.ink),
+            style: const TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 13,
+              letterSpacing: 0.8,
+              color: Tone.ink,
+            ),
           ),
         ),
         Expanded(
@@ -418,7 +459,12 @@ class RibbonBadge extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600, letterSpacing: 0.3),
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          letterSpacing: 0.3,
+        ),
       ),
     ),
   );
@@ -572,7 +618,12 @@ class StepTrack extends StatelessWidget {
                 height: 18,
                 child: Row(
                   children: [
-                    Expanded(child: Container(height: 2, color: i == 0 ? Colors.transparent : (i <= active ? Tone.copper : Tone.line))),
+                    Expanded(
+                      child: Container(
+                        height: 2,
+                        color: i == 0 ? Colors.transparent : (i <= active ? Tone.copper : Tone.line),
+                      ),
+                    ),
                     AnimatedContainer(
                       duration: Motion.medium,
                       curve: Motion.settle,
@@ -581,11 +632,23 @@ class StepTrack extends StatelessWidget {
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: i < active ? Tone.copper : Tone.paper,
-                        border: Border.all(color: i <= active ? Tone.copper : Tone.line, width: i == active ? 3 : 1.5),
-                        boxShadow: i == active ? [BoxShadow(color: Tone.copperLight.withValues(alpha: 0.5), blurRadius: 8)] : null,
+                        border: Border.all(
+                          color: i <= active ? Tone.copper : Tone.line,
+                          width: i == active ? 3 : 1.5,
+                        ),
+                        boxShadow: i == active
+                            ? [BoxShadow(color: Tone.copperLight.withValues(alpha: 0.5), blurRadius: 8)]
+                            : null,
                       ),
                     ),
-                    Expanded(child: Container(height: 2, color: i == steps.length - 1 ? Colors.transparent : (i < active ? Tone.copper : Tone.line))),
+                    Expanded(
+                      child: Container(
+                        height: 2,
+                        color: i == steps.length - 1
+                            ? Colors.transparent
+                            : (i < active ? Tone.copper : Tone.line),
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -673,7 +736,9 @@ class Pagination extends StatelessWidget {
                     width: 32,
                     height: 34,
                     alignment: Alignment.center,
-                    decoration: i == page ? paperDecoration(surface: Surface.inset, radius: Radii.xs, border: Tone.copper) : null,
+                    decoration: i == page
+                        ? paperDecoration(surface: Surface.inset, radius: Radii.xs, border: Tone.copper)
+                        : null,
                     child: Text(
                       '${i + 1}',
                       style: TextStyle(
@@ -759,7 +824,8 @@ class _SkeletonRowsState extends State<SkeletonRows> with SingleTickerProviderSt
               padding: const EdgeInsets.symmetric(horizontal: Space.m, vertical: Space.s),
               child: AnimatedBuilder(
                 animation: _wave,
-                builder: (context, _) => CustomPaint(size: const Size(double.infinity, 26), painter: _WavePainter(_wave.value, i)),
+                builder: (context, _) =>
+                    CustomPaint(size: const Size(double.infinity, 26), painter: _WavePainter(_wave.value, i)),
               ),
             ),
           ),
@@ -808,11 +874,21 @@ class EmptyState extends StatelessWidget {
     child: Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        const ExcludeSemantics(child: CustomPaint(size: Size(120, 96), painter: _BoxPainter())),
+        const ExcludeSemantics(
+          child: CustomPaint(size: Size(120, 96), painter: _BoxPainter()),
+        ),
         const SizedBox(height: Space.l),
-        Text(title, textAlign: TextAlign.center, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600)),
+        Text(
+          title,
+          textAlign: TextAlign.center,
+          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+        ),
         const SizedBox(height: Space.s),
-        Text(message, textAlign: TextAlign.center, style: const TextStyle(color: Tone.inkSoft)),
+        Text(
+          message,
+          textAlign: TextAlign.center,
+          style: const TextStyle(color: Tone.inkSoft),
+        ),
         if (action != null) ...[
           const SizedBox(height: Space.l),
           CopperButton(label: action!, icon: Icons.add, onPressed: onAction, compact: true),
@@ -872,7 +948,13 @@ class _BoxPainter extends CustomPainter {
 
 /// A copper-bordered notice with a megaphone: "Important Update: …".
 class AlertBanner extends StatelessWidget {
-  const AlertBanner({super.key, required this.title, required this.message, this.icon = Icons.campaign_outlined, this.actions = const []});
+  const AlertBanner({
+    super.key,
+    required this.title,
+    required this.message,
+    this.icon = Icons.campaign_outlined,
+    this.actions = const [],
+  });
   final String title, message;
   final IconData icon;
   final List<Widget> actions;
@@ -892,7 +974,10 @@ class AlertBanner extends StatelessWidget {
         Text.rich(
           TextSpan(
             children: [
-              TextSpan(text: '$title ', style: const TextStyle(fontWeight: FontWeight.w600)),
+              TextSpan(
+                text: '$title ',
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
               TextSpan(text: message),
             ],
           ),
@@ -963,7 +1048,13 @@ class _PaperFieldState extends State<PaperField> {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(Radii.xs),
             boxShadow: focused || error
-                ? [BoxShadow(color: (error ? Tone.error : Tone.copperLight).withValues(alpha: 0.45), blurRadius: 12, spreadRadius: 1)]
+                ? [
+                    BoxShadow(
+                      color: (error ? Tone.error : Tone.copperLight).withValues(alpha: 0.45),
+                      blurRadius: 12,
+                      spreadRadius: 1,
+                    ),
+                  ]
                 : const [],
           ),
           child: TextField(
@@ -1061,14 +1152,22 @@ ThemeData paperTheme() {
     checkboxTheme: CheckboxThemeData(
       side: const BorderSide(color: Tone.copper, width: 2),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(Radii.xs)),
-      fillColor: WidgetStateProperty.resolveWith((s) => s.contains(WidgetState.selected) ? Tone.copperWash : Tone.paper),
+      fillColor: WidgetStateProperty.resolveWith(
+        (s) => s.contains(WidgetState.selected) ? Tone.copperWash : Tone.paper,
+      ),
       checkColor: const WidgetStatePropertyAll(Tone.copper),
     ),
     radioTheme: const RadioThemeData(fillColor: WidgetStatePropertyAll(Tone.copper)),
     switchTheme: SwitchThemeData(
-      thumbColor: WidgetStateProperty.resolveWith((s) => s.contains(WidgetState.selected) ? Tone.paperHigh : Tone.paper),
-      trackColor: WidgetStateProperty.resolveWith((s) => s.contains(WidgetState.selected) ? Tone.copper : Tone.muted),
-      trackOutlineColor: WidgetStateProperty.resolveWith((s) => s.contains(WidgetState.selected) ? Tone.copperDeep : Tone.line),
+      thumbColor: WidgetStateProperty.resolveWith(
+        (s) => s.contains(WidgetState.selected) ? Tone.paperHigh : Tone.paper,
+      ),
+      trackColor: WidgetStateProperty.resolveWith(
+        (s) => s.contains(WidgetState.selected) ? Tone.copper : Tone.muted,
+      ),
+      trackOutlineColor: WidgetStateProperty.resolveWith(
+        (s) => s.contains(WidgetState.selected) ? Tone.copperDeep : Tone.line,
+      ),
     ),
     sliderTheme: const SliderThemeData(
       activeTrackColor: Tone.copper,
@@ -1114,14 +1213,19 @@ ThemeData paperTheme() {
 
 /// Gives every paper control access to sound and haptic feedback.
 class FeedbackScope extends InheritedNotifier<UiFeedback> {
-  const FeedbackScope({super.key, required UiFeedback feedback, required super.child}) : super(notifier: feedback);
+  const FeedbackScope({super.key, required UiFeedback feedback, required super.child})
+    : super(notifier: feedback);
   static UiFeedback of(BuildContext context) =>
       context.dependOnInheritedWidgetOfExactType<FeedbackScope>()?.notifier ?? _silent;
   static final _silent = UiFeedback.silent();
 }
 
 /// Opens a dialog that unfolds like a letter from its envelope.
-Future<T?> showPaperDialog<T>(BuildContext context, {required WidgetBuilder builder, bool dismissible = true}) {
+Future<T?> showPaperDialog<T>(
+  BuildContext context, {
+  required WidgetBuilder builder,
+  bool dismissible = true,
+}) {
   final feedback = FeedbackScope.of(context)..play(Cue.open);
   return showGeneralDialog<T>(
     context: context,
@@ -1131,7 +1235,11 @@ Future<T?> showPaperDialog<T>(BuildContext context, {required WidgetBuilder buil
     transitionDuration: Motion.slow,
     pageBuilder: (context, _, _) => SafeArea(child: Builder(builder: builder)),
     transitionBuilder: (context, animation, _, child) {
-      final curved = CurvedAnimation(parent: animation, curve: Motion.settle, reverseCurve: Curves.easeInCubic);
+      final curved = CurvedAnimation(
+        parent: animation,
+        curve: Motion.settle,
+        reverseCurve: Curves.easeInCubic,
+      );
       return FadeTransition(
         opacity: CurvedAnimation(parent: animation, curve: const Interval(0, 0.6)),
         child: AnimatedBuilder(
@@ -1154,7 +1262,12 @@ Future<T?> showPaperDialog<T>(BuildContext context, {required WidgetBuilder buil
 
 /// The paper sheet a dialog is written on, with its envelope fold behind.
 class PaperSheet extends StatelessWidget {
-  const PaperSheet({super.key, required this.child, this.maxWidth = 560, this.padding = const EdgeInsets.all(Space.xl)});
+  const PaperSheet({
+    super.key,
+    required this.child,
+    this.maxWidth = 560,
+    this.padding = const EdgeInsets.all(Space.xl),
+  });
   final Widget child;
   final double maxWidth;
   final EdgeInsetsGeometry padding;
@@ -1271,21 +1384,27 @@ class ToastHostState extends State<ToastHost> {
                                   children: [
                                     Container(
                                       width: 4,
-                                      color: t.kind == ToastKind.error || t.kind == ToastKind.warning ? Tone.error : Tone.copper,
+                                      color: t.kind == ToastKind.error || t.kind == ToastKind.warning
+                                          ? Tone.error
+                                          : Tone.copper,
                                     ),
                                     Expanded(
                                       child: Padding(
-                                        padding: const EdgeInsets.symmetric(horizontal: Space.m, vertical: 10),
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: Space.m,
+                                          vertical: 10,
+                                        ),
                                         child: Text.rich(
                                           TextSpan(
                                             children: [
                                               TextSpan(
-                                                text: '${switch (t.kind) {
-                                                  ToastKind.success => 'Success',
-                                                  ToastKind.info => 'Info',
-                                                  ToastKind.warning => 'Warning',
-                                                  ToastKind.error => 'Error',
-                                                }}: ',
+                                                text:
+                                                    '${switch (t.kind) {
+                                                      ToastKind.success => 'Success',
+                                                      ToastKind.info => 'Info',
+                                                      ToastKind.warning => 'Warning',
+                                                      ToastKind.error => 'Error',
+                                                    }}: ',
                                                 style: const TextStyle(fontWeight: FontWeight.w600),
                                               ),
                                               TextSpan(text: t.message),
@@ -1347,11 +1466,16 @@ class FolderTabs extends StatelessWidget {
                   padding: EdgeInsets.symmetric(horizontal: Space.l + 2, vertical: i == selected ? 11 : 9),
                   decoration: BoxDecoration(
                     borderRadius: const BorderRadius.vertical(top: Radius.circular(Radii.s)),
-                    border: Border.all(color: i == selected ? Tone.copper : Tone.line, width: i == selected ? 2 : 1),
+                    border: Border.all(
+                      color: i == selected ? Tone.copper : Tone.line,
+                      width: i == selected ? 2 : 1,
+                    ),
                     gradient: LinearGradient(
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
-                      colors: i == selected ? [Tone.paperHigh, Tone.paper] : [Tone.muted, Color.lerp(Tone.muted, Tone.paperShade, 0.5)!],
+                      colors: i == selected
+                          ? [Tone.paperHigh, Tone.paper]
+                          : [Tone.muted, Color.lerp(Tone.muted, Tone.paperShade, 0.5)!],
                     ),
                     boxShadow: i == selected ? elevation(1) : null,
                   ),

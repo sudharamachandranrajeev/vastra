@@ -20,6 +20,7 @@
   change.
 - Catalog backup and restore. Restoring adds missing finds and keeps the ones already present.
 - Bug reporter that opens a prefilled GitHub issue. Recent errors are optional and redacted.
+- Linux builds and the Arch package declare GStreamer, which the interface sounds need.
 
 ## 0.2.0
 

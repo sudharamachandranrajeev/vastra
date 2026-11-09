@@ -89,7 +89,11 @@ Future<void> start(ShareIntake intake) async {
                       onPressed: () => openExternal(
                         issueLink(
                           'Vastra could not open its catalog',
-                          bugReport(summary: redact('$error'), steps: 'Opened Vastra.', errors: diagnostics.recent),
+                          bugReport(
+                            summary: redact('$error'),
+                            steps: 'Opened Vastra.',
+                            errors: diagnostics.recent,
+                          ),
                         ),
                       ),
                     ),

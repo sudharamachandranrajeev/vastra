@@ -19,7 +19,12 @@ import 'package:vastra/ui/app.dart';
 
 const repo = 'https://github.com/sudharamachandranrajeev/vastra';
 
-Map<String, dynamic> release(String tag, {bool draft = false, List<String> files = const [], String host = 'github.com'}) => {
+Map<String, dynamic> release(
+  String tag, {
+  bool draft = false,
+  List<String> files = const [],
+  String host = 'github.com',
+}) => {
   'tag_name': tag,
   'name': 'Vastra ${tag.substring(1)}',
   'body': 'Notes for $tag',
@@ -29,7 +34,11 @@ Map<String, dynamic> release(String tag, {bool draft = false, List<String> files
   'published_at': '2026-10-01T00:00:00Z',
   'assets': [
     for (final f in files)
-      {'name': f, 'size': 3, 'browser_download_url': 'https://$host/sudharamachandranrajeev/vastra/releases/download/$tag/$f'},
+      {
+        'name': f,
+        'size': 3,
+        'browser_download_url': 'https://$host/sudharamachandranrajeev/vastra/releases/download/$tag/$f',
+      },
   ],
 };
 
@@ -52,14 +61,15 @@ void main() {
   setUp(() async => temp = await Directory.systemTemp.createTemp('vastra-test'));
   tearDown(() async => temp.delete(recursive: true));
 
-  UpdateService service(MockClient client, {Target target = Target.linux, String? executable}) => UpdateService(
-    settings: SettingsStore(),
-    workDirectory: temp,
-    backupDirectory: Directory(path.join(temp.path, 'backups')),
-    clientFactory: () => client,
-    target: target,
-    executable: executable ?? path.join(temp.path, 'app', 'vastra'),
-  );
+  UpdateService service(MockClient client, {Target target = Target.linux, String? executable}) =>
+      UpdateService(
+        settings: SettingsStore(),
+        workDirectory: temp,
+        backupDirectory: Directory(path.join(temp.path, 'backups')),
+        clientFactory: () => client,
+        target: target,
+        executable: executable ?? path.join(temp.path, 'app', 'vastra'),
+      );
 
   test('the app version matches pubspec.yaml', () {
     final pubspec = File('pubspec.yaml').readAsStringSync();
@@ -88,9 +98,13 @@ void main() {
 
   test('update checks find newer releases and explain failures', () async {
     final next = '${Version.current.major}.${Version.current.minor + 1}.0';
-    final newer = service(MockClient((_) async => http.Response(jsonEncode([release('v$next'), release('v$appVersion')]), 200)));
+    final newer = service(
+      MockClient((_) async => http.Response(jsonEncode([release('v$next'), release('v$appVersion')]), 200)),
+    );
     expect((await newer.newer())?.version.toString(), next);
-    final current = service(MockClient((_) async => http.Response(jsonEncode([release('v$appVersion')]), 200)));
+    final current = service(
+      MockClient((_) async => http.Response(jsonEncode([release('v$appVersion')]), 200)),
+    );
     expect(await current.newer(), isNull);
     final limited = service(MockClient((_) async => http.Response('', 403)));
     expect(limited.newer(), throwsA(isA<UpdateFailure>()));
@@ -101,7 +115,11 @@ void main() {
   test('downloads are kept only when they match the published checksum', () async {
     final bytes = utf8.encode('package');
     final name = 'Vastra-0.2.0-linux-x64.tar.gz';
-    final r = Release.parseList(jsonEncode([release('v0.2.0', files: [name, checksumsAsset])])).single;
+    final r = Release.parseList(
+      jsonEncode([
+        release('v0.2.0', files: [name, checksumsAsset]),
+      ]),
+    ).single;
     MockClient client(String digest) => MockClient(
       (req) async => req.url.path.endsWith(checksumsAsset)
           ? http.Response('$digest  $name\n', 200)
@@ -111,21 +129,32 @@ void main() {
     expect(await good.readAsBytes(), bytes);
     await good.delete();
     await expectLater(service(client('0' * 64)).download(r), throwsA(isA<UpdateFailure>()));
-    expect(Directory(path.join(temp.path, 'updates')).listSync(), isEmpty, reason: 'nothing unverified is kept');
+    expect(
+      Directory(path.join(temp.path, 'updates')).listSync(),
+      isEmpty,
+      reason: 'nothing unverified is kept',
+    );
   });
 
-  test('only installer-managed copies update themselves; Android never installs over a newer version', () async {
-    final none = MockClient((_) async => http.Response('[]', 200));
-    final app = await Directory(path.join(temp.path, 'app')).create();
-    expect(service(none, target: Target.windows).mode, InstallMode.manual, reason: 'portable folder');
-    await File(path.join(app.path, 'unins000.exe')).create();
-    expect(service(none, target: Target.windows).mode, InstallMode.automatic);
-    expect(service(none).mode, InstallMode.manual, reason: 'a system package');
-    await File(path.join(app.path, '.vastra-install')).create();
-    expect(service(none).mode, InstallMode.automatic);
-    final older = Release.parseList(jsonEncode([release('v0.1.0', files: ['Vastra-0.1.0-android.apk', checksumsAsset])])).single;
-    expect(service(none, target: Target.android).canInstall(older), false);
-  });
+  test(
+    'only installer-managed copies update themselves; Android never installs over a newer version',
+    () async {
+      final none = MockClient((_) async => http.Response('[]', 200));
+      final app = await Directory(path.join(temp.path, 'app')).create();
+      expect(service(none, target: Target.windows).mode, InstallMode.manual, reason: 'portable folder');
+      await File(path.join(app.path, 'unins000.exe')).create();
+      expect(service(none, target: Target.windows).mode, InstallMode.automatic);
+      expect(service(none).mode, InstallMode.manual, reason: 'a system package');
+      await File(path.join(app.path, '.vastra-install')).create();
+      expect(service(none).mode, InstallMode.automatic);
+      final older = Release.parseList(
+        jsonEncode([
+          release('v0.1.0', files: ['Vastra-0.1.0-android.apk', checksumsAsset]),
+        ]),
+      ).single;
+      expect(service(none, target: Target.android).canInstall(older), false);
+    },
+  );
 
   test('backups restore missing finds and keep the ones already here', () async {
     final source = CatalogRepository.memory();
@@ -146,7 +175,8 @@ void main() {
 
     final snapshots = service(MockClient((_) async => http.Response('[]', 200)));
     for (var i = 0; i < 7; i++) {
-      await File(path.join(temp.path, 'backups', 'vastra-0.1.0-2026010100000$i.sqlite')).create(recursive: true);
+      await File(path.join(temp.path, 'backups', 'vastra-0.1.0-2026010100000$i.sqlite'))
+          .create(recursive: true);
     }
     final kept = await snapshots.snapshot(device);
     expect(kept.existsSync(), true);
@@ -155,7 +185,9 @@ void main() {
     final notes = File(path.join(temp.path, 'notes.txt'))..writeAsStringSync('hello');
     expect(() => device.restoreFrom(notes.path), throwsA(isA<FormatException>()));
     final future = sqlite3.open(path.join(temp.path, 'future.sqlite'))
-      ..execute('CREATE TABLE products (id TEXT PRIMARY KEY, source TEXT UNIQUE, document TEXT NOT NULL, collection TEXT)')
+      ..execute(
+        'CREATE TABLE products (id TEXT PRIMARY KEY, source TEXT UNIQUE, document TEXT NOT NULL, collection TEXT)',
+      )
       ..execute('PRAGMA user_version = 2')
       ..close();
     expect(future, isNotNull);
@@ -171,7 +203,14 @@ void main() {
     expect(log.recent.join(), isNot(contains('secret-item')));
     expect(log.recent.firstWhere((l) => !l.startsWith(' ')), contains('https://shop.com/…'));
     final body = bugReport(summary: 'Share does nothing', steps: '1. Share', errors: log.recent, finds: 3);
-    expect(body, allOf(contains('Vastra: $appVersion'), contains('Catalog size: 3 finds'), contains('Share does nothing')));
+    expect(
+      body,
+      allOf(
+        contains('Vastra: $appVersion'),
+        contains('Catalog size: 3 finds'),
+        contains('Share does nothing'),
+      ),
+    );
     final link = issueLink('Share broken', body);
     expect(link.toString().length, lessThanOrEqualTo(7000));
     expect(link.queryParameters['body'], contains('Share does nothing'));
@@ -191,11 +230,16 @@ void main() {
       settings: SettingsStore(),
       workDirectory: Directory.systemTemp,
       backupDirectory: Directory.systemTemp,
-      clientFactory: () => MockClient((_) async => http.Response(jsonEncode([release('v$next'), release('v0.1.0')]), 200)),
+      clientFactory: () =>
+          MockClient((_) async => http.Response(jsonEncode([release('v$next'), release('v0.1.0')]), 200)),
       target: Target.linux,
     );
     await tester.pumpWidget(VastraApp(data: data!, repository: catalog, updates: updates));
-    for (var i = 0; i < 20 && find.textContaining('Vastra $next is ready.', findRichText: true).evaluate().isEmpty; i++) {
+    for (
+      var i = 0;
+      i < 20 && find.textContaining('Vastra $next is ready.', findRichText: true).evaluate().isEmpty;
+      i++
+    ) {
       await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 20)));
       await tester.pump(const Duration(milliseconds: 100));
     }

@@ -30,7 +30,9 @@ void main() {
       await tester.scrollUntilVisible(
         save,
         200,
-        scrollable: find.descendant(of: find.byType(CustomScrollView), matching: find.byType(Scrollable)).first,
+        scrollable: find
+            .descendant(of: find.byType(CustomScrollView), matching: find.byType(Scrollable))
+            .first,
       );
       await tester.tap(save);
       await tester.pumpAndSettle();
@@ -55,11 +57,12 @@ void main() {
     addTearDown(repo.close);
     final data = await tester.runAsync(CatalogData.load);
     final intake = ShareIntake();
-    final page = '<script type="application/ld+json">${jsonEncode({
-      '@type': 'Product',
-      'name': 'Linen wrap midi dress',
-      'offers': {'price': '89', 'priceCurrency': 'GBP'},
-    })}</script>';
+    final page =
+        '<script type="application/ld+json">${jsonEncode({
+          '@type': 'Product',
+          'name': 'Linen wrap midi dress',
+          'offers': {'price': '89', 'priceCurrency': 'GBP'},
+        })}</script>';
     await tester.pumpWidget(
       VastraApp(
         data: data!,
@@ -67,7 +70,8 @@ void main() {
         intake: intake,
         importer: (categorizer) => ProductImporter(
           categorizer: categorizer,
-          clientFactory: () => MockClient((_) async => http.Response(page, 200, headers: {'content-type': 'text/html'})),
+          clientFactory: () =>
+              MockClient((_) async => http.Response(page, 200, headers: {'content-type': 'text/html'})),
         ),
       ),
     );
@@ -82,7 +86,10 @@ void main() {
     expect(entry.sourceUrl, 'https://shop.store.com/products/linen-wrap');
     expect([entry.category, entry.productType], ['Clothing', 'Dresses']);
     expect(find.text('Linen wrap midi dress'), findsWidgets);
-    expect(find.text('Filed automatically as Dresses. Tap to correct it; Vastra learns from your choice.'), findsOneWidget);
+    expect(
+      find.text('Filed automatically as Dresses. Tap to correct it; Vastra learns from your choice.'),
+      findsOneWidget,
+    );
     expect(find.text('MORE LIKE THIS'), findsOneWidget);
     await tester.pump(const Duration(seconds: 6));
     expect(tester.takeException(), isNull);

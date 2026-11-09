@@ -86,7 +86,12 @@ class Home extends StatefulWidget {
 }
 
 const _tabs = ['Discover', 'My catalog', 'Sellers', 'Collections'];
-const _tabIcons = [Icons.explore_outlined, Icons.inventory_2_outlined, Icons.storefront_outlined, Icons.bookmarks_outlined];
+const _tabIcons = [
+  Icons.explore_outlined,
+  Icons.inventory_2_outlined,
+  Icons.storefront_outlined,
+  Icons.bookmarks_outlined,
+];
 
 class _HomeState extends State<Home> with WidgetsBindingObserver {
   int _tab = 0, _page = 0;
@@ -145,7 +150,8 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
     if (updates.canInstall(release)) {
       showPaperDialog<void>(
         context,
-        builder: (_) => UpdateSheet(release: release, updates: updates, repository: widget.repository, quit: _quit),
+        builder: (_) =>
+            UpdateSheet(release: release, updates: updates, repository: widget.repository, quit: _quit),
       );
     } else {
       _open(release.page.toString());
@@ -206,7 +212,10 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
     for (final e in _entries) {
       products[e.product.id] = e.product;
     }
-    return [..._entries.where((e) => !e.product.sample).map((e) => e.product), ...products.values.where((p) => p.sample)];
+    return [
+      ..._entries.where((e) => !e.product.sample).map((e) => e.product),
+      ...products.values.where((p) => p.sample),
+    ];
   }
 
   Categorizer get _categorizer => Categorizer([
@@ -233,7 +242,9 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
   Future<void> _open(String value) async {
     try {
       final uri = Uri.parse(value);
-      if (uri.scheme != 'https' || uri.host.isEmpty || !await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+      if (uri.scheme != 'https' ||
+          uri.host.isEmpty ||
+          !await launchUrl(uri, mode: LaunchMode.externalApplication)) {
         throw StateError('No browser');
       }
     } on Object {
@@ -244,7 +255,10 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
   void _save(Product p, [String collection = 'My edit']) {
     final saved = _saved(p) != null;
     if (_write(() => saved ? widget.repository.unsave(p) : widget.repository.save(p, collection))) {
-      _toast(saved ? ToastKind.info : ToastKind.success, saved ? 'Removed from $collection.' : 'Saved to $collection.');
+      _toast(
+        saved ? ToastKind.info : ToastKind.success,
+        saved ? 'Removed from $collection.' : 'Saved to $collection.',
+      );
     }
   }
 
@@ -264,7 +278,8 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
     final product = await showPaperDialog<Product>(
       context,
       dismissible: false,
-      builder: (_) => ImportSheet(importer: importer, repository: widget.repository, initial: initial, auto: auto),
+      builder: (_) =>
+          ImportSheet(importer: importer, repository: widget.repository, initial: initial, auto: auto),
     );
     if (!mounted || product == null) return;
     _reload();
@@ -279,11 +294,8 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
 
   Future<void> _detail(Product product) => showPaperDialog<void>(
     context,
-    builder: (dialogContext) => _ProductDetail(
-      product: product,
-      home: this,
-      close: () => Navigator.pop(dialogContext),
-    ),
+    builder: (dialogContext) =>
+        _ProductDetail(product: product, home: this, close: () => Navigator.pop(dialogContext)),
   );
 
   Future<void> _remove(Product product, BuildContext dialogContext) async {
@@ -354,7 +366,11 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
                   const Expanded(
                     child: Text('Side by side', style: TextStyle(fontSize: 26, fontWeight: FontWeight.w600)),
                   ),
-                  PaperIconButton(icon: Icons.close, tooltip: 'Close comparison', onPressed: () => Navigator.pop(c)),
+                  PaperIconButton(
+                    icon: Icons.close,
+                    tooltip: 'Close comparison',
+                    onPressed: () => Navigator.pop(c),
+                  ),
                 ],
               ),
               const SizedBox(height: Space.s),
@@ -373,7 +389,9 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
                     dividerThickness: 0.6,
                     columns: [
                       const DataColumn(label: Text('Detail')),
-                      ...products.map((p) => DataColumn(label: SizedBox(width: 180, child: Text(p.name, maxLines: 3)))),
+                      ...products.map(
+                        (p) => DataColumn(label: SizedBox(width: 180, child: Text(p.name, maxLines: 3))),
+                      ),
                     ],
                     rows: [
                       for (final row in rows)
@@ -399,7 +417,10 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
     await showPaperDialog<void>(
       context,
       builder: (c) => ExportSheet(
-        products: [for (final e in _entries) if (!e.product.sample) e],
+        products: [
+          for (final e in _entries)
+            if (!e.product.sample) e,
+        ],
         collections: collections,
         onDone: (message, ok) => _toast(ok ? ToastKind.success : ToastKind.error, message),
       ),
@@ -417,122 +438,147 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
           listenable: feedback,
           builder: (context, _) => SingleChildScrollView(
             child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
-                children: [
-                  const Expanded(child: Text('Settings', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600))),
-                  PaperIconButton(icon: Icons.close, tooltip: 'Close settings', onPressed: () => Navigator.pop(c)),
-                ],
-              ),
-              const SizedBox(height: Space.l),
-              const SectionHeader('Feedback'),
-              SwitchListTile(
-                contentPadding: EdgeInsets.zero,
-                title: const Text('Soft sounds'),
-                subtitle: const Text('Quiet chimes when you add, save or open things.'),
-                value: feedback.sound,
-                onChanged: (v) {
-                  feedback.sound = v;
-                  feedback.play(Cue.toggle);
-                },
-              ),
-              SwitchListTile(
-                contentPadding: EdgeInsets.zero,
-                title: const Text('Light haptics'),
-                subtitle: const Text('A gentle tap on supported phones.'),
-                value: feedback.haptics,
-                onChanged: (v) {
-                  feedback.haptics = v;
-                  feedback.play(Cue.toggle);
-                },
-              ),
-              if (updates != null) ...[
-                const SizedBox(height: Space.l),
-                const SectionHeader('Updates'),
-                StatefulBuilder(
-                  builder: (context, setLocal) => SwitchListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: const Text('Check for updates when Vastra starts'),
-                    subtitle: const Text('Asks GitHub for the list of releases. Nothing else is sent.'),
-                    value: updates.checkOnStartup,
-                    onChanged: (v) {
-                      setLocal(() => updates.checkOnStartup = v);
-                      feedback.play(Cue.toggle);
-                    },
-                  ),
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  children: [
+                    const Expanded(
+                      child: Text('Settings', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600)),
+                    ),
+                    PaperIconButton(
+                      icon: Icons.close,
+                      tooltip: 'Close settings',
+                      onPressed: () => Navigator.pop(c),
+                    ),
+                  ],
                 ),
+                const SizedBox(height: Space.l),
+                const SectionHeader('Feedback'),
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: const Text('Soft sounds'),
+                  subtitle: const Text('Quiet chimes when you add, save or open things.'),
+                  value: feedback.sound,
+                  onChanged: (v) {
+                    feedback.sound = v;
+                    feedback.play(Cue.toggle);
+                  },
+                ),
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: const Text('Light haptics'),
+                  subtitle: const Text('A gentle tap on supported phones.'),
+                  value: feedback.haptics,
+                  onChanged: (v) {
+                    feedback.haptics = v;
+                    feedback.play(Cue.toggle);
+                  },
+                ),
+                if (updates != null) ...[
+                  const SizedBox(height: Space.l),
+                  const SectionHeader('Updates'),
+                  StatefulBuilder(
+                    builder: (context, setLocal) => SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: const Text('Check for updates when Vastra starts'),
+                      subtitle: const Text('Asks GitHub for the list of releases. Nothing else is sent.'),
+                      value: updates.checkOnStartup,
+                      onChanged: (v) {
+                        setLocal(() => updates.checkOnStartup = v);
+                        feedback.play(Cue.toggle);
+                      },
+                    ),
+                  ),
+                  Wrap(
+                    spacing: Space.s,
+                    runSpacing: Space.s,
+                    children: [
+                      PaperButton(
+                        label: 'Check now',
+                        icon: Icons.refresh,
+                        compact: true,
+                        onPressed: _checkForUpdate,
+                      ),
+                      PaperButton(
+                        label: 'All versions and rollback',
+                        icon: Icons.history,
+                        compact: true,
+                        onPressed: _versions,
+                      ),
+                    ],
+                  ),
+                ],
+                const SizedBox(height: Space.l),
+                const SectionHeader('Your data'),
+                const SizedBox(height: Space.s),
+                const Text(
+                  'Back up the whole catalog to a file. Restoring adds the finds that are missing and keeps everything already here.',
+                  style: TextStyle(color: Tone.inkSoft),
+                ),
+                const SizedBox(height: Space.m),
                 Wrap(
                   spacing: Space.s,
                   runSpacing: Space.s,
                   children: [
-                    PaperButton(label: 'Check now', icon: Icons.refresh, compact: true, onPressed: _checkForUpdate),
-                    PaperButton(label: 'All versions and rollback', icon: Icons.history, compact: true, onPressed: _versions),
+                    PaperButton(
+                      label: 'Back up catalog',
+                      icon: Icons.save_alt,
+                      compact: true,
+                      onPressed: () => backupCatalog(context, widget.repository),
+                    ),
+                    PaperButton(
+                      label: 'Restore from backup',
+                      icon: Icons.settings_backup_restore,
+                      compact: true,
+                      onPressed: () async {
+                        if ((await restoreCatalog(context, widget.repository) ?? 0) > 0) _reload();
+                      },
+                    ),
+                  ],
+                ),
+                const SizedBox(height: Space.l),
+                const SectionHeader('Help'),
+                const SizedBox(height: Space.m),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: PaperButton(
+                    label: 'Report a problem',
+                    icon: Icons.bug_report_outlined,
+                    compact: true,
+                    onPressed: _report,
+                  ),
+                ),
+                const SizedBox(height: Space.l),
+                const SectionHeader('About'),
+                const SizedBox(height: Space.m),
+                const Text(
+                  'Vastra $appVersion. Fashion, footwear, accessories, beauty, fragrance and personal care, gathered from any store. Your catalog stays on this device. No account, no tracking, no ads, and never more than you asked for.',
+                ),
+                const SizedBox(height: Space.m),
+                Wrap(
+                  spacing: Space.s,
+                  runSpacing: Space.s,
+                  children: [
+                    PaperButton(
+                      label: 'Source code and roadmap',
+                      icon: Icons.north_east,
+                      compact: true,
+                      onPressed: () => _open('https://github.com/sudharamachandranrajeev/vastra'),
+                    ),
+                    PaperButton(
+                      label: 'Licences',
+                      compact: true,
+                      onPressed: () => showLicensePage(
+                        context: context,
+                        applicationName: 'Vastra',
+                        applicationVersion: appVersion,
+                      ),
+                    ),
                   ],
                 ),
               ],
-              const SizedBox(height: Space.l),
-              const SectionHeader('Your data'),
-              const SizedBox(height: Space.s),
-              const Text(
-                'Back up the whole catalog to a file. Restoring adds the finds that are missing and keeps everything already here.',
-                style: TextStyle(color: Tone.inkSoft),
-              ),
-              const SizedBox(height: Space.m),
-              Wrap(
-                spacing: Space.s,
-                runSpacing: Space.s,
-                children: [
-                  PaperButton(
-                    label: 'Back up catalog',
-                    icon: Icons.save_alt,
-                    compact: true,
-                    onPressed: () => backupCatalog(context, widget.repository),
-                  ),
-                  PaperButton(
-                    label: 'Restore from backup',
-                    icon: Icons.settings_backup_restore,
-                    compact: true,
-                    onPressed: () async {
-                      if ((await restoreCatalog(context, widget.repository) ?? 0) > 0) _reload();
-                    },
-                  ),
-                ],
-              ),
-              const SizedBox(height: Space.l),
-              const SectionHeader('Help'),
-              const SizedBox(height: Space.m),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: PaperButton(label: 'Report a problem', icon: Icons.bug_report_outlined, compact: true, onPressed: _report),
-              ),
-              const SizedBox(height: Space.l),
-              const SectionHeader('About'),
-              const SizedBox(height: Space.m),
-              const Text(
-                'Vastra $appVersion. Fashion, footwear, accessories, beauty, fragrance and personal care, gathered from any store. Your catalog stays on this device. No account, no tracking, no ads, and never more than you asked for.',
-              ),
-              const SizedBox(height: Space.m),
-              Wrap(
-                spacing: Space.s,
-                runSpacing: Space.s,
-                children: [
-                  PaperButton(
-                    label: 'Source code and roadmap',
-                    icon: Icons.north_east,
-                    compact: true,
-                    onPressed: () => _open('https://github.com/sudharamachandranrajeev/vastra'),
-                  ),
-                  PaperButton(
-                    label: 'Licences',
-                    compact: true,
-                    onPressed: () => showLicensePage(context: context, applicationName: 'Vastra', applicationVersion: appVersion),
-                  ),
-                ],
-              ),
-            ],
-          ),
+            ),
           ),
         ),
       ),
@@ -557,12 +603,16 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
         .toList();
     if (_tab == 1) products = products.where((p) => !p.sample).toList();
     if (_tab == 3) {
-      products = products.where((p) => _saved(p) != null && (_collection == 'All collections' || _saved(p) == _collection)).toList();
+      products = products
+          .where((p) => _saved(p) != null && (_collection == 'All collections' || _saved(p) == _collection))
+          .toList();
     }
     if (_sort == 'Name A–Z') products.sort((a, b) => a.name.compareTo(b.name));
     if (_sort == 'Price: low to high' && _currency != 'All currencies') {
       double amount(Product p) {
-        final prices = p.offers.where((o) => o.currency == _currency && o.price != null).map((o) => o.price!).toList()..sort();
+        final prices =
+            p.offers.where((o) => o.currency == _currency && o.price != null).map((o) => o.price!).toList()
+              ..sort();
         return prices.firstOrNull ?? double.infinity;
       }
 
@@ -571,34 +621,36 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
     return products;
   }
 
-  Widget _dropdown(String value, List<String> options, ValueChanged<String> onChanged, String label) => Semantics(
-    label: label,
-    child: Container(
-      padding: const EdgeInsets.symmetric(horizontal: Space.m),
-      decoration: paperDecoration(surface: Surface.inset, radius: Radii.xs),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<String>(
-          value: options.contains(value) ? value : options.first,
-          dropdownColor: Tone.paper,
-          borderRadius: BorderRadius.circular(Radii.s),
-          icon: const Icon(Icons.expand_more, color: Tone.copper),
-          style: const TextStyle(color: Tone.ink, fontFamily: 'Inter', fontSize: 13.5),
-          items: options.map((v) => DropdownMenuItem(value: v, child: Text(v))).toList(),
-          onChanged: (v) {
-            FeedbackScope.of(context).play(Cue.toggle);
-            onChanged(v!);
-          },
+  Widget _dropdown(String value, List<String> options, ValueChanged<String> onChanged, String label) =>
+      Semantics(
+        label: label,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: Space.m),
+          decoration: paperDecoration(surface: Surface.inset, radius: Radii.xs),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<String>(
+              value: options.contains(value) ? value : options.first,
+              dropdownColor: Tone.paper,
+              borderRadius: BorderRadius.circular(Radii.s),
+              icon: const Icon(Icons.expand_more, color: Tone.copper),
+              style: const TextStyle(color: Tone.ink, fontFamily: 'Inter', fontSize: 13.5),
+              items: options.map((v) => DropdownMenuItem(value: v, child: Text(v))).toList(),
+              onChanged: (v) {
+                FeedbackScope.of(context).play(Cue.toggle);
+                onChanged(v!);
+              },
+            ),
+          ),
         ),
-      ),
-    ),
-  );
+      );
 
   @override
   Widget build(BuildContext context) {
     final wide = MediaQuery.sizeOf(context).width >= 880;
     final gutter = wide ? Space.huge - 16 : Space.l;
     final collections = _entries.map((e) => e.collection).whereType<String>().toSet().toList()..sort();
-    final currencies = _all.expand((p) => p.offers.map((o) => o.currency)).whereType<String>().toSet().toList()..sort();
+    final currencies =
+        _all.expand((p) => p.offers.map((o) => o.currency)).whereType<String>().toSet().toList()..sort();
     final products = _visible();
     final perPage = wide ? 16 : 10;
     final pages = (products.length / perPage).ceil();
@@ -622,7 +674,11 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
               icon: Icons.system_update_alt,
               actions: [
                 CopperButton(label: 'Update', compact: true, onPressed: () => _update(_available!)),
-                PaperButton(label: 'Later', compact: true, onPressed: () => setState(() => _available = null)),
+                PaperButton(
+                  label: 'Later',
+                  compact: true,
+                  onPressed: () => setState(() => _available = null),
+                ),
               ],
             ),
           ),
@@ -658,7 +714,12 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
                 const SizedBox(height: Space.l),
                 Text(
                   'A world of good finds.\nAn edit that’s you.',
-                  style: TextStyle(fontSize: wide ? 42 : 30, height: 1.12, fontWeight: FontWeight.w700, letterSpacing: -0.8),
+                  style: TextStyle(
+                    fontSize: wide ? 42 : 30,
+                    height: 1.12,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -0.8,
+                  ),
                 ),
                 const SizedBox(height: Space.m),
                 const Text(
@@ -679,18 +740,17 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
             ),
           )
         else
-          Text(
-            switch (_tab) {
-              1 => 'Your finds, together.',
-              2 => 'Meet your next good source.',
-              _ => 'A little more you.',
-            },
-            style: const TextStyle(fontSize: 30, fontWeight: FontWeight.w700, letterSpacing: -0.6),
-          ),
+          Text(switch (_tab) {
+            1 => 'Your finds, together.',
+            2 => 'Meet your next good source.',
+            _ => 'A little more you.',
+          }, style: const TextStyle(fontSize: 30, fontWeight: FontWeight.w700, letterSpacing: -0.6)),
         const SizedBox(height: Space.xl),
         PaperField(
           controller: _search,
-          label: _tab == 2 ? 'Search sellers, countries or specialties' : 'Search your finds or paste a product link',
+          label: _tab == 2
+              ? 'Search sellers, countries or specialties'
+              : 'Search your finds or paste a product link',
           prefixIcon: Icons.search,
           suffix: _query.isEmpty
               ? null
@@ -739,11 +799,21 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
             runSpacing: Space.m,
             crossAxisAlignment: WrapCrossAlignment.center,
             children: [
-              _dropdown(_currency, ['All currencies', ...currencies], (v) => setState(() {
-                _currency = v;
-                if (v == 'All currencies') _sort = 'Curated order';
-              }), 'Currency'),
-              _dropdown(_sort, ['Curated order', 'Name A–Z', if (_currency != 'All currencies') 'Price: low to high'], (v) => setState(() => _sort = v), 'Sort'),
+              _dropdown(
+                _currency,
+                ['All currencies', ...currencies],
+                (v) => setState(() {
+                  _currency = v;
+                  if (v == 'All currencies') _sort = 'Curated order';
+                }),
+                'Currency',
+              ),
+              _dropdown(
+                _sort,
+                ['Curated order', 'Name A–Z', if (_currency != 'All currencies') 'Price: low to high'],
+                (v) => setState(() => _sort = v),
+                'Sort',
+              ),
               if (_tab == 0)
                 Row(
                   mainAxisSize: MainAxisSize.min,
@@ -758,7 +828,13 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
                     const Text('Include samples'),
                   ],
                 ),
-              if (_tab == 3) _dropdown(_collection, ['All collections', ...collections], (v) => setState(() => _collection = v), 'Collection'),
+              if (_tab == 3)
+                _dropdown(
+                  _collection,
+                  ['All collections', ...collections],
+                  (v) => setState(() => _collection = v),
+                  'Collection',
+                ),
             ],
           ),
         if (_tab == 2)
@@ -766,7 +842,14 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
             spacing: Space.s,
             runSpacing: Space.s,
             children: [
-              for (final kind in ['All sellers', 'Independent', 'Marketplace', 'Wholesale', 'Retail', 'Directory'])
+              for (final kind in [
+                'All sellers',
+                'Independent',
+                'Marketplace',
+                'Wholesale',
+                'Retail',
+                'Directory',
+              ])
                 PaperButton(
                   label: kind,
                   compact: true,
@@ -803,7 +886,9 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
           (s) =>
               (_sellerKind == 'All sellers' || s['kind'] == _sellerKind) &&
               (_category == 'All discoveries' || (s['categories'] as List).contains(_category)) &&
-              '${s['name']} ${s['description']} ${s['country']}'.toLowerCase().contains(_query.trim().toLowerCase()),
+              '${s['name']} ${s['description']} ${s['country']}'.toLowerCase().contains(
+                _query.trim().toLowerCase(),
+              ),
         )
         .toList();
 
@@ -836,9 +921,15 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(s['name'] as String, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600)),
+                                Text(
+                                  s['name'] as String,
+                                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+                                ),
                                 const SizedBox(height: 2),
-                                Text('${s['country']} · ${s['kind']}', style: const TextStyle(color: Tone.copper, fontSize: 12.5)),
+                                Text(
+                                  '${s['country']} · ${s['kind']}',
+                                  style: const TextStyle(color: Tone.copper, fontSize: 12.5),
+                                ),
                                 const SizedBox(height: Space.m),
                                 Text(s['description'] as String),
                                 const SizedBox(height: Space.m),
@@ -846,8 +937,18 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
                                   spacing: Space.s,
                                   runSpacing: Space.s,
                                   children: [
-                                    PaperButton(label: 'Explore source', icon: Icons.north_east, compact: true, onPressed: () => _open(s['url'] as String)),
-                                    PaperButton(label: 'Public contact', icon: Icons.contact_page_outlined, compact: true, onPressed: () => _open(s['contact'] as String)),
+                                    PaperButton(
+                                      label: 'Explore source',
+                                      icon: Icons.north_east,
+                                      compact: true,
+                                      onPressed: () => _open(s['url'] as String),
+                                    ),
+                                    PaperButton(
+                                      label: 'Public contact',
+                                      icon: Icons.contact_page_outlined,
+                                      compact: true,
+                                      onPressed: () => _open(s['contact'] as String),
+                                    ),
                                   ],
                                 ),
                               ],
@@ -871,7 +972,8 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
                   3 => 'Make room for your favorites',
                   _ => 'No finds match this search',
                 },
-                message: 'Share a product from any app, paste a link, save a favorite, or try a broader search.',
+                message:
+                    'Share a product from any app, paste a link, save a favorite, or try a broader search.',
                 action: 'Add New Item',
                 onAction: _import,
               ),
@@ -937,13 +1039,16 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
                         label: 'Google Shopping',
                         icon: Icons.north_east,
                         compact: true,
-                        onPressed: () => _open(Uri.https('www.google.com', '/search', {'tbm': 'shop', 'q': _query}).toString()),
+                        onPressed: () => _open(
+                          Uri.https('www.google.com', '/search', {'tbm': 'shop', 'q': _query}).toString(),
+                        ),
                       ),
                       PaperButton(
                         label: 'Etsy',
                         icon: Icons.north_east,
                         compact: true,
-                        onPressed: () => _open(Uri.https('www.etsy.com', '/search', {'q': _query}).toString()),
+                        onPressed: () =>
+                            _open(Uri.https('www.etsy.com', '/search', {'q': _query}).toString()),
                       ),
                     ],
                   ),
@@ -964,13 +1069,21 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
       appBar: AppBar(
         toolbarHeight: 64,
         titleSpacing: gutter,
-        title: const Text('vastra.', style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800, letterSpacing: -1.4, color: Tone.ink)),
+        title: const Text(
+          'vastra.',
+          style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800, letterSpacing: -1.4, color: Tone.ink),
+        ),
         actions: [
           PaperIconButton(icon: Icons.ios_share, tooltip: 'Export catalog', onPressed: _export),
           const SizedBox(width: Space.s),
           PaperIconButton(icon: Icons.tune, tooltip: 'Settings', onPressed: _settings),
           const SizedBox(width: Space.m),
-          CopperButton(label: wide ? 'Add a product link' : 'Add link', icon: Icons.add, compact: true, onPressed: _import),
+          CopperButton(
+            label: wide ? 'Add a product link' : 'Add link',
+            icon: Icons.add,
+            compact: true,
+            onPressed: _import,
+          ),
           SizedBox(width: gutter),
         ],
       ),
@@ -986,7 +1099,11 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
                 ),
               ),
             if (wide) const Divider(height: 1, thickness: 2, color: Tone.copper),
-            Expanded(child: FadeThrough(child: KeyedSubtree(key: ValueKey(_tab), child: body))),
+            Expanded(
+              child: FadeThrough(
+                child: KeyedSubtree(key: ValueKey(_tab), child: body),
+              ),
+            ),
           ],
         ),
       ),
@@ -1021,8 +1138,18 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
                                     duration: Motion.medium,
                                     curve: Motion.ease,
                                     padding: const EdgeInsets.symmetric(horizontal: Space.l, vertical: 5),
-                                    decoration: i == _tab ? paperDecoration(surface: Surface.inset, radius: Radii.m, border: Tone.copper) : null,
-                                    child: Icon(_tabIcons[i], color: i == _tab ? Tone.copper : Tone.inkSoft, size: 22),
+                                    decoration: i == _tab
+                                        ? paperDecoration(
+                                            surface: Surface.inset,
+                                            radius: Radii.m,
+                                            border: Tone.copper,
+                                          )
+                                        : null,
+                                    child: Icon(
+                                      _tabIcons[i],
+                                      color: i == _tab ? Tone.copper : Tone.inkSoft,
+                                      size: 22,
+                                    ),
                                   ),
                                   const SizedBox(height: 3),
                                   Text(
@@ -1070,7 +1197,12 @@ class ProductPhoto extends StatelessWidget {
     );
     Widget fadeIn(Widget child, int? frame, bool sync) => sync
         ? child
-        : AnimatedOpacity(opacity: frame == null ? 0 : 1, duration: Motion.slow, curve: Motion.ease, child: child);
+        : AnimatedOpacity(
+            opacity: frame == null ? 0 : 1,
+            duration: Motion.slow,
+            curve: Motion.ease,
+            child: child,
+          );
     if (product.sample) {
       return Image.asset(
         'assets/images/${product.id}.jpg',
@@ -1107,8 +1239,10 @@ class ProductCard extends StatelessWidget {
   final VoidCallback onOpen, onSave, onCompare;
   @override
   Widget build(BuildContext context) {
-    final fresh = !product.sample &&
-        (DateTime.tryParse(product.checkedAt)?.isAfter(DateTime.now().subtract(const Duration(days: 7))) ?? false);
+    final fresh =
+        !product.sample &&
+        (DateTime.tryParse(product.checkedAt)?.isAfter(DateTime.now().subtract(const Duration(days: 7))) ??
+            false);
     return Pressable(
       onTap: onOpen,
       cue: Cue.open,
@@ -1132,7 +1266,9 @@ class ProductCard extends StatelessWidget {
                       top: Space.s,
                       left: 0,
                       child: RibbonBadge(
-                        product.sample ? 'Sample' : (fresh ? 'New' : (product.extraction == 'link' ? 'Link' : 'Yours')),
+                        product.sample
+                            ? 'Sample'
+                            : (fresh ? 'New' : (product.extraction == 'link' ? 'Link' : 'Yours')),
                         color: product.sample ? Tone.inkSoft : Tone.copper,
                       ),
                     ),
@@ -1238,7 +1374,12 @@ class SimilarStrip extends StatelessWidget {
                     child: ClipRRect(borderRadius: BorderRadius.circular(Radii.xs), child: ProductPhoto(p)),
                   ),
                   const SizedBox(height: Space.s),
-                  Text(p.name, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                  Text(
+                    p.name,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                  ),
                   Text(
                     p.displayOffer?.priceText ?? '',
                     maxLines: 1,
@@ -1284,9 +1425,13 @@ class _ProductDetailState extends State<_ProductDetail> {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(child: Text(label, style: const TextStyle(color: Tone.inkSoft, fontSize: 12.5))),
+              Expanded(
+                child: Text(label, style: const TextStyle(color: Tone.inkSoft, fontSize: 12.5)),
+              ),
               const SizedBox(width: Space.l),
-              Expanded(child: Text(value, textAlign: TextAlign.end, style: const TextStyle(fontSize: 12.5))),
+              Expanded(
+                child: Text(value, textAlign: TextAlign.end, style: const TextStyle(fontSize: 12.5)),
+              ),
             ],
           ),
         );
@@ -1315,7 +1460,12 @@ class _ProductDetailState extends State<_ProductDetail> {
                   Expanded(
                     child: Align(
                       alignment: Alignment.centerLeft,
-                      child: Breadcrumbs([p.category, ?p.productType, if (p.sourceCategory != null && p.sourceCategory!.length < 40) p.sourceCategory!.split(' > ').last]),
+                      child: Breadcrumbs([
+                        p.category,
+                        ?p.productType,
+                        if (p.sourceCategory != null && p.sourceCategory!.length < 40)
+                          p.sourceCategory!.split(' > ').last,
+                      ]),
                     ),
                   ),
                   PaperIconButton(icon: Icons.close, tooltip: 'Close product', onPressed: widget.close),
@@ -1366,9 +1516,20 @@ class _ProductDetailState extends State<_ProductDetail> {
                 ),
               ),
               const SizedBox(height: Space.xl),
-              Text(p.brand.toUpperCase(), style: const TextStyle(fontSize: 11.5, letterSpacing: 1.2, color: Tone.copper)),
+              Text(
+                p.brand.toUpperCase(),
+                style: const TextStyle(fontSize: 11.5, letterSpacing: 1.2, color: Tone.copper),
+              ),
               const SizedBox(height: Space.s),
-              Text(p.name, style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w700, letterSpacing: -0.4, height: 1.2)),
+              Text(
+                p.name,
+                style: const TextStyle(
+                  fontSize: 26,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: -0.4,
+                  height: 1.2,
+                ),
+              ),
               const SizedBox(height: Space.s),
               Row(
                 children: [
@@ -1379,7 +1540,10 @@ class _ProductDetailState extends State<_ProductDetail> {
                   if (p.rating != null) ...[
                     const SizedBox(width: Space.m),
                     const Icon(Icons.star_rounded, size: 18, color: Tone.copper),
-                    Text(' ${p.rating}${p.reviewCount == null ? '' : ' · ${p.reviewCount} reviews'}', style: const TextStyle(fontSize: 12.5)),
+                    Text(
+                      ' ${p.rating}${p.reviewCount == null ? '' : ' · ${p.reviewCount} reviews'}',
+                      style: const TextStyle(fontSize: 12.5),
+                    ),
                   ],
                 ],
               ),
@@ -1401,7 +1565,10 @@ class _ProductDetailState extends State<_ProductDetail> {
               _fact('Barcode (GTIN)', p.gtin),
               _fact('Maker part number', p.mpn),
               _fact('Shipping, taxes and duties', 'Not included — confirm at checkout'),
-              _fact('Quality evidence', p.sample ? 'Illustrative sample only' : 'Seller-provided; not independently verified'),
+              _fact(
+                'Quality evidence',
+                p.sample ? 'Illustrative sample only' : 'Seller-provided; not independently verified',
+              ),
               if (p.variants.isNotEmpty) ...[
                 const SizedBox(height: Space.l),
                 const SectionHeader('Variants'),
@@ -1415,7 +1582,11 @@ class _ProductDetailState extends State<_ProductDetail> {
                       dataRowMinHeight: 34,
                       dataRowMaxHeight: 40,
                       headingRowColor: const WidgetStatePropertyAll(Tone.paperHigh),
-                      headingTextStyle: const TextStyle(fontWeight: FontWeight.w600, color: Tone.ink, fontSize: 12.5),
+                      headingTextStyle: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: Tone.ink,
+                        fontSize: 12.5,
+                      ),
                       dataTextStyle: const TextStyle(fontSize: 12.5, color: Tone.ink),
                       columns: const [
                         DataColumn(label: Text('Size')),
@@ -1430,7 +1601,18 @@ class _ProductDetailState extends State<_ProductDetail> {
                             cells: [
                               DataCell(Text(v.size ?? '—')),
                               DataCell(Text(v.color ?? '—')),
-                              DataCell(Text(v.price == null ? '—' : Offer(seller: '', url: '', price: v.price, currency: v.currency).priceText)),
+                              DataCell(
+                                Text(
+                                  v.price == null
+                                      ? '—'
+                                      : Offer(
+                                          seller: '',
+                                          url: '',
+                                          price: v.price,
+                                          currency: v.currency,
+                                        ).priceText,
+                                ),
+                              ),
                               DataCell(Text(v.availability ?? '—')),
                               DataCell(Text(v.sku ?? '—')),
                             ],
@@ -1455,11 +1637,19 @@ class _ProductDetailState extends State<_ProductDetail> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(o.priceText, style: const TextStyle(fontWeight: FontWeight.w600)),
-                              Text('${o.seller} · ${o.availability}', style: const TextStyle(fontSize: 12.5, color: Tone.inkSoft)),
+                              Text(
+                                '${o.seller} · ${o.availability}',
+                                style: const TextStyle(fontSize: 12.5, color: Tone.inkSoft),
+                              ),
                             ],
                           ),
                         ),
-                        if (o.url.isNotEmpty) PaperIconButton(icon: Icons.north_east, tooltip: 'View original offer', onPressed: () => home._open(o.url)),
+                        if (o.url.isNotEmpty)
+                          PaperIconButton(
+                            icon: Icons.north_east,
+                            tooltip: 'View original offer',
+                            onPressed: () => home._open(o.url),
+                          ),
                       ],
                     ),
                   ),
@@ -1512,7 +1702,12 @@ class _ProductDetailState extends State<_ProductDetail> {
               const SizedBox(height: Space.xl),
               const SectionHeader('Keep it'),
               const SizedBox(height: Space.m),
-              PaperField(controller: _collection, label: 'Collection name', enabled: saved == null, maxLength: 60),
+              PaperField(
+                controller: _collection,
+                label: 'Collection name',
+                enabled: saved == null,
+                maxLength: 60,
+              ),
               const SizedBox(height: Space.m),
               Wrap(
                 spacing: Space.s,
@@ -1552,18 +1747,35 @@ class _ProductDetailState extends State<_ProductDetail> {
                 ),
               ],
               const SizedBox(height: Space.l),
-              Text('Find similar elsewhere: ${Recommender.searchQuery(p)}', style: const TextStyle(fontSize: 12.5, color: Tone.inkSoft)),
+              Text(
+                'Find similar elsewhere: ${Recommender.searchQuery(p)}',
+                style: const TextStyle(fontSize: 12.5, color: Tone.inkSoft),
+              ),
               const SizedBox(height: Space.s),
               Wrap(
                 spacing: Space.s,
                 runSpacing: Space.s,
                 children: [
                   for (final (label, uri) in [
-                    ('Google Shopping', Uri.https('www.google.com', '/search', {'tbm': 'shop', 'q': Recommender.searchQuery(p)})),
-                    ('Pinterest', Uri.https('www.pinterest.com', '/search/pins/', {'q': Recommender.searchQuery(p)})),
+                    (
+                      'Google Shopping',
+                      Uri.https('www.google.com', '/search', {
+                        'tbm': 'shop',
+                        'q': Recommender.searchQuery(p),
+                      }),
+                    ),
+                    (
+                      'Pinterest',
+                      Uri.https('www.pinterest.com', '/search/pins/', {'q': Recommender.searchQuery(p)}),
+                    ),
                     ('Etsy', Uri.https('www.etsy.com', '/search', {'q': Recommender.searchQuery(p)})),
                   ])
-                    PaperButton(label: label, icon: Icons.north_east, compact: true, onPressed: () => home._open(uri.toString())),
+                    PaperButton(
+                      label: label,
+                      icon: Icons.north_east,
+                      compact: true,
+                      onPressed: () => home._open(uri.toString()),
+                    ),
                 ],
               ),
               if (!p.sample) ...[
@@ -1572,7 +1784,12 @@ class _ProductDetailState extends State<_ProductDetail> {
                   spacing: Space.s,
                   runSpacing: Space.s,
                   children: [
-                    PaperButton(label: 'Original product', icon: Icons.open_in_new, compact: true, onPressed: () => home._open(p.sourceUrl)),
+                    PaperButton(
+                      label: 'Original product',
+                      icon: Icons.open_in_new,
+                      compact: true,
+                      onPressed: () => home._open(p.sourceUrl),
+                    ),
                     PaperButton(
                       label: 'Copy link',
                       icon: Icons.copy,
@@ -1592,7 +1809,12 @@ class _ProductDetailState extends State<_ProductDetail> {
                         home._import(p.sourceUrl);
                       },
                     ),
-                    PaperButton(label: 'Remove', icon: Icons.delete_outline, compact: true, onPressed: () => home._remove(p, context)),
+                    PaperButton(
+                      label: 'Remove',
+                      icon: Icons.delete_outline,
+                      compact: true,
+                      onPressed: () => home._remove(p, context),
+                    ),
                   ],
                 ),
               ],
@@ -1611,7 +1833,13 @@ class _ProductDetailState extends State<_ProductDetail> {
 
 /// Fetches a shared or pasted link, showing each step as it happens.
 class ImportSheet extends StatefulWidget {
-  const ImportSheet({super.key, required this.importer, required this.repository, this.initial = '', this.auto = false});
+  const ImportSheet({
+    super.key,
+    required this.importer,
+    required this.repository,
+    this.initial = '',
+    this.auto = false,
+  });
   final ProductImporter importer;
   final CatalogRepository repository;
   final String initial;
@@ -1629,7 +1857,9 @@ class _ImportSheetState extends State<ImportSheet> {
   @override
   void initState() {
     super.initState();
-    if (widget.auto && widget.initial.isNotEmpty) WidgetsBinding.instance.addPostFrameCallback((_) => _submit());
+    if (widget.auto && widget.initial.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _submit());
+    }
   }
 
   @override
@@ -1662,7 +1892,9 @@ class _ImportSheetState extends State<ImportSheet> {
     } on ImportFailure catch (error) {
       if (mounted) setState(() => _error = error.message);
     } on Object {
-      if (mounted) setState(() => _error = 'The product could not be saved. Your existing catalog has not been reset.');
+      if (mounted) {
+        setState(() => _error = 'The product could not be saved. Your existing catalog has not been reset.');
+      }
     } finally {
       if (mounted) {
         if (_error != null) FeedbackScope.of(context).play(Cue.error);
@@ -1683,7 +1915,10 @@ class _ImportSheetState extends State<ImportSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text('A link to your next good find.', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600)),
+            const Text(
+              'A link to your next good find.',
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600),
+            ),
             const SizedBox(height: Space.s),
             const Text(
               'Paste or share a product from any store or app. Vastra gathers its details, files it in the right category and keeps it on this device. Importing a link again refreshes it.',
@@ -1748,7 +1983,12 @@ class _ImportSheetState extends State<ImportSheet> {
               runSpacing: Space.s,
               children: [
                 PaperButton(label: 'Cancel', onPressed: _busy ? null : () => Navigator.pop(context)),
-                CopperButton(label: _busy ? 'Importing' : 'Import product', icon: Icons.add_link, busy: _busy, onPressed: _submit),
+                CopperButton(
+                  label: _busy ? 'Importing' : 'Import product',
+                  icon: Icons.add_link,
+                  busy: _busy,
+                  onPressed: _submit,
+                ),
               ],
             ),
           ],
@@ -1812,7 +2052,10 @@ class _ExportSheetState extends State<ExportSheet> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Text('Take your catalog anywhere.', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600)),
+          const Text(
+            'Take your catalog anywhere.',
+            style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600),
+          ),
           const SizedBox(height: Space.s),
           const Text(
             'Every detail Vastra gathered, in formats stores and catalogs import directly. Nothing is uploaded; you choose where the file goes.',
@@ -1820,7 +2063,10 @@ class _ExportSheetState extends State<ExportSheet> {
           ),
           const SizedBox(height: Space.xl),
           if (widget.products.isEmpty)
-            const EmptyState(title: 'No Items Found', message: 'Import or share a product first. Samples are not exported.')
+            const EmptyState(
+              title: 'No Items Found',
+              message: 'Import or share a product first. Samples are not exported.',
+            )
           else ...[
             const SectionHeader('Format'),
             RadioGroup<ExportFormat>(

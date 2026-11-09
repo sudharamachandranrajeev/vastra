@@ -51,14 +51,12 @@ class UiFeedback extends ChangeNotifier {
   Future<void> play(Cue cue) async {
     if (!_enabled) return;
     if (_haptics) {
-      unawaited(
-        switch (cue) {
-          Cue.success => HapticFeedback.mediumImpact(),
-          Cue.error => HapticFeedback.heavyImpact(),
-          Cue.toggle => HapticFeedback.selectionClick(),
-          _ => HapticFeedback.lightImpact(),
-        },
-      );
+      unawaited(switch (cue) {
+        Cue.success => HapticFeedback.mediumImpact(),
+        Cue.error => HapticFeedback.heavyImpact(),
+        Cue.toggle => HapticFeedback.selectionClick(),
+        _ => HapticFeedback.lightImpact(),
+      });
     }
     if (!_sound) return;
     try {

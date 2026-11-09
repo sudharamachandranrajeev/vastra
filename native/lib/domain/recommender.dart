@@ -59,7 +59,11 @@ class Recommender {
     if (a.color != null && a.color!.toLowerCase() == b.color?.toLowerCase()) score += 0.05;
     if (a.brand == b.brand) score += 0.05;
     final pa = a.displayOffer, pb = b.displayOffer;
-    if (pa?.price != null && pb?.price != null && pa!.currency == pb!.currency && pa.price! > 0 && pb.price! > 0) {
+    if (pa?.price != null &&
+        pb?.price != null &&
+        pa!.currency == pb!.currency &&
+        pa.price! > 0 &&
+        pb.price! > 0) {
       // Within the same price band; halving or doubling costs the whole bonus.
       score += 0.1 * math.max(0, 1 - (math.log(pa.price! / pb.price!) / math.ln2).abs());
     }
@@ -81,8 +85,7 @@ class Recommender {
     if (likedIds.isEmpty) return [];
     final scored = [
       for (final p in products)
-        if (!likedIds.contains(p.id))
-          (p, liked.map((l) => similarity(l, p)).fold(0.0, math.max)),
+        if (!likedIds.contains(p.id)) (p, liked.map((l) => similarity(l, p)).fold(0.0, math.max)),
     ]..sort((a, b) => b.$2.compareTo(a.$2));
     return scored.where((s) => s.$2 > 0.12).take(limit).map((s) => s.$1).toList();
   }

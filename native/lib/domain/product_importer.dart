@@ -22,10 +22,7 @@ class ImportFailure implements Exception {
 String? sharedLink(String text) {
   final match =
       RegExp(r'https?://[^\s<>"]+', caseSensitive: false).firstMatch(text) ??
-      RegExp(
-        r'\b(?:[a-z0-9-]+\.)+[a-z]{2,}/[^\s<>"]*',
-        caseSensitive: false,
-      ).firstMatch(text);
+      RegExp(r'\b(?:[a-z0-9-]+\.)+[a-z]{2,}/[^\s<>"]*', caseSensitive: false).firstMatch(text);
   if (match == null) return null;
   final link = match.group(0)!.replaceFirst(RegExp(r'''[).,;:!?'\]]+$'''), '');
   return link.contains('://') ? link : 'https://$link';
@@ -48,7 +45,9 @@ class ProductImporter {
   /// HTTP is upgraded, because every app shares links differently.
   Uri validate(String value) {
     final link = sharedLink(value);
-    final uri = link == null ? null : Uri.tryParse(link.replaceFirst(RegExp(r'^http://', caseSensitive: false), 'https://'));
+    final uri = link == null
+        ? null
+        : Uri.tryParse(link.replaceFirst(RegExp(r'^http://', caseSensitive: false), 'https://'));
     if (value.length > 4096 ||
         uri == null ||
         uri.scheme != 'https' ||
@@ -58,7 +57,8 @@ class ProductImporter {
         !publicHost(uri.host)) {
       throw const ImportFailure('Share or paste a link to a product page on a public website.');
     }
-    final query = Map<String, dynamic>.from(uri.queryParametersAll)..removeWhere((key, _) => _tracking.hasMatch(key));
+    final query = Map<String, dynamic>.from(uri.queryParametersAll)
+      ..removeWhere((key, _) => _tracking.hasMatch(key));
     return Uri.parse(
       '${uri.removeFragment().toString().split('?').first}${query.isEmpty ? '' : '?${Uri(queryParameters: query).query}'}',
     );
@@ -71,7 +71,10 @@ class ProductImporter {
   Future<Product> fetch(String value) async {
     final source = validate(value);
     // Apps often share "Product name - Store https://…"; the words name the find.
-    final hint = _text(value.replaceFirst(sharedLink(value) ?? '', '').replaceAll(RegExp(r'https?://\S+'), ''), 250);
+    final hint = _text(
+      value.replaceFirst(sharedLink(value) ?? '', '').replaceAll(RegExp(r'https?://\S+'), ''),
+      250,
+    );
     final client = _clientFactory();
     try {
       final (page, uri) = await _page(client, source).timeout(
@@ -148,7 +151,10 @@ class ProductImporter {
 /// address literal or a local network name.
 bool publicHost(String host) =>
     RegExp(r'^(?:[a-z0-9-]+\.)+[a-z]{2,}$', caseSensitive: false).hasMatch(host) &&
-    !RegExp(r'(?:^|\.)(localhost|local|internal|lan|home|test|invalid|example)$', caseSensitive: false).hasMatch(host);
+    !RegExp(
+      r'(?:^|\.)(localhost|local|internal|lan|home|test|invalid|example)$',
+      caseSensitive: false,
+    ).hasMatch(host);
 
 typedef Json = Map<String, dynamic>;
 Json _object(dynamic value) => value is Map ? Map<String, dynamic>.from(value) : {};
@@ -169,8 +175,9 @@ String? _optional(dynamic value, [int limit = 200]) {
   return text.isEmpty ? null : text;
 }
 
-bool _typed(Json node, List<String> types) =>
-    _list(node['@type']).any((t) => types.any((type) => t == type || t == 'https://schema.org/$type' || t == 'http://schema.org/$type'));
+bool _typed(Json node, List<String> types) => _list(node['@type']).any(
+  (t) => types.any((type) => t == type || t == 'https://schema.org/$type' || t == 'http://schema.org/$type'),
+);
 
 List<Json> _nodes(dynamic value, List<String> types, [int depth = 0]) {
   if (depth > 12) return [];
@@ -184,7 +191,10 @@ String? safeImage(dynamic value, Uri source) {
   if (value is! String || value.length > 4096) return null;
   try {
     final uri = source.resolve(value.startsWith('//') ? 'https:$value' : value);
-    if (uri.scheme != 'https' || uri.userInfo.isNotEmpty || (uri.hasPort && uri.port != 443) || !publicHost(uri.host)) {
+    if (uri.scheme != 'https' ||
+        uri.userInfo.isNotEmpty ||
+        (uri.hasPort && uri.port != 443) ||
+        !publicHost(uri.host)) {
       return null;
     }
     return uri.toString();
@@ -199,7 +209,8 @@ String inferCategory(String value) => Categorizer().classify(name: value).catego
 class _Page {
   _Page(String markup) : document = html.parse(markup) {
     for (final element in document.querySelectorAll('meta')) {
-      final key = element.attributes['property'] ?? element.attributes['name'] ?? element.attributes['itemprop'];
+      final key =
+          element.attributes['property'] ?? element.attributes['name'] ?? element.attributes['itemprop'];
       if (key != null) metadata.putIfAbsent(key.toLowerCase(), () => element.attributes['content'] ?? '');
     }
     for (final script in document.querySelectorAll('script[type="application/ld+json"]')) {
@@ -310,8 +321,7 @@ Product extractProduct(String markup, Uri source, {Categorizer? categorizer}) {
     return RegExp(r'^[A-Z]{3}$').hasMatch(code) ? code : null;
   }
 
-  String availability(dynamic value) =>
-      _text(value, 100).replaceFirst(RegExp(r'^https?://schema.org/'), '');
+  String availability(dynamic value) => _text(value, 100).replaceFirst(RegExp(r'^https?://schema.org/'), '');
   String? gtin(Json n) => [
     for (final key in ['gtin', 'gtin13', 'gtin12', 'gtin14', 'gtin8', 'isbn']) _text(n[key], 20),
   ].firstWhere((g) => RegExp(r'^\d{8,14}$').hasMatch(g), orElse: () => '').nonEmpty;
@@ -329,8 +339,12 @@ Product extractProduct(String markup, Uri source, {Categorizer? categorizer}) {
         return Offer(
           seller: seller.isEmpty ? host : seller,
           url: source.toString(),
-          price: amount(o['price']) ?? amount(o['lowPrice']) ?? amount(_object(o['priceSpecification'])['price']),
-          currency: currency(o['priceCurrency']) ?? currency(_object(o['priceSpecification'])['priceCurrency']),
+          price:
+              amount(o['price']) ??
+              amount(o['lowPrice']) ??
+              amount(_object(o['priceSpecification'])['price']),
+          currency:
+              currency(o['priceCurrency']) ?? currency(_object(o['priceSpecification'])['priceCurrency']),
           availability: stock.isEmpty ? 'Unknown' : stock,
         );
       })
@@ -346,24 +360,23 @@ Product extractProduct(String markup, Uri source, {Categorizer? categorizer}) {
       ),
     );
   }
-  final variantList = _list(node['hasVariant'])
-      .map(_object)
-      .take(100)
-      .map((v) {
-        final offer = _object(_list(v['offers']).firstOrNull);
-        final stock = availability(offer['availability']);
-        return Variant(
-          sku: _optional(v['sku'], 80),
-          gtin: gtin(v),
-          size: _optional(v['size'], 50),
-          color: _optional(v['color'], 80),
-          price: amount(offer['price']),
-          currency: currency(offer['priceCurrency']),
-          availability: stock.isEmpty ? null : stock,
-          image: _list(v['image']).map((i) => safeImage(i is String ? i : _object(i)['url'], source)).nonNulls.firstOrNull,
-        );
-      })
-      .toList();
+  final variantList = _list(node['hasVariant']).map(_object).take(100).map((v) {
+    final offer = _object(_list(v['offers']).firstOrNull);
+    final stock = availability(offer['availability']);
+    return Variant(
+      sku: _optional(v['sku'], 80),
+      gtin: gtin(v),
+      size: _optional(v['size'], 50),
+      color: _optional(v['color'], 80),
+      price: amount(offer['price']),
+      currency: currency(offer['priceCurrency']),
+      availability: stock.isEmpty ? null : stock,
+      image: _list(v['image'])
+          .map((i) => safeImage(i is String ? i : _object(i)['url'], source))
+          .nonNulls
+          .firstOrNull,
+    );
+  }).toList();
   final images = [
     ..._list(node['image']).map((v) => v is String ? v : _object(v)['url'] ?? _object(v)['contentUrl']),
     metadata['og:image'],
@@ -383,7 +396,10 @@ Product extractProduct(String markup, Uri source, {Categorizer? categorizer}) {
   final audience = _object(node['audience']);
   final rating = _object(node['aggregateRating']);
   final sourceCategory = [
-    _list(node['category']).map((c) => _text(c is String ? c : _object(c)['name'], 200)).where((c) => c.isNotEmpty).join(' > '),
+    _list(node['category'])
+        .map((c) => _text(c is String ? c : _object(c)['name'], 200))
+        .where((c) => c.isNotEmpty)
+        .join(' > '),
     page.breadcrumb(name) ?? '',
     _text(metadata['product:category'], 200),
   ].firstWhere((s) => s.isNotEmpty, orElse: () => '');
@@ -437,8 +453,18 @@ Product linkProduct(Uri source, {String? page, String? note, String hint = '', C
   final host = source.host.replaceFirst(RegExp(r'^www\.'), '');
   // "/products/linen-wrap-dress-123" names the product when the page would not.
   final slug = source.pathSegments.reversed
-      .map((s) => Uri.decodeComponent(s).replaceAll(RegExp(r'[-_+]+'), ' ').replaceAll(RegExp(r'\.\w+$'), '').trim())
-      .firstWhere((s) => RegExp(r'[a-zA-Z]{3}').hasMatch(s) && !RegExp(r'^(p|dp|product|products|item|itm)$').hasMatch(s), orElse: () => '');
+      .map(
+        (s) =>
+            Uri.decodeComponent(s)
+                .replaceAll(RegExp(r'[-_+]+'), ' ')
+                .replaceAll(RegExp(r'\.\w+$'), '')
+                .trim(),
+      )
+      .firstWhere(
+        (s) =>
+            RegExp(r'[a-zA-Z]{3}').hasMatch(s) && !RegExp(r'^(p|dp|product|products|item|itm)$').hasMatch(s),
+        orElse: () => '',
+      );
   final name = [
     _text(parsed?.meta(['og:title', 'twitter:title']), 250),
     _text(parsed?.document.querySelector('title')?.text, 250),

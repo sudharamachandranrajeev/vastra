@@ -58,11 +58,26 @@ void main() {
           'audience': {'@type': 'PeopleAudience', 'suggestedGender': 'female'},
           'aggregateRating': {'ratingValue': 4.6, 'reviewCount': 212},
           'keywords': 'summer, linen, wrap',
-          'image': ['https://cdn.store.com/a.jpg', {'url': 'https://cdn.store.com/b.jpg'}],
+          'image': [
+            'https://cdn.store.com/a.jpg',
+            {'url': 'https://cdn.store.com/b.jpg'},
+          ],
           'offers': {'@type': 'AggregateOffer', 'lowPrice': '89', 'priceCurrency': 'GBP'},
           'hasVariant': [
-            {'sku': 'LW-1-S', 'size': 'S', 'offers': {'price': '89', 'priceCurrency': 'GBP', 'availability': 'https://schema.org/InStock'}},
-            {'sku': 'LW-1-M', 'size': 'M', 'offers': {'price': '89', 'priceCurrency': 'GBP', 'availability': 'https://schema.org/OutOfStock'}},
+            {
+              'sku': 'LW-1-S',
+              'size': 'S',
+              'offers': {'price': '89', 'priceCurrency': 'GBP', 'availability': 'https://schema.org/InStock'},
+            },
+            {
+              'sku': 'LW-1-M',
+              'size': 'M',
+              'offers': {
+                'price': '89',
+                'priceCurrency': 'GBP',
+                'availability': 'https://schema.org/OutOfStock',
+              },
+            },
           ],
         },
         '<script type="application/ld+json">${jsonEncode({
@@ -79,12 +94,18 @@ void main() {
     expect(p.category, 'Clothing');
     expect(p.productType, 'Dresses', reason: 'the breadcrumb names the type when the title does not');
     expect(p.sourceCategory, 'Women > Dresses');
-    expect([p.sku, p.gtin, p.mpn, p.color, p.pattern, p.gender, p.condition], ['LW-1', '5012345678900', 'M-77', 'Sage', 'Solid', 'female', 'New']);
+    expect(
+      [p.sku, p.gtin, p.mpn, p.color, p.pattern, p.gender, p.condition],
+      ['LW-1', '5012345678900', 'M-77', 'Sage', 'Solid', 'female', 'New'],
+    );
     expect([p.rating, p.reviewCount], [4.6, 212]);
     expect(p.tags, ['summer', 'linen', 'wrap']);
     expect(p.images, ['https://cdn.store.com/a.jpg', 'https://cdn.store.com/b.jpg']);
     expect(p.offers.single.price, 89);
-    expect(p.variants.map((v) => '${v.size} ${v.sku} ${v.availability}'), ['S LW-1-S InStock', 'M LW-1-M OutOfStock']);
+    expect(p.variants.map((v) => '${v.size} ${v.sku} ${v.availability}'), [
+      'S LW-1-S InStock',
+      'M LW-1-M OutOfStock',
+    ]);
     expect(p.sizes, ['S', 'M']);
   });
   test('crossbody bags and spring shirts are classified correctly', () {
@@ -93,14 +114,25 @@ void main() {
   });
   test('shared text from any app yields its link, without trackers', () {
     expect(sharedLink('Look at this! https://store.com/p/1). Via @store'), 'https://store.com/p/1');
-    expect(sharedLink('Linen dress store.co.uk/p/linen-dress?ref=app'), 'https://store.co.uk/p/linen-dress?ref=app');
+    expect(
+      sharedLink('Linen dress store.co.uk/p/linen-dress?ref=app'),
+      'https://store.co.uk/p/linen-dress?ref=app',
+    );
     expect(sharedLink('No link here'), isNull);
     expect(
       importer.validate('Dress https://www.zalando.co.uk/p.html?size=9&utm_source=app&igsh=x#top').toString(),
       'https://www.zalando.co.uk/p.html?size=9',
     );
-    expect(importer.validate('http://shop.example-store.com/a').scheme, 'https', reason: 'plain HTTP is upgraded');
-    expect(importer.validate('https://evil.nike.com/a').host, 'evil.nike.com', reason: 'any public store is accepted');
+    expect(
+      importer.validate('http://shop.example-store.com/a').scheme,
+      'https',
+      reason: 'plain HTTP is upgraded',
+    );
+    expect(
+      importer.validate('https://evil.nike.com/a').host,
+      'evil.nike.com',
+      reason: 'any public store is accepted',
+    );
   });
   test('URL policy rejects private addresses, local names, credentials and schemes', () {
     for (final value in [
@@ -139,20 +171,26 @@ void main() {
     expect(p.name, 'Wool runner');
   });
   test('native fetch parses real HTML response', () async {
-    final client = MockClient((_) async => http.Response(page(node), 200, headers: {'content-type': 'text/html'}));
-    expect((await ProductImporter(clientFactory: () => client).fetch(source.toString())).offers.single.currency, 'USD');
+    final client = MockClient(
+      (_) async => http.Response(page(node), 200, headers: {'content-type': 'text/html'}),
+    );
+    expect(
+      (await ProductImporter(clientFactory: () => client).fetch(source.toString())).offers.single.currency,
+      'USD',
+    );
   });
   test('blocked, oversized and non-product pages still save the find from what was shared', () async {
     final blocked = MockClient((_) async => http.Response('Forbidden', 403));
-    final saved = await ProductImporter(clientFactory: () => blocked).fetch(
-      'Organic cotton hoodie - Store https://shop.store.com/products/organic-cotton-hoodie',
-    );
+    final saved = await ProductImporter(clientFactory: () => blocked)
+        .fetch('Organic cotton hoodie - Store https://shop.store.com/products/organic-cotton-hoodie');
     expect(saved.extraction, 'link');
     expect(saved.name, 'Organic cotton hoodie - Store');
     expect(saved.productType, 'Knitwear');
     expect(saved.description, contains('403'));
 
-    final huge = MockClient((_) async => http.Response('x' * 4000001, 200, headers: {'content-type': 'text/html'}));
+    final huge = MockClient(
+      (_) async => http.Response('x' * 4000001, 200, headers: {'content-type': 'text/html'}),
+    );
     expect((await ProductImporter(clientFactory: () => huge).fetch(source.toString())).extraction, 'link');
 
     final plain = MockClient(
@@ -164,7 +202,10 @@ void main() {
       ),
     );
     final scarf = await ProductImporter(clientFactory: () => plain).fetch(source.toString());
-    expect([scarf.name, scarf.category, scarf.images.single], ['Silk scarf in ivory', 'Accessories', 'https://cdn.store.com/scarf.jpg']);
+    expect(
+      [scarf.name, scarf.category, scarf.images.single],
+      ['Silk scarf in ivory', 'Accessories', 'https://cdn.store.com/scarf.jpg'],
+    );
     expect(() => extractProduct('<html><title>Home</title></html>', source), throwsA(isA<ImportFailure>()));
   });
   test('the URL slug names a find when the store shares nothing', () {

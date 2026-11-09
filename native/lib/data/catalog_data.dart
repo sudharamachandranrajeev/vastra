@@ -5,11 +5,7 @@ import 'package:flutter/services.dart';
 import '../domain/product.dart';
 
 class CatalogData {
-  CatalogData({
-    required this.samples,
-    required this.sellers,
-    required this.categories,
-  });
+  CatalogData({required this.samples, required this.sellers, required this.categories});
   final List<Product> samples;
   final List<Map<String, dynamic>> sellers;
   final List<String> categories;
