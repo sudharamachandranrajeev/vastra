@@ -1063,7 +1063,7 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
                       label: 'Source code and roadmap',
                       icon: Icons.north_east,
                       compact: true,
-                      onPressed: () => _open('https://github.com/sudharamachandranrajeev/vastra'),
+                      onPressed: () => _open('https://github.com/sudharamachandranrajeev/vastra-fashion-finds'),
                     ),
                     PaperButton(
                       label: 'Licences',

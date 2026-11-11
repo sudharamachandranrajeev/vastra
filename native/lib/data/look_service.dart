@@ -126,7 +126,7 @@ class LookService {
       final request = http.Request('GET', uri)..followRedirects = false;
       request.headers.addAll({
         'Accept': 'image/*',
-        'User-Agent': 'Vastra/0.10 (+https://github.com/sudharamachandranrajeev/vastra)',
+        'User-Agent': 'Vastra/0.10 (+https://github.com/sudharamachandranrajeev/vastra-fashion-finds)',
       });
       final response = await client.send(request).timeout(const Duration(seconds: 10));
       if ([301, 302, 303, 307, 308].contains(response.statusCode)) {

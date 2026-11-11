@@ -4,7 +4,7 @@ pkgver=@VERSION@
 pkgrel=1
 pkgdesc='Standalone fashion and personal-care discovery'
 arch=('x86_64')
-url='https://github.com/sudharamachandranrajeev/vastra'
+url='https://github.com/sudharamachandranrajeev/vastra-fashion-finds'
 license=('custom:All rights reserved')
 depends=('gtk3' 'gcc-libs' 'libglvnd' 'gstreamer' 'gst-plugins-base-libs' 'webkit2gtk-4.1')
 optdepends=('tesseract: read product details from screenshots'
@@ -12,7 +12,7 @@ optdepends=('tesseract: read product details from screenshots'
 provides=('vastra')
 conflicts=('vastra')
 options=('!strip')
-source=("Vastra-${pkgver}-linux-x64.tar.gz::https://github.com/sudharamachandranrajeev/vastra/releases/download/v${pkgver}/Vastra-${pkgver}-linux-x64.tar.gz")
+source=("Vastra-${pkgver}-linux-x64.tar.gz::https://github.com/sudharamachandranrajeev/vastra-fashion-finds/releases/download/v${pkgver}/Vastra-${pkgver}-linux-x64.tar.gz")
 sha256sums=('@SHA256@')
 package() {
   local app="$srcdir/vastra-$pkgver-linux-x64"

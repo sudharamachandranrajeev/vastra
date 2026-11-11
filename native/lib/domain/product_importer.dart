@@ -107,7 +107,7 @@ class ProductImporter {
       request.headers.addAll({
         'Accept': 'text/html,application/xhtml+xml',
         'Accept-Language': 'en',
-        'User-Agent': 'Vastra/0.10 (+https://github.com/sudharamachandranrajeev/vastra)',
+        'User-Agent': 'Vastra/0.10 (+https://github.com/sudharamachandranrajeev/vastra-fashion-finds)',
       });
       final response = await client.send(request);
       if ([301, 302, 303, 307, 308].contains(response.statusCode)) {

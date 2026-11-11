@@ -1,6 +1,6 @@
 <h1 align="center">
   <br>
-  <a href="https://github.com/sudharamachandranrajeev/vastra"><img src="branding/vastra-512.png" alt="Vastra" width="140"></a>
+  <a href="https://github.com/sudharamachandranrajeev/vastra-fashion-finds"><img src="branding/vastra-512.png" alt="Vastra" width="140"></a>
   <br>
   Vastra
   <br>
@@ -9,10 +9,10 @@
 <h4 align="center">Keep the clothes, shoes and beauty products you like in one place, and compare them side by side.</h4>
 
 <p align="center">
-  <a href="https://github.com/sudharamachandranrajeev/vastra/releases"><img src="https://img.shields.io/github/v/release/sudharamachandranrajeev/vastra?include_prereleases&color=a0522d&label=download" alt="Latest release"></a>
+  <a href="https://github.com/sudharamachandranrajeev/vastra-fashion-finds/releases"><img src="https://img.shields.io/github/v/release/sudharamachandranrajeev/vastra-fashion-finds?include_prereleases&color=a0522d&label=download" alt="Latest release"></a>
   <img src="https://img.shields.io/badge/works%20on-Android%20%7C%20Windows%20%7C%20Linux-555" alt="Works on Android, Windows and Linux">
   <img src="https://img.shields.io/badge/account-not%20needed-697854" alt="No account needed">
-  <a href="https://github.com/sudharamachandranrajeev/brahma"><img src="https://img.shields.io/badge/part%20of-Brahma-8a5cf6" alt="Part of Brahma"></a>
+  <a href="https://github.com/sudharamachandranrajeev/brahma-life-suite"><img src="https://img.shields.io/badge/part%20of-Brahma-8a5cf6" alt="Part of Brahma"></a>
 </p>
 
 <p align="center">
@@ -296,7 +296,7 @@ need Clang, CMake, Ninja, pkg-config, GTK 3, GStreamer and WebKitGTK 4.1 develop
 and liblzma.
 
 ```bash
-git clone https://github.com/sudharamachandranrajeev/vastra
+git clone https://github.com/sudharamachandranrajeev/vastra-fashion-finds
 cd vastra/native
 flutter pub get --enforce-lockfile
 flutter run -d linux        # or windows, or an Android device
@@ -333,18 +333,18 @@ VASTRA_SHOTS=/tmp/vastra-shots flutter test test/screenshots_test.dart   # rende
 
 ## Related
 
-Vastra runs on its own, and the [Brahma](https://github.com/sudharamachandranrajeev/brahma) app
+Vastra runs on its own, and the [Brahma](https://github.com/sudharamachandranrajeev/brahma-life-suite) app
 links to it from its home screen. The Brahma family:
 
 | App | What it does |
 | --- | --- |
-| [brahma](https://github.com/sudharamachandranrajeev/brahma) | The shared core and the all-in-one app |
-| [artha](https://github.com/sudharamachandranrajeev/artha) | Money: accounts, spending, bills and investments |
-| [graha-anveshana](https://github.com/sudharamachandranrajeev/graha-anveshana) | Find a home to rent or buy |
-| [vahana-anveshana](https://github.com/sudharamachandranrajeev/vahana-anveshana) | Find a car |
-| [udyoga](https://github.com/sudharamachandranrajeev/udyoga) | Career and job hunting |
-| [vidya](https://github.com/sudharamachandranrajeev/vidya) | Learning, flashcards and focus |
-| [bhojana](https://github.com/sudharamachandranrajeev/bhojana) | Shopping lists priced across UK shops |
+| [brahma](https://github.com/sudharamachandranrajeev/brahma-life-suite) | The shared core and the all-in-one app |
+| [artha](https://github.com/sudharamachandranrajeev/artha-personal-finance) | Money: accounts, spending, bills and investments |
+| [graha-anveshana](https://github.com/sudharamachandranrajeev/graha-anveshana-property-search) | Find a home to rent or buy |
+| [vahana-anveshana](https://github.com/sudharamachandranrajeev/vahana-anveshana-car-manager) | Find a car |
+| [udyoga](https://github.com/sudharamachandranrajeev/udyoga-career-manager) | Career and job hunting |
+| [vidya](https://github.com/sudharamachandranrajeev/vidya-learning-manager) | Learning, flashcards and focus |
+| [bhojana](https://github.com/sudharamachandranrajeev/bhojana-grocery-shopping) | Shopping lists priced across UK shops |
 
 ## License
 

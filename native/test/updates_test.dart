@@ -17,7 +17,7 @@ import 'package:vastra/domain/product.dart';
 import 'package:vastra/domain/releases.dart';
 import 'package:vastra/ui/app.dart';
 
-const repo = 'https://github.com/sudharamachandranrajeev/vastra';
+const repo = 'https://github.com/sudharamachandranrajeev/vastra-fashion-finds';
 
 Map<String, dynamic> release(
   String tag, {
@@ -37,7 +37,7 @@ Map<String, dynamic> release(
       {
         'name': f,
         'size': 3,
-        'browser_download_url': 'https://$host/sudharamachandranrajeev/vastra/releases/download/$tag/$f',
+        'browser_download_url': 'https://$host/sudharamachandranrajeev/vastra-fashion-finds/releases/download/$tag/$f',
       },
   ],
 };
